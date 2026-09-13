@@ -31,6 +31,7 @@ services:
       PORT: 3000
       CORS_ORIGIN: http://localhost:5173
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flowboard_dev
+      JWT_SECRET: change-this-in-production-min-32-chars
     depends_on:
       postgres:
         condition: service_healthy

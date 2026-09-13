@@ -17,11 +17,12 @@ export class InvitationsService {
 
     await this.prisma.invitation.create({
       data: {
-        organizationId: orgId,
-        invitedById,
+        organization: { connect: { id: orgId } },
+        invitedBy: { connect: { id: invitedById } },
         email: dto.email,
-        role: dto.role,
+        role: dto.role as any,
         tokenHash,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
 
