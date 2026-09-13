@@ -9,20 +9,23 @@ export class UsersService {
     return this.users.find(u => u.email === email.toLowerCase());
   }
 
-  async findById(id: string) {
-    return this.users.find(u => u.id === id);
+  async findByRefreshTokenHash(tokenHash: string) {
+    return this.users.find(u => u.refreshTokenHash === tokenHash);
   }
 
-  async create(data: { email: string; password: string }) {
-    const password = await bcrypt.hash(data.password, 12);
-    const user = { ...data, email: data.email.toLowerCase(), password, id: Date.now().toString() };
+  async create(data: { email: string; name: string; passwordHash: string }) {
+    const user = { ...data, email: data.email.toLowerCase(), id: Date.now().toString(), isActive: true };
     this.users.push(user);
     return user;
   }
 
-  async updateLastLogin(id: string) {
-    const user = this.users.find(u => u.id === id);
-    if (user) user.lastLogin = new Date();
-    return user;
+  async updateRefreshToken(email: string, tokenHash: string) {
+    const user = this.users.find(u => u.email === email.toLowerCase());
+    if (user) user.refreshTokenHash = tokenHash;
+  }
+
+  async clearRefreshToken(email: string) {
+    const user = this.users.find(u => u.email === email.toLowerCase());
+    if (user) delete user.refreshTokenHash;
   }
 }
