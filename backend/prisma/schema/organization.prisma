@@ -1,1 +1,13 @@
-// Organization model — to be designed in schema phase
+model Organization {
+  id          String               @id @default(uuid())
+  name        String
+  slug        String               @unique
+  description String?
+  logoUrl     String?
+  isActive    Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  members     OrganizationMember[]
+  invitations Invitation[]
+  projects    Project[]
+}

@@ -1,1 +1,18 @@
-// User model — to be designed in schema phase
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  displayName     String?
+  avatarUrl       String?
+  isActive        Boolean        @default(true)
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  refreshTokens   RefreshToken[]
+  orgMemberships  OrganizationMember[]
+  projectMemberships ProjectMember[]
+  invitations     Invitation[]
+}
