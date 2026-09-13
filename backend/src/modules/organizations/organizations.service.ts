@@ -8,9 +8,11 @@ export class OrganizationsService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateOrganizationDto) {
+    const slugBase = dto.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const slug = `${slugBase}-${Date.now().toString(36)}`;
     return this.prisma.$transaction(async (tx) => {
       const org = await tx.organization.create({
-        data: { name: dto.name, slug: dto.name.toLowerCase().replace(/ /g, '-') },
+        data: { name: dto.name, slug },
       });
       await tx.organizationMember.create({
         data: {

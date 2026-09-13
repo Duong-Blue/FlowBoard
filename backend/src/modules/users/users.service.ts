@@ -1,31 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from 'src/database/prisma.service';
 
 @Injectable()
 export class UsersService {
-  private users = []; // Mock DB
+  constructor(private prisma: PrismaService) {}
 
   async findByEmail(email: string) {
-    return this.users.find(u => u.email === email.toLowerCase());
+    return this.prisma.user.findUnique({ where: { email: email.toLowerCase() } });
   }
 
-  async findByRefreshTokenHash(tokenHash: string) {
-    return this.users.find(u => u.refreshTokenHash === tokenHash);
+  async findById(id: string) {
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async create(data: { email: string; name: string; passwordHash: string }) {
-    const user = { ...data, email: data.email.toLowerCase(), id: Date.now().toString(), isActive: true };
-    this.users.push(user);
-    return user;
+  async create(data: { email: string; password: string; firstName?: string; lastName?: string }) {
+    const passwordHash = await bcrypt.hash(data.password, 12);
+    return this.prisma.user.create({
+      data: {
+        email: data.email.toLowerCase(),
+        passwordHash,
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+      },
+    });
   }
 
-  async updateRefreshToken(email: string, tokenHash: string) {
-    const user = this.users.find(u => u.email === email.toLowerCase());
-    if (user) user.refreshTokenHash = tokenHash;
-  }
-
-  async clearRefreshToken(email: string) {
-    const user = this.users.find(u => u.email === email.toLowerCase());
-    if (user) delete user.refreshTokenHash;
+  async updateLastLogin(userId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { lastLoginAt: new Date() },
+    });
   }
 }
