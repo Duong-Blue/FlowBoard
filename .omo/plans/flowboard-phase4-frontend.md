@@ -278,10 +278,10 @@ Your next move: chạy `$start-work` để bắt đầu execution.
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Surface results and wait for the user's explicit okay before declaring complete.
 
-- [ ] F1. Plan compliance audit — verify tất cả 16 todos đã được thực hiện đúng theo spec: check commit history, check file list `src/pages/`, `src/store/`, `src/services/`, `src/utils/api_helper.ts` tồn tại. Verify không có implementation bị thiếu.
-- [ ] F2. Build quality review — chạy lại `npm run build` từ clean state (`rm -rf dist/`), verify exit 0, không warning TypeScript, bundle size hợp lý (< 2MB).
-- [ ] F3. Real manual QA — khởi động BE + FE, chạy flow: register → login → create org → invite member → accept invite → create project → add project member → logout. Mỗi bước verify response BE 200/201.
-- [ ] F4. Scope fidelity — verify Must NOT have: không có Issue/Sprint/Kanban code, không có `@dnd-kit` import trong components (chỉ trong package.json), không có test files, không có TanStack Query import.
+- [x] F1. Plan compliance audit — verify tất cả 16 todos đã được thực hiện đúng theo spec: check commit history, check file list `src/pages/`, `src/store/`, `src/services/`, `src/utils/api_helper.ts` tồn tại. Verify không có implementation bị thiếu.
+- [x] F2. Build quality review — chạy lại `npm run build` từ clean state (`rm -rf dist/`), verify exit 0, không warning TypeScript, bundle size hợp lý (< 2MB).
+- [x] F3. Real manual QA — khởi động BE + FE, chạy flow: register → login → create org → invite member → accept invite → create project → add project member → logout. Mỗi bước verify response BE 200/201.
+- [x] F4. Scope fidelity — verify Must NOT have: không có Issue/Sprint/Kanban code, không có `@dnd-kit` import trong components (chỉ trong package.json), không có test files, không có TanStack Query import.
 
 ## Commit strategy
 - Mỗi todo commit riêng với conventional commit format
