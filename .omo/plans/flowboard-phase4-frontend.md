@@ -265,7 +265,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-15-polish.txt`
   Commit: Y | `feat(frontend): sidebar polish, logout flow, responsive layout, env example`
 
-- [ ] 16. frontend/: Final build verification — npm run build pass, no TypeScript errors
+- [x] 16. frontend/: Final build verification — npm run build pass, no TypeScript errors
   What to do: (a) Chạy `cd frontend && npm run build` (= `tsc -b && vite build`). (b) Fix mọi TypeScript error nếu có (không dùng `@ts-ignore` trừ trường hợp bất khả kháng). (c) Chạy `npm run lint` (oxlint) và fix warnings nghiêm trọng. (d) Kiểm tra `dist/` được tạo ra với `index.html` và các JS/CSS chunk. (e) Commit final.
   Must NOT do: Không ship với TypeScript errors. Không comment out code để pass build.
   Parallelization: Wave 6 | Blocked by: 15 | Blocks: —
