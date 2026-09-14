@@ -45,10 +45,10 @@ export class InvitationsService {
     });
   }
 
-  async accept(rawToken: string) {
+  async accept(rawToken: string, userId: string) {
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
     const invitation = await this.prisma.invitation.findFirst({
-      where: { tokenHash, acceptedAt: null, revokedAt: null },
+      where: { tokenHash, acceptedAt: null, revokedAt: null, expiresAt: { gt: new Date() } },
     });
     if (!invitation) throw new BadRequestException('Invalid or expired token');
 
@@ -60,7 +60,7 @@ export class InvitationsService {
       return tx.organizationMember.create({
         data: {
           organizationId: invitation.organizationId,
-          userId: 'dummy-user-id', // Needs integration with auth flow
+          userId: userId, // Use the passed userId
           role: invitation.role,
         },
       });

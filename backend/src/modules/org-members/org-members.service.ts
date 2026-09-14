@@ -11,6 +11,13 @@ export class OrgMembersService {
   }
 
   async updateRole(orgId: string, targetUserId: string, requesterId: string, role: OrgRole) {
+    const requester = await this.prisma.organizationMember.findUnique({
+      where: { organizationId_userId: { organizationId: orgId, userId: requesterId } },
+    });
+    if (!requester || (requester.role !== 'OWNER' && requester.role !== 'ADMIN')) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
     if (role === 'OWNER') throw new ForbiddenException('Cannot assign OWNER role');
     const member = await this.prisma.organizationMember.findFirst({
       where: { organizationId: orgId, userId: targetUserId },
@@ -24,6 +31,13 @@ export class OrgMembersService {
   }
 
   async remove(orgId: string, targetUserId: string, requesterId: string) {
+    const requester = await this.prisma.organizationMember.findUnique({
+      where: { organizationId_userId: { organizationId: orgId, userId: requesterId } },
+    });
+    if (!requester || (requester.role !== 'OWNER' && requester.role !== 'ADMIN')) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
     const member = await this.prisma.organizationMember.findFirst({
       where: { organizationId: orgId, userId: targetUserId },
     });

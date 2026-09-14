@@ -28,8 +28,9 @@ export class InvitationsController {
     return this.invitationsService.revoke(orgId, id, userId);
   }
 
+  @UseGuards(JwtAuthGuard, OrgMemberGuard)
   @Post('accept')
-  accept(@Body() dto: AcceptInvitationDto) {
-    return this.invitationsService.accept(dto.token);
+  accept(@CurrentUser('id') userId: string, @Body() dto: AcceptInvitationDto) {
+    return this.invitationsService.accept(dto.token, userId);
   }
 }
