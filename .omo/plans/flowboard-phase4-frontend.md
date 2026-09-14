@@ -175,7 +175,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-6-auth-pages.txt`
   Commit: Y | `feat(frontend): add login and register pages`
 
-- [ ] 7. frontend/src/services/: Tạo service layer (orgService, projectService, memberService, invitationService)
+- [x] 7. frontend/src/services/: Tạo service layer (orgService, projectService, memberService, invitationService)
   What to do: Mỗi service là một file TypeScript module export plain functions dùng `api_helper`. (a) `frontend/src/services/orgService.ts`: `getOrgs()`, `createOrg(dto)`, `getOrg(orgId)`, `updateOrg(orgId, dto)`, `deleteOrg(orgId)`. (b) `frontend/src/services/memberService.ts`: `getOrgMembers(orgId)`, `updateOrgMemberRole(orgId, userId, role)`, `removeOrgMember(orgId, userId)`, `getProjectMembers(projectId)`, `addProjectMember(projectId, dto)`, `updateProjectMemberRole(projectId, userId, role)`, `removeProjectMember(projectId, userId)`. (c) `frontend/src/services/invitationService.ts`: `getInvitations(orgId)`, `sendInvitation(orgId, dto)`, `revokeInvitation(orgId, id)`, `acceptInvitation(orgId, token)`. (d) `frontend/src/services/projectService.ts`: `getProjects(orgId)`, `createProject(orgId, dto)`, `getProject(orgId, id)`, `updateProject(orgId, id, dto)`, `deleteProject(orgId, id)`. Tất cả return typed Promise dùng interfaces từ `store/types.ts`.
   Must NOT do: Không đặt fetch logic trong components hay Redux thunks — mọi thứ qua service layer. Không thêm caching (không phải TanStack Query).
   Parallelization: Wave 2 | Blocked by: 3,4 | Blocks: 8,9,10,11,12,13,14,15
