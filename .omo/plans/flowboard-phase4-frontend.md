@@ -255,7 +255,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-14-project-members.txt`
   Commit: Y | `feat(frontend): add project members management page`
 
-- [ ] 15. frontend/src/: Polish — sidebar active state, breadcrumb, logout, .env.example, responsive
+- [x] 15. frontend/src/: Polish — sidebar active state, breadcrumb, logout, .env.example, responsive
   What to do: (a) Sidebar: highlight active org, active project bằng bg color + font-semibold. (b) Logout: dispatch `logout()`, clear localStorage tokens, gọi `apiPost('/auth/logout', { refreshToken })`, navigate `/login`. (c) User avatar dropdown trong header: hiển thị `displayName || firstName`, avatar initials, link "Profile" (placeholder), "Sign out". (d) Tạo `frontend/.env.example`: `VITE_API_URL=http://localhost:3000`. (e) AppLayout responsive: trên mobile sidebar collapse (hamburger menu). Trên desktop sidebar cố định. (f) Page titles: mỗi page set `document.title = "FlowBoard - <PageName>"`. (g) 404 NotFound page update cho phù hợp với AppLayout (hiện tại chỉ có plain text). (h) Global error toast: nếu `api_helper` response interceptor catch lỗi không phải 401, show `sonner` toast với message từ BE response.
   Must NOT do: Không thêm mobile bottom navigation (out of scope). Không animation phức tạp.
   Parallelization: Wave 6 | Blocked by: tất cả pages | Blocks: 16
