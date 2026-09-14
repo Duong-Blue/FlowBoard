@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import * as crypto from 'crypto';
 
@@ -36,6 +36,13 @@ export class InvitationsService {
   }
 
   async revoke(orgId: string, invitationId: string, requesterId: string) {
+    const requester = await this.prisma.organizationMember.findFirst({
+      where: { organizationId: orgId, userId: requesterId },
+    });
+    if (!requester || (requester.role !== 'OWNER' && requester.role !== 'ADMIN')) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
     const invitation = await this.prisma.invitation.findUnique({ where: { id: invitationId } });
     if (!invitation || invitation.organizationId !== orgId) throw new NotFoundException();
 
@@ -52,6 +59,11 @@ export class InvitationsService {
     });
     if (!invitation) throw new BadRequestException('Invalid or expired token');
 
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.email.toLowerCase() !== invitation.email.toLowerCase()) {
+      throw new BadRequestException('Invitation token was not issued for this user email');
+    }
+
     return this.prisma.$transaction(async (tx) => {
       await tx.invitation.update({
         where: { id: invitation.id },
@@ -60,7 +72,7 @@ export class InvitationsService {
       return tx.organizationMember.create({
         data: {
           organizationId: invitation.organizationId,
-          userId: userId, // Use the passed userId
+          userId: userId,
           role: invitation.role,
         },
       });

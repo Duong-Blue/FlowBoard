@@ -2,9 +2,10 @@ import { Controller, Post, Body, Get, Param, Patch, Delete, UseGuards, Req } fro
 import { ProjectMembersService } from './project-members.service';
 import { AddProjectMemberDto } from './add-project-member.dto';
 import { UpdateProjectMemberRoleDto } from './update-project-member-role.dto';
+import { ProjectMemberGuard } from '../../common/guards/project-member.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ProjectMemberGuard)
 @Controller('projects/:projectId/members')
 export class ProjectMembersController {
   constructor(private readonly service: ProjectMembersService) {}

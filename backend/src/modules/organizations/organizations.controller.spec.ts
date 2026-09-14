@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrganizationsController } from './organizations.controller';
 import { OrganizationsService } from './organizations.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OrgMemberGuard } from '../../common/guards/org-member.guard';
 
 describe('OrganizationsController', () => {
   let controller: OrganizationsController;
@@ -16,11 +17,15 @@ describe('OrganizationsController', () => {
             findAll: vi.fn(),
             create: vi.fn(),
             findOne: vi.fn(),
+            update: vi.fn(),
+            delete: vi.fn(),
           },
         },
       ],
     })
       .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(OrgMemberGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
