@@ -155,7 +155,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-4-store.txt` — output `npm run build` (exit 0)
   Commit: Y | `feat(frontend): add redux store with authSlice, orgSlice, projectSlice`
 
-- [ ] 5. frontend/src/layouts/ + frontend/src/App.tsx: Tạo AuthLayout, AppLayout, cập nhật router
+- [x] 5. frontend/src/layouts/ + frontend/src/App.tsx: Tạo AuthLayout, AppLayout, cập nhật router
   What to do: (a) `frontend/src/layouts/AuthLayout.tsx`: check `isAuthenticated` từ Redux store — nếu true, redirect `<Navigate to="/" />`. Render `<Outlet />` centered (login/register form giữa màn hình, Jira-style dark sidebar bên trái với logo). (b) `frontend/src/layouts/AppLayout.tsx`: check `isAuthenticated` — nếu false, redirect `<Navigate to="/login" />`. Layout 2 cột: sidebar cố định trái (width 240px) + main content bên phải. Sidebar chứa: logo FlowBoard, org switcher dropdown (danh sách orgs từ Redux), "Create org" link, divider, danh sách projects của active org, settings link. Header top bar: tên org active, avatar + dropdown user (logout). (c) Cập nhật `frontend/src/App.tsx`: router cấu trúc mới — `AuthLayout` bọc `/login`, `/register`, `/invitations/accept`; `AppLayout` bọc tất cả routes còn lại. Lazy import các page components (chưa tồn tại thì để placeholder `<div>TODO</div>` tạm).
   Must NOT do: Không đặt business logic trong layout — chỉ shell + redirect. Không fetch data trong layout component (fetch ở pages).
   Parallelization: Wave 2 | Blocked by: 4 | Blocks: 6,7,8,9,10,11,12,13,14,15
