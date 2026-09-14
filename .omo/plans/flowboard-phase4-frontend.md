@@ -215,7 +215,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-10-org-members.txt`
   Commit: Y | `feat(frontend): add org members management page`
 
-- [ ] 11. frontend/src/pages/invitations/: InvitationsPage.tsx + AcceptInvitationPage.tsx
+- [x] 11. frontend/src/pages/invitations/: InvitationsPage.tsx + AcceptInvitationPage.tsx
   What to do: (a) `InvitationsPage.tsx` (route `/orgs/:orgId/invitations`): Section 1 "Pending Invitations" — fetch `invitationService.getInvitations(orgId)`, list: email, role, expires date, status badge. Button "Revoke" → `invitationService.revokeInvitation(orgId, id)` → refresh list. Section 2 "Invite Member" — form: email (required), role select (ADMIN/MEMBER, default MEMBER). Submit → `invitationService.sendInvitation(orgId, { email, role })` → toast "Invitation sent". Chỉ OWNER/ADMIN thấy invite form. (b) `AcceptInvitationPage.tsx` (route `/invitations/accept`): public route (trong AuthLayout hoặc standalone). Đọc `?token=` từ query string. Nếu chưa login → redirect `/login?redirect=/invitations/accept?token=...`. Nếu đã login → hiển thị "Join Organization" button → gọi `invitationService.acceptInvitation(orgId, token)`. Vấn đề: cần `orgId` — lấy từ query param `?orgId=...&token=...` hoặc decode token (nếu BE trả orgId trong invitation info endpoint). Sau accept → navigate `/`.
   Must NOT do: Không gửi email thật — chỉ hiển thị token/link để copy. Không auto-accept khi vào trang (luôn confirm button).
   Parallelization: Wave 4 | Blocked by: 5,7 | Blocks: — | Can parallelize with: 12,13
@@ -225,7 +225,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-11-invitations.txt`
   Commit: Y | `feat(frontend): add invitations management and accept invitation pages`
 
-- [ ] 12. frontend/src/pages/projects/ProjectListPage.tsx + CreateProjectPage.tsx
+- [x] 12. frontend/src/pages/projects/ProjectListPage.tsx + CreateProjectPage.tsx
   What to do: (a) `ProjectListPage.tsx` (route `/orgs/:orgId/projects`): mount → fetch `projectService.getProjects(orgId)` → dispatch `setProjects`. Hiển thị grid cards kiểu Jira project browser: project key badge (e.g. "FLOW"), name, description, status badge (ACTIVE=green, ARCHIVED=gray). Click → navigate `/orgs/:orgId/projects/:projectId/members` (phase này chưa có board). Button "+ Create Project". (b) `CreateProjectPage.tsx` (route `/orgs/:orgId/projects/new`): Form: name (required), key (auto-generate uppercase 2-6 chars từ name, editable, unique per org — BE enforce), description. Submit → `projectService.createProject(orgId, dto)` → dispatch `addProject` → navigate `/orgs/:orgId/projects/:newId/members`. Cancel → navigate back.
   Must NOT do: Không navigate sang board page (chưa có). Không pagination.
   Parallelization: Wave 4 | Blocked by: 5,7 | Blocks: 13,14 | Can parallelize with: 11
