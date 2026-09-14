@@ -235,7 +235,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-12-project-pages.txt`
   Commit: Y | `feat(frontend): add project list and create project pages`
 
-- [ ] 13. frontend/src/pages/projects/ProjectSettingsPage.tsx
+- [x] 13. frontend/src/pages/projects/ProjectSettingsPage.tsx
   What to do: Route `/orgs/:orgId/projects/:projectId/settings`. Fetch `projectService.getProject(orgId, projectId)`. Form: name, description, status (select: ACTIVE/ARCHIVED). Submit → `projectService.updateProject(orgId, projectId, dto)` → dispatch `updateProject`, toast. Danger Zone: "Archive Project" (status → ARCHIVED) + "Delete Project" với confirm dialog → `projectService.deleteProject(orgId, projectId)` → dispatch `removeProject` → navigate `/orgs/:orgId/projects`. Chỉ project ADMIN thấy Danger Zone — check từ `memberService.getProjectMembers(projectId)`.
   Must NOT do: Không xóa không confirm. Không cho MEMBER/VIEWER xóa (FE guard + BE 403).
   Parallelization: Wave 5 | Blocked by: 12 | Blocks: — | Can parallelize with: 14
@@ -245,7 +245,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-13-project-settings.txt`
   Commit: Y | `feat(frontend): add project settings page`
 
-- [ ] 14. frontend/src/pages/projects/ProjectMembersPage.tsx
+- [x] 14. frontend/src/pages/projects/ProjectMembersPage.tsx
   What to do: Route `/orgs/:orgId/projects/:projectId/members`. Fetch `memberService.getProjectMembers(projectId)`. Hiển thị: avatar, name, email, role badge (ADMIN=blue, MEMBER=gray, VIEWER=outline). Actions (chỉ ADMIN): add member — form email + role (BE cần userId, không phải email — worker cần figure out: có thể dùng org member list làm source, select từ dropdown org members chưa trong project). Role change dropdown. Remove button → confirm. Section "Add Member": fetch org members → filter ra những ai chưa trong project → dropdown select + role select → `memberService.addProjectMember(projectId, { userId, role })`. Loading state. Current user không thể tự remove.
   Must NOT do: Không add member bằng email trực tiếp (BE nhận userId) — dùng org member list làm source.
   Parallelization: Wave 5 | Blocked by: 12 | Blocks: — | Can parallelize with: 13
