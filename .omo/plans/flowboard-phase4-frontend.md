@@ -135,7 +135,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-2-shadcn.txt` — list files trong `src/components/ui/`
   Commit: Y | `feat(frontend): add shadcn-compatible ui components (button, input, card, dialog, badge, avatar)`
 
-- [ ] 3. frontend/src/utils/api_helper.ts: Tạo axios singleton với auth interceptors
+- [x] 3. frontend/src/utils/api_helper.ts: Tạo axios singleton với auth interceptors
   What to do: Tạo file `frontend/src/utils/api_helper.ts`. Nội dung: (a) Tạo axios instance với `baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000'`, `timeout: 10000`. (b) Request interceptor: đọc `localStorage.getItem('accessToken')`, nếu có thì set `Authorization: Bearer <token>`. (c) Response interceptor 401: gọi `POST /auth/refresh` với `{ refreshToken: localStorage.getItem('refreshToken') }`, lưu token mới vào localStorage, retry request gốc. Nếu refresh cũng fail → xóa tokens, redirect `/login`. (d) Export các typed helper functions: `apiGet<T>(url, params?)`, `apiPost<T>(url, data?)`, `apiPatch<T>(url, data?)`, `apiDelete<T>(url)`. (e) Tạo `frontend/src/.env.example` → `VITE_API_URL=http://localhost:3000`.
   Must NOT do: Không dùng `fetch` native. Không để raw axios calls rải rác trong components — mọi thứ qua api_helper. Không hardcode URL (dùng env var).
   Parallelization: Wave 1 | Blocked by: 1 | Blocks: tất cả service/page todos
@@ -145,7 +145,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-3-api-helper.ts` — copy nội dung file
   Commit: Y | `feat(frontend): add axios api_helper with auth interceptors`
 
-- [ ] 4. frontend/src/store/: Tạo Redux store với authSlice, orgSlice, projectSlice
+- [x] 4. frontend/src/store/: Tạo Redux store với authSlice, orgSlice, projectSlice
   What to do: (a) Tạo `frontend/src/store/index.ts` — configure Redux store, export `RootState`, `AppDispatch`, typed `useAppSelector`, `useAppDispatch` hooks. (b) `frontend/src/store/slices/authSlice.ts`: state = `{ user: User | null, accessToken: string | null, isAuthenticated: boolean }`. Actions: `setCredentials(user, accessToken)`, `logout()`. Thunk `refreshTokenThunk` nếu cần. (c) `frontend/src/store/slices/orgSlice.ts`: state = `{ list: Organization[], activeOrgId: string | null, loading: boolean }`. Actions: `setOrgs`, `setActiveOrg`, `addOrg`, `removeOrg`, `updateOrg`. (d) `frontend/src/store/slices/projectSlice.ts`: state = `{ list: Project[], activeProjectId: string | null, loading: boolean }`. Actions: `setProjects`, `setActiveProject`, `addProject`, `removeProject`, `updateProject`. (e) `frontend/src/store/types.ts`: TypeScript interfaces `User`, `Organization`, `Project`, `OrgMember`, `ProjectMember`, `Invitation` — bám sát Prisma models từ BE. (f) Wrap `<App />` trong `main.tsx` với `<Provider store={store}>`. (g) `frontend/src/store/slices/authSlice.ts`: persist `accessToken` + `refreshToken` vào localStorage trong reducer.
   Must NOT do: Không dùng `redux-persist` lib — tự persist thủ công qua localStorage trong reducer. Không tạo slice cho entities chưa có BE (Issue, Sprint).
   Parallelization: Wave 1 | Blocked by: 1 | Blocks: 5,6,7
