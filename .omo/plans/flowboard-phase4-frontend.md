@@ -165,7 +165,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-5-layouts.txt`
   Commit: Y | `feat(frontend): add AuthLayout, AppLayout, update router structure`
 
-- [ ] 6. frontend/src/pages/auth/: Login page + Register page
+- [x] 6. frontend/src/pages/auth/: Login page + Register page
   What to do: (a) `frontend/src/pages/auth/LoginPage.tsx`: Form 2 field (email, password). Submit gọi `apiPost<{ accessToken, refreshToken, user }>('/auth/login', { email, password })`. Success → dispatch `setCredentials`, lưu tokens localStorage, navigate `/`. Error → hiển thị toast error. Dùng shadcn `Button`, `Input`, `Label`, `Card`. Link "Chưa có tài khoản? Đăng ký". (b) `frontend/src/pages/auth/RegisterPage.tsx`: Form 4 field (firstName, lastName, email, password). Submit gọi `apiPost('/auth/register', dto)`. Success → auto-login (gọi login luôn hoặc redirect `/login` với toast success). (c) `frontend/src/components/ui/toaster.tsx` render `<Toaster />` từ sonner trong `main.tsx` hoặc `AppLayout`. (d) Cả 2 pages: loading state trên button khi đang submit.
   Must NOT do: Không validate phức tạp (chỉ required + email format đơn giản). Không dùng react-hook-form — useState đủ.
   Parallelization: Wave 2 | Blocked by: 5 | Blocks: —
@@ -185,7 +185,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-7-services.txt` — list files + `npm run build` exit 0
   Commit: Y | `feat(frontend): add service layer (org, project, member, invitation)`
 
-- [ ] 8. frontend/src/pages/orgs/OrgDashboard.tsx + CreateOrgPage.tsx
+- [x] 8. frontend/src/pages/orgs/OrgDashboard.tsx + CreateOrgPage.tsx
   What to do: (a) `OrgDashboard.tsx` (route `/`): mount → `orgService.getOrgs()` → dispatch `setOrgs`. Hiển thị grid cards tổ chức (như Jira's team picker): mỗi card có logo/avatar initials, tên, slug, số members (nếu có). Click card → dispatch `setActiveOrg(id)`, navigate `/orgs/:orgId/projects`. Button "+ New Organization" → navigate `/orgs/new`. Nếu list rỗng → empty state "No organizations yet, create one". Loading skeleton khi fetch. (b) `CreateOrgPage.tsx` (route `/orgs/new`): Form — name (required), slug (auto-generate từ name, editable), description (optional). Submit `orgService.createOrg(dto)` → dispatch `addOrg`, navigate `/orgs/:newId/projects`. Cancel → navigate `/`.
   Must NOT do: Không fetch members trong trang này (chưa cần). Không pagination (scope này).
   Parallelization: Wave 3 | Blocked by: 5,7 | Blocks: — | Can parallelize with: 9,10
@@ -195,7 +195,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-8-org-dashboard.txt`
   Commit: Y | `feat(frontend): add org dashboard and create org page`
 
-- [ ] 9. frontend/src/pages/orgs/OrgSettingsPage.tsx
+- [x] 9. frontend/src/pages/orgs/OrgSettingsPage.tsx
   What to do: Route `/orgs/:orgId/settings`. Load org hiện tại từ Redux (activeOrgId) hoặc fetch `orgService.getOrg(orgId)`. Form edit: name, description, logoUrl (text input URL). Submit → `orgService.updateOrg(orgId, dto)` → dispatch `updateOrg`, toast success. Section "Danger Zone": button "Delete Organization" → confirm dialog (shadcn `Dialog`) → `orgService.deleteOrg(orgId)` → dispatch `removeOrg` → navigate `/`. Chỉ OWNER mới thấy Danger Zone — check role từ members (fetch `memberService.getOrgMembers(orgId)`, tìm current user). Badge hiển thị role hiện tại của user.
   Must NOT do: Không cho non-OWNER xóa org (check FE + BE sẽ trả 403). Không xóa mà không confirm dialog.
   Parallelization: Wave 3 | Blocked by: 5,7 | Blocks: — | Can parallelize with: 8,10
@@ -205,7 +205,7 @@ Your next move: chạy `$start-work` để bắt đầu execution.
   Evidence: `.omo/evidence/phase4-frontend/task-9-org-settings.txt`
   Commit: Y | `feat(frontend): add org settings page with delete confirmation`
 
-- [ ] 10. frontend/src/pages/orgs/OrgMembersPage.tsx
+- [x] 10. frontend/src/pages/orgs/OrgMembersPage.tsx
   What to do: Route `/orgs/:orgId/members`. Fetch `memberService.getOrgMembers(orgId)`. Hiển thị table/list: avatar initials, displayName hoặc `${firstName} ${lastName}`, email, role badge (color-coded: OWNER=purple, ADMIN=blue, MEMBER=gray). Actions (chỉ OWNER/ADMIN thấy): dropdown role (ADMIN, MEMBER) → `memberService.updateOrgMemberRole(orgId, userId, role)`. Button remove → confirm inline hoặc dialog → `memberService.removeOrgMember(orgId, userId)`. Current user không thể remove chính mình. OWNER không thể bị downgrade (FE guard). Loading skeleton. Empty state nếu 0 members (không nên xảy ra vì luôn có OWNER).
   Must NOT do: Không hiển thị invite form ở đây — invite có trang riêng. Không cho MEMBER thấy action buttons.
   Parallelization: Wave 3 | Blocked by: 5,7 | Blocks: — | Can parallelize with: 8,9
