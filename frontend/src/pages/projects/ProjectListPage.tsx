@@ -4,10 +4,11 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import { setProjects, setLoading } from '../../store/slices/projectSlice';
 import { getProjects } from '../../services/projectService';
 import { Button } from '../../components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
+import { PageLoader } from '../../components/shared/PageLoader';
+import { EmptyState } from '../../components/shared/EmptyState';
+import { SemanticBadge } from '../../components/shared/SemanticBadge';
 
 export default function ProjectListPage() {
   const { orgId } = useParams<{ orgId: string }>();
@@ -23,7 +24,7 @@ export default function ProjectListPage() {
       try {
         const data = await getProjects(orgId);
         dispatch(setProjects(data));
-      } catch (error) {
+      } catch {
         toast.error('Failed to fetch projects');
       } finally {
         dispatch(setLoading(false));
@@ -34,11 +35,7 @@ export default function ProjectListPage() {
   }, [orgId, dispatch]);
 
   if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (
@@ -55,44 +52,55 @@ export default function ProjectListPage() {
       </div>
 
       {projects.length === 0 ? (
-        <div className="flex h-[400px] flex-col items-center justify-center rounded-md border border-dashed text-center">
-          <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
-            <h3 className="mt-4 text-lg font-semibold">No projects created</h3>
-            <p className="mb-4 mt-2 text-sm text-muted-foreground">
-              You haven't created any projects yet. Start by creating your first project.
-            </p>
+        <EmptyState
+          icon={PlusCircle}
+          title="No projects created"
+          description="You haven't created any projects yet. Start by creating your first project."
+          action={
             <Button onClick={() => navigate(`/orgs/${orgId}/projects/new`)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Create Project
             </Button>
-          </div>
-        </div>
+          }
+        />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <Card
-              key={project.id}
-              className="cursor-pointer transition-colors hover:bg-muted/50"
-              onClick={() => navigate(`/orgs/${orgId}/projects/${project.id}/members`)}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xl font-bold">{project.name}</CardTitle>
-                <Badge variant="secondary" className="uppercase font-mono">
-                  {project.key}
-                </Badge>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="line-clamp-2 min-h-[40px] mt-2">
-                  {project.description || 'No description provided.'}
-                </CardDescription>
-                <div className="mt-4 flex items-center justify-between">
-                  <Badge variant={project.status === 'active' ? 'default' : 'secondary'}>
-                    {project.status || 'Active'}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="rounded-md border">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-slate-50 border-b">
+              <tr>
+                <th className="px-4 py-3 font-medium text-slate-500">Project Name</th>
+                <th className="px-4 py-3 font-medium text-slate-500">Key</th>
+                <th className="px-4 py-3 font-medium text-slate-500">Status</th>
+                <th className="px-4 py-3 font-medium text-slate-500 w-1/2">Description</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {projects.map((project) => (
+                <tr
+                  key={project.id}
+                  onClick={() => navigate(`/orgs/${orgId}/projects/${project.id}/members`)}
+                  className="hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                    {project.name}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                      {project.key}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <SemanticBadge status={project.status || 'active'}>
+                      {project.status || 'Active'}
+                    </SemanticBadge>
+                  </td>
+                  <td className="px-4 py-3 text-slate-500 truncate max-w-xs">
+                    {project.description || 'No description provided.'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

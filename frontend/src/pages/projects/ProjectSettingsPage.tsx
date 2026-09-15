@@ -4,7 +4,6 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import { updateProject, removeProject } from '../../store/slices/projectSlice';
 import { getProject, updateProject as updateProjectApi, deleteProject } from '../../services/projectService';
 import { getOrgMembers } from '../../services/memberService';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -19,6 +18,14 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog';
 import type { Member as ProjectMember } from '../../store/types';
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 
 export default function ProjectSettingsPage() {
   const { orgId, projectId } = useParams<{ orgId: string; projectId: string }>();
@@ -67,7 +74,7 @@ export default function ProjectSettingsPage() {
       const res = await updateProjectApi(projectId, { name, description, status });
       dispatch(updateProject(res));
       toast.success('Project updated successfully');
-    } catch (err: unknown) {
+    } catch {
       toast.error('Failed to update project');
     } finally {
       setSaving(false);
@@ -82,7 +89,7 @@ export default function ProjectSettingsPage() {
       dispatch(updateProject(res));
       setStatus('ARCHIVED');
       toast.success('Project archived');
-    } catch (err: unknown) {
+    } catch {
       toast.error('Failed to archive project');
     } finally {
       setSaving(false);
@@ -97,7 +104,7 @@ export default function ProjectSettingsPage() {
       dispatch(removeProject(projectId));
       toast.success('Project deleted');
       navigate(`/orgs/${orgId}/projects`);
-    } catch (err: unknown) {
+    } catch {
       toast.error('Failed to delete project');
       setDeleting(false);
       setShowDeleteConfirm(false);
@@ -122,13 +129,13 @@ export default function ProjectSettingsPage() {
         <p className="text-muted-foreground">Manage project details and preferences.</p>
       </div>
 
-      <Card>
-        <form onSubmit={handleUpdate}>
-          <CardHeader>
-            <CardTitle>General</CardTitle>
-            <CardDescription>Basic project information</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <Separator />
+
+      <form onSubmit={handleUpdate} className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium">General</h3>
+          <p className="text-sm text-muted-foreground mb-4">Basic project information.</p>
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Project Name</Label>
               <Input
@@ -150,53 +157,53 @@ export default function ProjectSettingsPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={saving}
-              >
-                <option value="ACTIVE">Active</option>
-                <option value="ARCHIVED">Archived</option>
-              </select>
+              <Select value={status} onValueChange={setStatus} disabled={saving}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="ARCHIVED">Archived</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+          </div>
+        </div>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </form>
 
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>Irreversible actions for this project</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Separator />
+
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-lg font-medium text-destructive">Danger Zone</h3>
+          <p className="text-sm text-muted-foreground">Irreversible actions for this project.</p>
+        </div>
+        
+        <div className="border border-red-200 bg-red-50/50 rounded-md p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Archive Project</p>
               <p className="text-sm text-muted-foreground">Mark this project as read-only.</p>
             </div>
-            <Button variant="outline" onClick={handleArchive} disabled={saving || status === 'ARCHIVED'}>
+            <Button variant="outline" size="sm" onClick={handleArchive} disabled={saving || status === 'ARCHIVED'}>
               {status === 'ARCHIVED' ? 'Archived' : 'Archive'}
             </Button>
           </div>
-          <Separator />
+          <Separator className="bg-red-200/50" />
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Delete Project</p>
+              <p className="font-medium text-destructive">Delete Project</p>
               <p className="text-sm text-muted-foreground">Permanently delete this project and all its data.</p>
             </div>
-            <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} disabled={deleting}>
+            <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)} disabled={deleting}>
               Delete
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent>

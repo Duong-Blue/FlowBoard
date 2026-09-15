@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { PageLoader } from '../../components/shared/PageLoader';
+import { EmptyState } from '../../components/shared/EmptyState';
+import { SemanticBadge } from '../../components/shared/SemanticBadge';
 import { getProjectMembers, addProjectMember, updateProjectMemberRole, removeProjectMember, getOrgMembers } from '../../services/memberService';
 import type { Member } from '../../store/types';
 import { useAppSelector } from '../../store';
@@ -72,7 +76,7 @@ export default function ProjectMembersPage() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading) return <PageLoader />;
 
   const currentUserProjectMember = projectMembers.find(m => m.userId === user?.id);
   const isAdmin = currentUserProjectMember?.role === 'ADMIN';
@@ -141,27 +145,31 @@ export default function ProjectMembersPage() {
         </Card>
       )}
 
-      <div className="space-y-4">
-        {projectMembers.map(member => (
-          <Card key={member.userId}>
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-medium">
+      <div className="border border-slate-200 rounded-md divide-y divide-slate-200 bg-white">
+        {projectMembers.length === 0 ? (
+          <div className="p-8">
+            <EmptyState icon={Users} title="No members found" description="Add members to get started." className="border-none" />
+          </div>
+        ) : (
+          projectMembers.map(member => (
+            <div key={member.userId} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="h-7 w-7 text-xs bg-slate-100 text-slate-700 rounded-full flex items-center justify-center font-medium">
                   {member.name?.charAt(0).toUpperCase() || '?'}
                 </div>
-                <div>
-                  <p className="font-medium">{member.name}</p>
-                  <p className="text-sm text-muted-foreground">{member.email}</p>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-slate-900">{member.name}</span>
+                  <span className="text-xs text-slate-500">{member.email}</span>
                 </div>
               </div>
               
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {isAdmin ? (
                   <Select
                     value={member.role}
                     onValueChange={(val: string) => handleRoleChange(member.userId, val)}
                   >
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-28 h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -171,26 +179,22 @@ export default function ProjectMembersPage() {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <span className="text-sm font-medium px-2 py-1 rounded bg-secondary">
-                    {member.role}
-                  </span>
+                  <SemanticBadge status={member.role.toLowerCase()}>{member.role}</SemanticBadge>
                 )}
                 
                 {isAdmin && member.userId !== user?.id && (
                   <Button
-                    variant="destructive"
+                    variant="ghost"
                     size="sm"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 px-2"
                     onClick={() => handleRemove(member.userId)}
                   >
                     Remove
                   </Button>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        ))}
-        {projectMembers.length === 0 && (
-          <p className="text-muted-foreground text-center py-8">No members found.</p>
+            </div>
+          ))
         )}
       </div>
     </div>
