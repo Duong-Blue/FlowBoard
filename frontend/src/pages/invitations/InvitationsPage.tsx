@@ -3,7 +3,17 @@ import { useParams } from 'react-router-dom';
 import { getInvitations, sendInvitation, revokeInvitation } from '../../services/invitationService';
 import type { Invitation } from '../../store/types';
 
+import { AlertCircle, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { SemanticBadge } from '../../components/shared/SemanticBadge';
+import { PageLoader } from '../../components/shared/PageLoader';
+import { EmptyState } from '../../components/shared/EmptyState';
 
 export default function InvitationsPage() {
   const { orgId } = useParams<{ orgId: string }>();
@@ -15,23 +25,36 @@ export default function InvitationsPage() {
   const [role, setRole] = useState('MEMBER');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
-  const [sendSuccess, setSendSuccess] = useState(false);
 
   useEffect(() => {
     if (!orgId) return;
-    loadInvitations();
+    let isMounted = true;
+    getInvitations(orgId)
+      .then((data) => {
+        if (isMounted) {
+          setInvitations(data);
+          setError(null);
+          setLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load invitations');
+          setLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [orgId]);
 
   const loadInvitations = async () => {
+    if (!orgId) return;
     try {
-      setLoading(true);
-      setError(null);
-      const data = await getInvitations(orgId!);
+      const data = await getInvitations(orgId);
       setInvitations(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load invitations');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -41,9 +64,8 @@ export default function InvitationsPage() {
     try {
       setSending(true);
       setSendError(null);
-      setSendSuccess(false);
       await sendInvitation(orgId, { email, role });
-      setSendSuccess(true);
+      toast.success('Invitation sent!');
       setEmail('');
       setRole('MEMBER');
       await loadInvitations();
@@ -65,76 +87,88 @@ export default function InvitationsPage() {
     }
   };
 
-  if (loading) return <div>Loading invitations...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return <PageLoader text="Loading invitations..." />;
+  if (error) return <EmptyState icon={AlertCircle} title="Error" description={error} />;
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Organization Invitations</h1>
+      <h1 className="text-2xl font-bold mb-6 text-slate-900">Organization Invitations</h1>
       
-      <div className="bg-white rounded-lg shadow p-6 mb-8">
-        <h2 className="text-lg font-medium mb-4">Send New Invitation</h2>
-        {sendError && <div className="text-red-600 mb-4">{sendError}</div>}
-        {sendSuccess && <div className="text-green-600 mb-4">Invitation sent successfully!</div>}
-        <form onSubmit={handleSend} className="flex gap-4 items-end">
-          <div className="flex-1">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
-            <input
+      <div className="bg-white rounded-lg shadow border border-slate-200 p-6 mb-8">
+        <h2 className="text-lg font-medium mb-4 text-slate-900">Send New Invitation</h2>
+        {sendError && <div className="text-red-600 text-sm mb-4">{sendError}</div>}
+        <form onSubmit={handleSend} className="flex gap-3 items-end">
+          <div className="flex-1 space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
               type="email"
               id="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+              placeholder="colleague@example.com"
             />
           </div>
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-            >
-              <option value="MEMBER">Member</option>
-              <option value="ADMIN">Admin</option>
-            </select>
+          <div className="w-[180px] space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger id="role">
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="MEMBER">Member</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <button
-            type="submit"
-            disabled={sending}
-            className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-300"
-          >
+          <Button type="submit" disabled={sending}>
             {sending ? 'Sending...' : 'Send Invitation'}
-          </button>
+          </Button>
         </form>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <h2 className="text-lg font-medium p-6 border-b">Pending Invitations</h2>
+      <div className="bg-white rounded-lg shadow border border-slate-200">
+        <h2 className="text-lg font-medium p-6 border-b border-slate-200 text-slate-900">Pending Invitations</h2>
         {invitations.length === 0 ? (
-          <div className="p-6 text-gray-500">No pending invitations.</div>
+          <div className="p-6">
+            <EmptyState icon={Mail} title="No pending invitations" description="Invite team members to collaborate." />
+          </div>
         ) : (
-          <ul className="divide-y divide-gray-200">
-            {invitations.map((invitation) => (
-              <li key={invitation.id} className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{invitation.email}</p>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {invitation.role}
-                  </span>
-                  <button
-                    onClick={() => handleRevoke(invitation.id)}
-                    className="text-sm text-red-600 hover:text-red-900"
-                  >
-                    Revoke
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left text-slate-600">
+              <thead className="text-xs text-slate-500 bg-slate-50 border-b border-slate-200 uppercase">
+                <tr>
+                  <th className="px-6 py-3 font-medium">Email</th>
+                  <th className="px-6 py-3 font-medium">Role</th>
+                  <th className="px-6 py-3 font-medium">Status</th>
+                  <th className="px-6 py-3 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {invitations.map((invitation) => (
+                  <tr key={invitation.id} className="bg-white hover:bg-slate-50/50">
+                    <td className="px-6 py-4 font-medium text-slate-900">{invitation.email}</td>
+                    <td className="px-6 py-4">
+                      <SemanticBadge status={invitation.role}>{invitation.role}</SemanticBadge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <SemanticBadge status="pending">Pending</SemanticBadge>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRevoke(invitation.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        Revoke
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
