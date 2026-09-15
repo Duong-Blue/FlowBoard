@@ -1,6 +1,7 @@
 import { Injectable, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -12,7 +13,13 @@ export class ProjectsService {
 
     return this.prisma.$transaction(async (tx) => {
       const project = await tx.project.create({
-        data: { name: dto.name, key: dto.key, organizationId: orgId },
+        data: {
+          name: dto.name,
+          key: dto.key,
+          description: dto.description,
+          organizationId: orgId,
+          createdById: userId,
+        },
       });
       await tx.projectMember.create({
         data: { projectId: project.id, userId, role: 'ADMIN' },
@@ -35,7 +42,7 @@ export class ProjectsService {
     return project;
   }
 
-  async update(projectId: string, userId: string, dto: { name?: string }) {
+  async update(projectId: string, userId: string, dto: UpdateProjectDto) {
     await this.findOne(projectId, userId);
     return this.prisma.project.update({ where: { id: projectId }, data: dto });
   }
