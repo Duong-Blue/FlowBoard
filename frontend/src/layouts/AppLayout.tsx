@@ -4,6 +4,7 @@ import { logout } from '../store/slices/authSlice';
 import { Menu, X, LogOut, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
+import { AppBreadcrumb } from '../components/shared/AppBreadcrumb';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
+
+function NavItem({ to, children, isActive, onClick }: { to: string; children: React.ReactNode; isActive?: boolean; onClick?: () => void }) {
+  const location = useLocation();
+  const isCurrent = isActive ?? location.pathname.startsWith(to);
+  return (
+    <Link 
+      to={to} 
+      className={`block px-2 py-1.5 rounded-md text-xs font-medium transition-colors ${
+        isCurrent 
+          ? 'bg-slate-200/60 text-slate-900 font-semibold' 
+          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+      }`}
+      onClick={onClick}
+    >
+      {children}
+    </Link>
+  );
+}
 
 export default function AppLayout() {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
@@ -50,26 +69,10 @@ export default function AppLayout() {
   };
 
   const displayName = user?.name || user?.email || 'User';
-
-  const NavLink = ({ to, children, isActive }: { to: string, children: React.ReactNode, isActive?: boolean }) => {
-    const isCurrent = isActive ?? location.pathname.startsWith(to);
-    return (
-      <Link 
-        to={to} 
-        className={`block px-3 py-2 rounded-md text-sm transition-colors ${
-          isCurrent 
-            ? 'bg-slate-100 text-slate-900 font-semibold' 
-            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-        }`}
-        onClick={() => setIsMobileMenuOpen(false)}
-      >
-        {children}
-      </Link>
-    );
-  };
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
+    <div className="min-h-screen flex bg-white">
       {isMobileMenuOpen && (
         <div 
           className="fixed inset-0 bg-black/20 z-40 lg:hidden"
@@ -78,10 +81,10 @@ export default function AppLayout() {
       )}
 
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static
+        fixed inset-y-0 left-0 z-50 w-64 bg-slate-50 border-r border-slate-200 flex flex-col transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="h-14 border-b border-slate-200 flex items-center justify-between px-4">
+        <div className="h-12 border-b border-slate-200 flex items-center justify-between px-4">
           <Link to="/" className="font-semibold text-lg flex items-center">
             FlowBoard
           </Link>
@@ -93,47 +96,49 @@ export default function AppLayout() {
           </button>
         </div>
         
-        <div className="p-4 border-b border-slate-200 space-y-2">
+        <div className="p-3 border-b border-slate-200 space-y-1">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Organization</div>
           {orgs.map((org) => (
-            <NavLink 
+            <NavItem 
               key={org.id} 
               to={`/orgs/${org.id}`}
               isActive={activeOrgId === org.id}
+              onClick={closeMobileMenu}
             >
               {org.name}
-            </NavLink>
+            </NavItem>
           ))}
           {orgs.length === 0 && (
             <div className="text-sm text-slate-500 px-3">No organizations</div>
           )}
         </div>
         
-        <div className="flex-1 p-4 overflow-y-auto space-y-2">
+        <div className="flex-1 p-3 overflow-y-auto space-y-1">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Projects</div>
           {projects.map((project) => (
-            <NavLink 
+            <NavItem 
               key={project.id} 
               to={`/projects/${project.id}`}
               isActive={activeProjectId === project.id}
+              onClick={closeMobileMenu}
             >
               {project.name}
-            </NavLink>
+            </NavItem>
           ))}
           {projects.length === 0 && (
             <div className="text-sm text-slate-500 px-3">No projects</div>
           )}
         </div>
         
-        <div className="p-4 border-t border-slate-200">
-           <NavLink to="/settings" isActive={location.pathname === '/settings'}>
+        <div className="p-3 border-t border-slate-200">
+           <NavItem to="/settings" isActive={location.pathname === '/settings'} onClick={closeMobileMenu}>
              Settings
-           </NavLink>
+           </NavItem>
         </div>
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="h-14 bg-white border-b border-slate-200 flex items-center px-4 lg:px-6 shrink-0">
+        <header className="h-12 bg-white border-b border-slate-200 flex items-center px-4 lg:px-6 shrink-0">
           <button 
             className="lg:hidden p-2 -ml-2 mr-2 rounded-md text-slate-500 hover:bg-slate-100"
             onClick={() => setIsMobileMenuOpen(true)}
@@ -142,13 +147,13 @@ export default function AppLayout() {
           </button>
           
           <div className="flex-1 flex items-center text-sm text-slate-500">
-             <div className="hidden sm:block">Breadcrumb goes here</div>
+             <div className="hidden sm:block"><AppBreadcrumb /></div>
           </div>
           
           <div className="flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 hover:bg-slate-50 p-1.5 rounded-md transition-colors outline-none">
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-7 w-7">
                   <AvatarFallback className="bg-slate-100 text-slate-600 text-xs">
                     {getInitials(displayName)}
                   </AvatarFallback>
@@ -178,10 +183,11 @@ export default function AppLayout() {
           </div>
         </header>
         
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-slate-50">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-white">
           <Outlet />
         </div>
       </main>
     </div>
   );
 }
+

@@ -1,5 +1,6 @@
 
 import { Link, Outlet } from "react-router-dom";
+import { Toaster } from "../components/ui/sonner";
 
 export default function RootLayout() {
   return (
@@ -15,6 +16,7 @@ export default function RootLayout() {
       <footer className="bg-gray-800 text-white p-4 text-center">
         © {new Date().getFullYear()} FlowBoard. All rights reserved.
       </footer>
+      <Toaster position="top-right" />
     </div>
   );
 }

@@ -1,7 +1,16 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosError } from 'axios';
 
+const getApiUrl = () => {
+  let envUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  envUrl = envUrl.replace(/\/$/, '');
+  if (!envUrl.endsWith('/api')) {
+    envUrl = `${envUrl}/api`;
+  }
+  return envUrl;
+};
+
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: getApiUrl(),
 });
 
 let store: any;
@@ -15,6 +24,19 @@ const clearAuthStorage = () => {
 };
 
 api.interceptors.request.use((config) => {
+  if (config.url) {
+    let cleanUrl = config.url;
+    if (cleanUrl.startsWith('/api/')) {
+      cleanUrl = cleanUrl.replace(/^\/api/, '');
+    } else if (cleanUrl.startsWith('api/')) {
+      cleanUrl = cleanUrl.replace(/^api/, '');
+    }
+    if (!cleanUrl.startsWith('/')) {
+      cleanUrl = `/${cleanUrl}`;
+    }
+    config.url = cleanUrl;
+  }
+
   const token = store?.getState()?.auth?.accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -64,7 +86,7 @@ api.interceptors.response.use(
       }
 
       try {
-        const { data } = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/auth/refresh`, { refreshToken });
+        const { data } = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/auth/refresh`, { refreshToken });
         if (store && data.accessToken && data.user) {
           store.dispatch({ type: 'auth/setCredentials', payload: { user: data.user, accessToken: data.accessToken } });
         }
@@ -82,6 +104,12 @@ api.interceptors.response.use(
       } finally {
         isRefreshing = false;
       }
+    }
+
+    const serverMessage = (error.response?.data as { message?: string | string[] })?.message;
+    if (serverMessage) {
+      const formatted = Array.isArray(serverMessage) ? serverMessage.join(', ') : serverMessage;
+      return Promise.reject(new Error(formatted));
     }
     return Promise.reject(error);
   }

@@ -7,10 +7,21 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
+const getStoredUser = (): User | null => {
+  try {
+    const item = localStorage.getItem('user');
+    return item ? JSON.parse(item) : null;
+  } catch {
+    return null;
+  }
+};
+
+const initialUser = getStoredUser();
+
 const initialState: AuthState = {
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  user: initialUser,
   accessToken: null,
-  isAuthenticated: !!localStorage.getItem('user'),
+  isAuthenticated: !!initialUser,
 };
 
 const authSlice = createSlice({

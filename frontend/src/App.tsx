@@ -57,6 +57,13 @@ const router = createBrowserRouter([
   },
 ]);
 
+import { Toaster } from './components/ui/sonner';
+
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster position="top-right" />
+    </>
+  );
 }
