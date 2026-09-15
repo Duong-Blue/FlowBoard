@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Users } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { PageLoader } from '../../components/shared/PageLoader';
+import { EmptyState } from '../../components/shared/EmptyState';
+import { SemanticBadge } from '../../components/shared/SemanticBadge';
 import { getOrgMembers, updateOrgMemberRole, removeOrgMember } from '../../services/memberService';
 import type { Member } from '../../store/types';
 import { useAppSelector } from '../../store';
@@ -14,20 +20,33 @@ export default function OrgMembersPage() {
 
   useEffect(() => {
     if (!orgId) return;
-    loadMembers();
+    let isMounted = true;
+    getOrgMembers(orgId)
+      .then((data) => {
+        if (isMounted) {
+          setMembers(data);
+          setError(null);
+          setLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load members');
+          setLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [orgId]);
 
   const loadMembers = async () => {
+    if (!orgId) return;
     try {
-      setLoading(true);
-      setError(null);
-      const data = await getOrgMembers(orgId!);
+      const data = await getOrgMembers(orgId);
       setMembers(data);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to load members';
-      setError(message);
-    } finally {
-      setLoading(false);
+      toast.error(err instanceof Error ? err.message : 'Failed to load members');
     }
   };
 
@@ -56,60 +75,70 @@ export default function OrgMembersPage() {
   const isOwnerOrAdmin = currentMember?.role === 'OWNER' || currentMember?.role === 'ADMIN';
   const isOwner = currentMember?.role === 'OWNER';
 
-  if (loading) return <div>Loading members...</div>;
+  if (loading) return <PageLoader />;
   if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Organization Members</h1>
-      <div className="bg-white rounded-lg shadow">
-        <ul className="divide-y divide-gray-200">
-          {members.map((member) => {
+      <div className="border border-slate-200 rounded-md divide-y divide-slate-200 bg-white">
+        {members.length === 0 ? (
+          <div className="p-8">
+            <EmptyState icon={Users} title="No members found" description="Add members to get started." className="border-none" />
+          </div>
+        ) : (
+          members.map((member) => {
             const isSelf = member.userId === currentUser?.id;
             const canManage = isOwnerOrAdmin && !isSelf && (isOwner || member.role !== 'OWNER');
 
             return (
-              <li key={member.userId} className="p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-600 font-medium">{member.name[0]?.toUpperCase()}</span>
+              <div key={member.userId} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="h-7 w-7 text-xs bg-slate-100 text-slate-700 rounded-full flex items-center justify-center font-medium">
+                    {member.name?.charAt(0).toUpperCase() || '?'}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {member.name} {isSelf && <span className="text-gray-500">(You)</span>}
-                    </p>
-                    <p className="text-sm text-gray-500">{member.email}</p>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-slate-900">
+                      {member.name} {isSelf && <span className="text-slate-500 font-normal">(You)</span>}
+                    </span>
+                    <span className="text-xs text-slate-500">{member.email}</span>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {member.role}
-                  </span>
+                
+                <div className="flex items-center gap-3">
+                  {canManage ? (
+                    <Select
+                      value={member.role}
+                      onValueChange={(val: string) => handleRoleChange(member.userId, val)}
+                    >
+                      <SelectTrigger className="w-28 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isOwner && <SelectItem value="OWNER">Owner</SelectItem>}
+                        <SelectItem value="ADMIN">Admin</SelectItem>
+                        <SelectItem value="MEMBER">Member</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <SemanticBadge status={member.role.toLowerCase()}>{member.role}</SemanticBadge>
+                  )}
                   
                   {canManage && (
-                    <div className="flex items-center space-x-2">
-                      <select
-                        value={member.role}
-                        onChange={(e) => handleRoleChange(member.userId, e.target.value)}
-                        className="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                      >
-                        {isOwner && <option value="OWNER">Owner</option>}
-                        <option value="ADMIN">Admin</option>
-                        <option value="MEMBER">Member</option>
-                      </select>
-                      <button
-                        onClick={() => handleRemove(member.userId)}
-                        className="text-sm text-red-600 hover:text-red-900"
-                      >
-                        Remove
-                      </button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 px-2"
+                      onClick={() => handleRemove(member.userId)}
+                    >
+                      Remove
+                    </Button>
                   )}
                 </div>
-              </li>
+              </div>
             );
-          })}
-        </ul>
+          })
+        )}
       </div>
     </div>
   );

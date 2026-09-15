@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,23 +16,27 @@ export default function CreateOrgPage() {
   
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
+  const [isCustomSlug, setIsCustomSlug] = useState(false);
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Auto-generate slug from name
-  useEffect(() => {
-    if (name) {
+  const handleNameChange = (val: string) => {
+    setName(val);
+    if (!isCustomSlug) {
       setSlug(
-        name
+        val
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/(^-|-$)+/g, '')
       );
-    } else {
-      setSlug('');
     }
-  }, [name]);
+  };
+
+  const handleSlugChange = (val: string) => {
+    setSlug(val);
+    setIsCustomSlug(true);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -66,7 +70,7 @@ export default function CreateOrgPage() {
             id="name" 
             placeholder="Acme Corp" 
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => handleNameChange(e.target.value)}
             required
           />
         </div>
@@ -77,7 +81,7 @@ export default function CreateOrgPage() {
             id="slug" 
             placeholder="acme-corp" 
             value={slug}
-            onChange={(e) => setSlug(e.target.value)}
+            onChange={(e) => handleSlugChange(e.target.value)}
             required
           />
           <p className="text-xs text-gray-500">This will be used in URLs</p>

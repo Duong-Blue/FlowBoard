@@ -4,8 +4,10 @@ import { useSelector } from 'react-redux';
 import { useAppDispatch } from '../../store';
 import { setOrgs, setActiveOrg } from '../../store/slices/orgSlice';
 import * as orgService from '../../services/orgService';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { PageLoader } from '../../components/shared/PageLoader';
+import { EmptyState } from '../../components/shared/EmptyState';
+import { Building2, ChevronRight } from 'lucide-react';
 import type { RootState, Organization } from '../../store/types';
 
 export default function OrgDashboard() {
@@ -31,40 +33,48 @@ export default function OrgDashboard() {
     navigate(`/orgs/${orgId}/projects`);
   };
 
+  if (loading) {
+    return <PageLoader text="Loading organizations..." className="min-h-[400px]" />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
-        <Button onClick={() => navigate('/orgs/new')}>+ New Organization</Button>
+        <Button size="sm" onClick={() => navigate('/orgs/new')}>
+          + New Organization
+        </Button>
       </div>
 
       {error && <div className="text-red-500">{error}</div>}
 
-      {!loading && orgs.length === 0 && !error && (
-        <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg border-gray-200">
-          <h2 className="text-xl font-semibold mb-2">No organizations yet</h2>
-          <p className="text-gray-500 mb-4">Create your first organization to get started.</p>
-          <Button onClick={() => navigate('/orgs/new')}>Create Organization</Button>
+      {!loading && orgs.length === 0 && !error ? (
+        <EmptyState
+          icon={Building2}
+          title="No organizations yet"
+          description="Create your first organization to get started."
+          action={<Button onClick={() => navigate('/orgs/new')}>Create Organization</Button>}
+        />
+      ) : (
+        <div className="divide-y divide-slate-200 border border-slate-200 rounded-md bg-white">
+          {orgs.map((org: Organization) => (
+            <div
+              key={org.id}
+              onClick={() => handleOrgClick(org.id)}
+              className="flex items-center justify-between p-4 hover:bg-slate-50/80 cursor-pointer transition-colors"
+            >
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-semibold text-slate-900">{org.name}</span>
+                <span className="text-xs text-slate-500 font-mono">{org.slug}</span>
+                {org.description && (
+                  <span className="text-sm text-slate-600 line-clamp-1">{org.description}</span>
+                )}
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400" />
+            </div>
+          ))}
         </div>
       )}
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {orgs.map((org: Organization) => (
-          <Card 
-            key={org.id} 
-            className="cursor-pointer hover:border-gray-300 transition-colors"
-            onClick={() => handleOrgClick(org.id)}
-          >
-            <CardHeader>
-              <CardTitle>{org.name}</CardTitle>
-              {org.description && <CardDescription>{org.description}</CardDescription>}
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-500">Slug: {org.slug}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
     </div>
   );
 }
