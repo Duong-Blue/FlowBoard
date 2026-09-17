@@ -7,15 +7,28 @@ export class ProjectMemberGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const projectId = request.params.projectId;
-    const userId = request.user?.id || request.user?.sub;
+    const projectParam = request.params.projectId || request.params.id;
+    const userId = request.user?.id || request.user?.sub || request.user?.userId;
 
     if (!userId) {
       throw new ForbiddenException('User not authenticated');
     }
 
+    if (!projectParam) {
+      return true;
+    }
+
+    const project = await this.prisma.project.findFirst({
+      where: { OR: [{ id: projectParam }, { key: projectParam }] },
+      select: { id: true },
+    });
+
+    if (!project) {
+      throw new ForbiddenException('Not a project member');
+    }
+
     const member = await this.prisma.projectMember.findUnique({
-      where: { projectId_userId: { projectId, userId } },
+      where: { projectId_userId: { projectId: project.id, userId } },
     });
 
     if (!member) {

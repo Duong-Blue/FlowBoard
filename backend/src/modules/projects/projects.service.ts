@@ -7,7 +7,13 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(orgId: string, userId: string, dto: CreateProjectDto) {
+  async create(orgParam: string, userId: string, dto: CreateProjectDto) {
+    const org = await this.prisma.organization.findFirst({
+      where: { OR: [{ id: orgParam }, { slug: orgParam }] },
+    });
+    if (!org) throw new NotFoundException('Organization not found');
+    const orgId = org.id;
+
     const existing = await this.prisma.project.findFirst({ where: { organizationId: orgId, key: dto.key } });
     if (existing) throw new ConflictException('Project key must be unique');
 
@@ -28,27 +34,34 @@ export class ProjectsService {
     });
   }
 
-  async findAll(orgId: string, userId: string) {
+  async findAll(orgParam: string, userId: string) {
+    const org = await this.prisma.organization.findFirst({
+      where: { OR: [{ id: orgParam }, { slug: orgParam }] },
+    });
+    if (!org) return [];
     return this.prisma.project.findMany({
-      where: { organizationId: orgId, members: { some: { userId } } },
+      where: { organizationId: org.id, members: { some: { userId } } },
     });
   }
 
   async findOne(projectId: string, userId: string) {
     const project = await this.prisma.project.findFirst({
-      where: { id: projectId, members: { some: { userId } } },
+      where: {
+        OR: [{ id: projectId }, { key: projectId }],
+        members: { some: { userId } },
+      },
     });
     if (!project) throw new NotFoundException();
     return project;
   }
 
   async update(projectId: string, userId: string, dto: UpdateProjectDto) {
-    await this.findOne(projectId, userId);
-    return this.prisma.project.update({ where: { id: projectId }, data: dto });
+    const targetProject = await this.findOne(projectId, userId);
+    return this.prisma.project.update({ where: { id: targetProject.id }, data: dto });
   }
 
   async delete(projectId: string, userId: string) {
-    await this.findOne(projectId, userId);
-    return this.prisma.project.delete({ where: { id: projectId } });
+    const targetProject = await this.findOne(projectId, userId);
+    return this.prisma.project.delete({ where: { id: targetProject.id } });
   }
 }

@@ -37,27 +37,30 @@ export class OrganizationsService {
 
   async findOne(orgId: string, userId: string) {
     const org = await this.prisma.organization.findFirst({
-      where: { id: orgId, members: { some: { userId } } },
+      where: {
+        OR: [{ id: orgId }, { slug: orgId }],
+        members: { some: { userId } },
+      },
     });
     if (!org) throw new NotFoundException('Organization not found');
     return org;
   }
 
   async update(orgId: string, userId: string, dto: UpdateOrganizationDto) {
-    await this.findOne(orgId, userId);
+    const org = await this.findOne(orgId, userId);
     return this.prisma.organization.update({
-      where: { id: orgId },
+      where: { id: org.id },
       data: dto,
     });
   }
 
   async delete(orgId: string, userId: string) {
-    await this.findOne(orgId, userId);
+    const targetOrg = await this.findOne(orgId, userId);
     const org = await this.prisma.organization.findUnique({
-      where: { id: orgId },
+      where: { id: targetOrg.id },
       include: { projects: true },
     });
     if (org?.projects.length) throw new Error('Cannot delete org with projects');
-    return this.prisma.organization.delete({ where: { id: orgId } });
+    return this.prisma.organization.delete({ where: { id: targetOrg.id } });
   }
 }

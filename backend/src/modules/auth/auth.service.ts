@@ -32,11 +32,11 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.usersService.findByEmail(loginDto.email);
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Invalid email or password');
     }
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Invalid email or password');
     }
     await this.usersService.updateLastLogin(user.id);
     return this.generateTokens(user);
@@ -87,6 +87,18 @@ export class AuthService {
       },
     });
 
-    return { accessToken, refreshToken: rawRefreshToken };
+    const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+      accessToken,
+      refreshToken: rawRefreshToken,
+    };
   }
 }

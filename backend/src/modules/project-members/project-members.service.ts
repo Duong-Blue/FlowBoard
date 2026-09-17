@@ -15,7 +15,16 @@ export class ProjectMembersService {
     }
   }
 
-  async add(projectId: string, dto: { userId: string; role: ProjectRole }, requesterId: string) {
+  private async resolveProjectId(projectParam: string): Promise<string> {
+    const project = await this.prisma.project.findFirst({
+      where: { OR: [{ id: projectParam }, { key: projectParam }] },
+      select: { id: true },
+    });
+    return project?.id || projectParam;
+  }
+
+  async add(projectParam: string, dto: { userId: string; role: ProjectRole }, requesterId: string) {
+    const projectId = await this.resolveProjectId(projectParam);
     const project = await this.prisma.project.findUnique({ where: { id: projectId } });
     if (!project) throw new NotFoundException('Project not found');
 
@@ -38,14 +47,16 @@ export class ProjectMembersService {
     });
   }
 
-  async findAll(projectId: string, requesterId: string) {
+  async findAll(projectParam: string, requesterId: string) {
+    const projectId = await this.resolveProjectId(projectParam);
     return this.prisma.projectMember.findMany({
       where: { projectId },
       include: { user: true },
     });
   }
 
-  async updateRole(projectId: string, targetUserId: string, requesterId: string, role: ProjectRole) {
+  async updateRole(projectParam: string, targetUserId: string, requesterId: string, role: ProjectRole) {
+    const projectId = await this.resolveProjectId(projectParam);
     const project = await this.prisma.project.findUnique({ where: { id: projectId } });
     if (!project) throw new NotFoundException('Project not found');
 
@@ -57,7 +68,8 @@ export class ProjectMembersService {
     });
   }
 
-  async remove(projectId: string, targetUserId: string, requesterId: string) {
+  async remove(projectParam: string, targetUserId: string, requesterId: string) {
+    const projectId = await this.resolveProjectId(projectParam);
     const project = await this.prisma.project.findUnique({ where: { id: projectId } });
     if (!project) throw new NotFoundException('Project not found');
 
