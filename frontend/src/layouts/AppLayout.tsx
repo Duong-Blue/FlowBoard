@@ -101,7 +101,7 @@ export default function AppLayout() {
           {orgs.map((org) => (
             <NavItem 
               key={org.id} 
-              to={`/orgs/${org.id}`}
+              to={`/orgs/${org.slug || org.id}/projects`}
               isActive={activeOrgId === org.id}
               onClick={closeMobileMenu}
             >
@@ -115,16 +115,49 @@ export default function AppLayout() {
         
         <div className="flex-1 p-3 overflow-y-auto space-y-1">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Projects</div>
-          {projects.map((project) => (
-            <NavItem 
-              key={project.id} 
-              to={`/projects/${project.id}`}
-              isActive={activeProjectId === project.id}
-              onClick={closeMobileMenu}
-            >
-              {project.name}
-            </NavItem>
-          ))}
+          {projects.map((project) => {
+            const currentOrg = orgs.find(o => o.id === (activeOrgId || project.orgId));
+            const orgSlug = currentOrg?.slug || activeOrgId || project.orgId;
+            const projectKey = project.key || project.id;
+            const isProjectActive = activeProjectId === project.id || location.pathname.includes(`/projects/${projectKey}`) || location.pathname.includes(`/projects/${project.id}`);
+            const projectPath = `/orgs/${orgSlug}/projects/${projectKey}/issues`;
+            return (
+              <div key={project.id} className="space-y-0.5">
+                <NavItem 
+                  to={projectPath}
+                  isActive={isProjectActive}
+                  onClick={closeMobileMenu}
+                >
+                  {project.name}
+                </NavItem>
+                {isProjectActive && (
+                  <div className="pl-3 space-y-0.5 border-l-2 border-slate-200 ml-2.5 my-1">
+                    <NavItem 
+                      to={`/orgs/${orgSlug}/projects/${projectKey}/issues`} 
+                      isActive={location.pathname.endsWith('/issues')}
+                      onClick={closeMobileMenu}
+                    >
+                      Kanban / Issues
+                    </NavItem>
+                    <NavItem 
+                      to={`/orgs/${orgSlug}/projects/${projectKey}/members`} 
+                      isActive={location.pathname.endsWith('/members')}
+                      onClick={closeMobileMenu}
+                    >
+                      Members
+                    </NavItem>
+                    <NavItem 
+                      to={`/orgs/${orgSlug}/projects/${projectKey}/settings`} 
+                      isActive={location.pathname.endsWith('/settings')}
+                      onClick={closeMobileMenu}
+                    >
+                      Settings
+                    </NavItem>
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {projects.length === 0 && (
             <div className="text-sm text-slate-500 px-3">No projects</div>
           )}

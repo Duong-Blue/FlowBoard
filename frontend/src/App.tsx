@@ -10,6 +10,9 @@ import ProjectListPage from './pages/projects/ProjectListPage';
 import CreateProjectPage from './pages/projects/CreateProjectPage';
 import ProjectSettingsPage from './pages/projects/ProjectSettingsPage';
 import ProjectMembersPage from './pages/projects/ProjectMembersPage';
+import IssueListPage from './pages/projects/IssueListPage';
+import BoardPage from './pages/projects/BoardPage';
+import { IssueDetailPage } from './features/issues/pages/IssueDetailPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import InvitationsPage from './pages/invitations/InvitationsPage';
@@ -44,8 +47,15 @@ const router = createBrowserRouter([
           { path: 'orgs/:orgId/projects', element: <ProjectListPage /> },
           { path: 'orgs/:orgId/projects/new', element: <CreateProjectPage /> },
           { path: 'orgs/:orgId/projects/:projectId/members', element: <ProjectMembersPage /> },
+          { path: 'projects/:projectId/members', element: <ProjectMembersPage /> },
           { path: 'orgs/:orgId/projects/:projectId/settings', element: <ProjectSettingsPage /> },
-          { path: 'org/:orgId/project/:projectId', element: <div>TODO Project Board Page</div> },
+          { path: 'projects/:projectId/settings', element: <ProjectSettingsPage /> },
+          { path: 'orgs/:orgId/projects/:projectId/issues/:issueId', element: <IssueDetailPage /> },
+          { path: 'projects/:projectId/issues/:issueId', element: <IssueDetailPage /> },
+          { path: 'orgs/:orgId/projects/:projectId/issues', element: <IssueListPage /> },
+          { path: 'projects/:projectId/issues', element: <IssueListPage /> },
+          { path: 'orgs/:orgId/projects/:projectId/board', element: <BoardPage /> },
+          { path: 'projects/:projectId/board', element: <BoardPage /> },
           { path: 'orgs/:orgId/members', element: <OrgMembersPage /> },
           { path: 'orgs/:orgId/invitations', element: <InvitationsPage /> },
           { path: 'orgs/:orgId/settings', element: <OrgSettingsPage /> },

@@ -19,7 +19,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div 
-      className={cn("flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center", className)}
+      className={cn("flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 p-8 text-center", className)}
       {...props}
     >
       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 mb-4">
