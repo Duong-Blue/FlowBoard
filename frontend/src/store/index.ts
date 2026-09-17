@@ -4,6 +4,7 @@ import type { TypedUseSelectorHook } from 'react-redux';
 import authReducer from './slices/authSlice';
 import orgReducer from './slices/orgSlice';
 import projectReducer from './slices/projectSlice';
+import issueReducer from './slices/issueSlice';
 import type { RootState, AppDispatch } from './types';
 
 export const store = configureStore({
@@ -11,6 +12,7 @@ export const store = configureStore({
     auth: authReducer,
     org: orgReducer,
     project: projectReducer,
+    issue: issueReducer,
   },
 });
 

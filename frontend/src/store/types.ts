@@ -40,3 +40,57 @@ export interface Invitation {
   role: string;
   orgId: string;
 }
+
+export interface IssueUser {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+  email: string;
+  avatarUrl?: string;
+}
+
+export type IssueStatus = 'TODO' | 'IN_PROGRESS' | 'IN_PREVIEW' | 'DONE';
+
+export interface Issue {
+  id: string;
+  projectId: string;
+  key: string;
+  title: string;
+  description?: string;
+  status: IssueStatus | string;
+  priority: string;
+  assigneeId?: string;
+  reporterId: string;
+  createdAt: string;
+  updatedAt: string;
+  assignee?: IssueUser;
+  reporter?: IssueUser;
+}
+
+export interface MoveIssuePayload {
+  issueId: string;
+  sourceStatus: IssueStatus;
+  targetStatus: IssueStatus;
+  beforeIssueId: string | null;
+  afterIssueId: string | null;
+}
+
+export interface IssueFilters {
+  search?: string;
+  status?: string;
+  priority?: string;
+  assigneeId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface IssueListResponse {
+  items: Issue[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
