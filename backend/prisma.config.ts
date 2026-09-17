@@ -5,5 +5,6 @@ export default defineConfig({
   earlyAccess: true,
   datasource: {
     url: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/flowboard_dev',
+    shadowDatabaseUrl: 'postgresql://postgres:password@localhost:5432/flowboard_shadow',
   },
 });

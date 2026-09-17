@@ -1,18 +1,25 @@
 model User {
-  id              String         @id @default(uuid())
-  email           String         @unique
+  id              String               @id @default(uuid())
+  email           String               @unique
   passwordHash    String
   firstName       String
   lastName        String
   displayName     String?
   avatarUrl       String?
-  isActive        Boolean        @default(true)
+  isActive        Boolean              @default(true)
   emailVerifiedAt DateTime?
   lastLoginAt     DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
   refreshTokens   RefreshToken[]
   orgMemberships  OrganizationMember[]
+  reportedIssues  Issue[]              @relation("IssueReporter")
+  assignedIssues  Issue[]              @relation("IssueAssignee")
+
   projectMemberships ProjectMember[]
-  invitations     Invitation[]
+
+  invitations Invitation[]
+  comments Comment[]    @relation("CommentAuthor")
+  activities IssueActivity[] @relation("ActivityActor")
 }
+

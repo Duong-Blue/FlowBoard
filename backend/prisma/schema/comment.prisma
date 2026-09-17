@@ -1,0 +1,16 @@
+
+model Comment {
+  id        String   @id @default(uuid())
+  issueId   String
+  authorId  String?
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  author User? @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([issueId, createdAt, id])
+  @@index([authorId])
+  @@map("comments")
+}

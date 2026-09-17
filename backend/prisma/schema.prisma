@@ -7,3 +7,38 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum IssueStatus {
+  TODO
+  IN_PROGRESS
+  IN_PREVIEW
+  DONE
+}
+
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Issue {
+  id          String    @id @default(cuid())
+  projectId   String
+  issueKey    String    @unique // Add this line
+  reporterId  String
+  assigneeId  String? // Optional assignee
+  title       String
+  description String? // Optional description
+  status      IssueStatus @default(TODO)
+  priority    IssuePriority @default(MEDIUM)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reporter  User      @relation("ReporterIssues", fields: [reporterId], references: [id])
+  assignee  User?     @relation("AssigneeIssues", fields: [assigneeId], references: [id])
+
+  @@index([projectId, reporterId])
+  @@index([projectId, assigneeId])
+}

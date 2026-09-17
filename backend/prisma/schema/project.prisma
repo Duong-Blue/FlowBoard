@@ -4,17 +4,20 @@ enum ProjectStatus {
 }
 
 model Project {
-  id             String         @id @default(uuid())
+  id             String        @id @default(uuid())
   organizationId String
   name           String
   key            String
   description    String?
-  status         ProjectStatus  @default(ACTIVE)
+  status         ProjectStatus @default(ACTIVE)
   createdById    String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  organization   Organization   @relation(fields: [organizationId], references: [id])
-  members        ProjectMember[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  issueSequence  Int           @default(0)
+  issues         Issue[]
+
+  members ProjectMember[]
 
   @@unique([organizationId, key])
 }

@@ -1,0 +1,27 @@
+enum ActivityType {
+  ISSUE_CREATED
+  TITLE_CHANGED
+  DESCRIPTION_CHANGED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  ASSIGNEE_CHANGED
+  COMMENT_CREATED
+  COMMENT_UPDATED
+  COMMENT_DELETED
+}
+
+model IssueActivity {
+  id        String       @id @default(uuid())
+  issueId   String
+  actorId   String?
+  type      ActivityType
+  metadata  Json         @default("{}")
+  createdAt DateTime     @default(now())
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  actor User? @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([issueId, createdAt, id])
+  @@index([actorId])
+  @@map("issue_activities")
+}
