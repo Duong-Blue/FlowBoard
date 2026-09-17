@@ -9,6 +9,7 @@ import { OrgMembersModule } from './modules/org-members/org-members.module';
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { ProjectMembersModule } from './modules/project-members/project-members.module';
+import { IssuesModule } from './modules/issues/issues.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ProjectMembersModule } from './modules/project-members/project-members.
     InvitationsModule,
     ProjectsModule,
     ProjectMembersModule,
+    IssuesModule, // Import IssuesModule
   ],
   controllers: [],
   providers: [],
