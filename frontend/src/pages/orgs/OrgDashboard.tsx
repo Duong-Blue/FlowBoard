@@ -28,9 +28,9 @@ export default function OrgDashboard() {
     fetchOrgs();
   }, [dispatch]);
 
-  const handleOrgClick = (orgId: string) => {
-    dispatch(setActiveOrg(orgId));
-    navigate(`/orgs/${orgId}/projects`);
+  const handleOrgClick = (org: Organization) => {
+    dispatch(setActiveOrg(org.id));
+    navigate(`/orgs/${org.slug || org.id}/projects`);
   };
 
   if (loading) {
@@ -60,7 +60,7 @@ export default function OrgDashboard() {
           {orgs.map((org: Organization) => (
             <div
               key={org.id}
-              onClick={() => handleOrgClick(org.id)}
+              onClick={() => handleOrgClick(org)}
               className="flex items-center justify-between p-4 hover:bg-slate-50/80 cursor-pointer transition-colors"
             >
               <div className="flex flex-col gap-1">

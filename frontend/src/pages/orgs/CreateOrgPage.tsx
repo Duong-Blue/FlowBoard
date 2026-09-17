@@ -58,7 +58,7 @@ export default function CreateOrgPage() {
     <div className="max-w-md mx-auto space-y-6 mt-10">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold">Create Organization</h1>
-        <p className="text-gray-500">Setup a new workspace for your team</p>
+        <p className="text-slate-500">Setup a new workspace for your team</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -84,7 +84,7 @@ export default function CreateOrgPage() {
             onChange={(e) => handleSlugChange(e.target.value)}
             required
           />
-          <p className="text-xs text-gray-500">This will be used in URLs</p>
+          <p className="text-xs text-slate-500">This will be used in URLs</p>
         </div>
 
         <div className="space-y-2">

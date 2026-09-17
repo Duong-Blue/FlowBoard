@@ -99,7 +99,7 @@ export default function RegisterPage() {
           <Button className="w-full" type="submit" disabled={isLoading}>
             {isLoading ? 'Creating account...' : 'Create account'}
           </Button>
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm text-slate-500">
             Already have an account?{' '}
             <Link to="/register" className="font-semibold text-primary hover:underline">
               Sign in
