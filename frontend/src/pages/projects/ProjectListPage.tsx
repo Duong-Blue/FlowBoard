@@ -71,14 +71,15 @@ export default function ProjectListPage() {
                 <th className="px-4 py-3 font-medium text-slate-500">Project Name</th>
                 <th className="px-4 py-3 font-medium text-slate-500">Key</th>
                 <th className="px-4 py-3 font-medium text-slate-500">Status</th>
-                <th className="px-4 py-3 font-medium text-slate-500 w-1/2">Description</th>
+                <th className="px-4 py-3 font-medium text-slate-500">Description</th>
+                <th className="px-4 py-3 font-medium text-slate-500 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {projects.map((project) => (
                 <tr
                   key={project.id}
-                  onClick={() => navigate(`/orgs/${orgId}/projects/${project.id}/members`)}
+                  onClick={() => navigate(`/orgs/${orgId}/projects/${project.key || project.id}/issues`)}
                   className="hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   <td className="px-4 py-3 text-sm font-medium text-slate-900">
@@ -96,6 +97,24 @@ export default function ProjectListPage() {
                   </td>
                   <td className="px-4 py-3 text-slate-500 truncate max-w-xs">
                     {project.description || 'No description provided.'}
+                  </td>
+                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/orgs/${orgId}/projects/${project.key || project.id}/issues`)}
+                      >
+                        Board / Issues
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/orgs/${orgId}/projects/${project.key || project.id}/members`)}
+                      >
+                        Members
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

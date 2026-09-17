@@ -1,0 +1,211 @@
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { 
+  DndContext, 
+  DragOverlay, 
+  closestCorners, 
+  KeyboardSensor, 
+  PointerSensor, 
+  useSensor, 
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { fetchBoardIssues, moveCardOptimistic, rollbackMove } from '../../store/slices/issueSlice';
+import { moveIssue } from '../../services/issueService';
+import { getProjectMembers } from '../../services/memberService';
+import { PageLoader } from '../../components/shared/PageLoader';
+import { BoardColumn } from './components/BoardColumn';
+import { DragOverlayCard } from './components/DragOverlayCard';
+import type { Issue, IssueStatus, Member } from '../../store/types';
+import { toast } from 'sonner';
+import { LayoutList, LayoutDashboard } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+
+const COLUMNS: { id: IssueStatus; title: string }[] = [
+  { id: 'TODO', title: 'To Do' },
+  { id: 'IN_PROGRESS', title: 'In Progress' },
+  { id: 'IN_PREVIEW', title: 'In Preview' },
+  { id: 'DONE', title: 'Done' }
+];
+
+export default function BoardPage() {
+  const { orgId, projectId } = useParams<{ orgId: string; projectId: string }>();
+  const dispatch = useAppDispatch();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const { columns, loading } = useAppSelector((state) => state.issue.board);
+  
+  const [members, setMembers] = useState<Member[]>([]);
+  const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
+
+  const currentMember = members.find((m) => m.userId === currentUser?.id);
+  const userRole = currentMember?.role;
+  const canDrag = !userRole || userRole === 'ADMIN' || userRole === 'MEMBER';
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  useEffect(() => {
+    if (!projectId) return;
+
+    const loadData = async () => {
+      dispatch(fetchBoardIssues(projectId));
+      try {
+        const membersRes = await getProjectMembers(projectId);
+        setMembers(membersRes);
+      } catch (err) {
+        console.error('Failed to load members', err);
+      }
+    };
+
+    loadData();
+  }, [projectId, dispatch]);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const { issue } = active.data.current ?? {};
+    if (issue) setActiveIssue(issue);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveIssue(null);
+    const { active, over } = event;
+    if (!over || !projectId) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    if (!activeData || !activeData.issue) return;
+
+    const sourceStatus = activeData.issue.status as IssueStatus;
+    let targetStatus: IssueStatus;
+    
+    // Determine target column
+    if (overData?.type === 'Column') {
+      targetStatus = overData.columnId as IssueStatus;
+    } else if (overData?.type === 'Issue') {
+      targetStatus = overData.issue.status as IssueStatus;
+    } else {
+      return;
+    }
+
+    const targetColumnIssues = (columns[targetStatus] || []).filter(i => i.id !== activeId);
+    
+    // Same position, no change
+    if (activeId === overId) return;
+
+    let beforeIssueId: string | null = null;
+    let afterIssueId: string | null = null;
+
+    if (overData?.type === 'Issue') {
+      const overIndex = targetColumnIssues.findIndex(i => i.id === overId);
+      if (overIndex !== -1) {
+        // Find if dragging below or above
+        const isBelowOverItem = over && active.rect.current.translated && active.rect.current.translated.top > over.rect.top + over.rect.height;
+        const modifier = isBelowOverItem ? 1 : 0;
+        const newIndex = overIndex >= 0 ? overIndex + modifier : overIndex + 1;
+        
+        if (newIndex <= 0) {
+          beforeIssueId = targetColumnIssues[0]?.id || null;
+        } else if (newIndex >= targetColumnIssues.length) {
+          afterIssueId = targetColumnIssues[targetColumnIssues.length - 1]?.id || null;
+        } else {
+          // It is between two items
+          afterIssueId = targetColumnIssues[newIndex - 1].id;
+          beforeIssueId = targetColumnIssues[newIndex].id;
+        }
+      }
+    } else {
+      // Dropping onto an empty column or at the end
+      if (targetColumnIssues.length > 0) {
+        afterIssueId = targetColumnIssues[targetColumnIssues.length - 1].id;
+      }
+    }
+
+    // Dispatch optimistic update
+    dispatch(moveCardOptimistic({
+      issueId: activeId,
+      sourceStatus,
+      targetStatus,
+      beforeIssueId,
+      afterIssueId
+    }));
+
+    try {
+      await moveIssue(projectId, activeId, {
+        status: targetStatus,
+        beforeIssueId,
+        afterIssueId
+      });
+    } catch (err) {
+      dispatch(rollbackMove());
+      toast.error('Failed to move issue');
+    }
+  };
+
+  if (loading && !Object.values(columns).some(col => col.length > 0)) {
+    return <PageLoader />;
+  }
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      <div className="flex-none pb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Board</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link to={`/orgs/${orgId}/projects/${projectId}/issues`}>
+                <LayoutList className="mr-2 h-4 w-4" />
+                List View
+              </Link>
+            </Button>
+            <Button variant="default" className="pointer-events-none opacity-50">
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Board View
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-x-auto overflow-y-hidden">
+        <DndContext
+          sensors={canDrag ? sensors : undefined}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex gap-4 h-full pb-4">
+            {COLUMNS.map(col => (
+              <BoardColumn
+                key={col.id}
+                id={col.id}
+                title={col.title}
+                issues={columns[col.id] || []}
+                disabled={!canDrag}
+              />
+            ))}
+          </div>
+
+          <DragOverlay>
+            {activeIssue ? <DragOverlayCard issue={activeIssue} /> : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
+    </div>
+  );
+}
