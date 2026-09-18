@@ -19,7 +19,7 @@ export default function AcceptInvitationPage() {
       setAccepting(true);
       setError(null);
       await acceptInvitation(orgId, token);
-      navigate('/');
+      navigate(`/workspace/orgs/${orgId}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to accept invitation');
       setAccepting(false);

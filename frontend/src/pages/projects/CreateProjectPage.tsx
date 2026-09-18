@@ -63,7 +63,7 @@ export default function CreateProjectPage() {
       const newProject = await createProject(orgId, { name, key, description });
       dispatch(addProject(newProject));
       toast.success('Project created successfully');
-      navigate(`/orgs/${orgId}/projects/${newProject.id}/members`);
+      navigate(`/workspace/orgs/${orgId}/projects/${newProject.key}/issues`);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to create project';
       toast.error(message);
@@ -124,7 +124,7 @@ export default function CreateProjectPage() {
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => navigate(`/orgs/${orgId}/projects`)}
+              onClick={() => navigate(`/workspace/orgs/${orgId}/projects`)}
               disabled={loading}
             >
               Cancel

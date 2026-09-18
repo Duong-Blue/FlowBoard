@@ -46,7 +46,7 @@ export default function CreateOrgPage() {
     try {
       const newOrg = await orgService.createOrg({ name, slug, description });
       dispatch(setOrgs([...orgs, newOrg]));
-      navigate(`/orgs/${newOrg.id}/projects`);
+      navigate(`/workspace/orgs/${newOrg.slug || newOrg.id}/projects`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create organization');
     } finally {
@@ -98,7 +98,7 @@ export default function CreateOrgPage() {
         </div>
 
         <div className="pt-4 flex gap-4">
-          <Button type="button" variant="outline" className="w-full" onClick={() => navigate('/')}>
+          <Button type="button" variant="outline" className="w-full" onClick={() => navigate('/workspace')}>
             Cancel
           </Button>
           <Button type="submit" className="w-full" disabled={loading || !name || !slug}>

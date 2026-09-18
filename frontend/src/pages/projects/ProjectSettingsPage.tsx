@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { updateProject, removeProject } from '../../store/slices/projectSlice';
-import { getProject, updateProject as updateProjectApi, deleteProject } from '../../services/projectService';
+import { updateProject as updateProjectApi, deleteProject } from '../../services/projectService';
 import { getOrgMembers } from '../../services/memberService';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Separator } from '../../components/ui/separator';
 import { toast } from 'sonner';
+import { PageLoader } from '../../components/shared/PageLoader';
+import NotFound from '../NotFound';
+import { useResolvedProject } from '@/hooks/useResolvedProject';
 import {
   Dialog,
   DialogContent,
@@ -28,10 +31,12 @@ import {
 } from '../../components/ui/select';
 
 export default function ProjectSettingsPage() {
-  const { orgId, projectId } = useParams<{ orgId: string; projectId: string }>();
+  const { orgId } = useParams<{ orgId: string }>();
+  const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+  const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
 
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -43,17 +48,21 @@ export default function ProjectSettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const currentOrgId = orgId || activeOrgId || project?.organizationId || project?.orgId;
+
   useEffect(() => {
-    async function loadData() {
-      if (!orgId || !projectId || !user) return;
+    if (!project) return;
+    setName(project.name);
+    setDescription(project.description || '');
+    setStatus(project.status || 'ACTIVE');
+  }, [project]);
+
+  useEffect(() => {
+    async function loadMembers() {
+      if (!currentOrgId || !user) return;
       try {
         setLoading(true);
-        const p = await getProject(projectId);
-        setName(p.name);
-        setDescription(p.description || '');
-        setStatus(p.status || 'ACTIVE');
-
-        const members = await getOrgMembers(orgId);
+        const members = await getOrgMembers(currentOrgId);
         const me = members.find((m: ProjectMember) => m.userId === user.id);
         setIsAdmin(me?.role === 'ADMIN' || me?.role === 'OWNER');
       } catch (err) {
@@ -63,15 +72,15 @@ export default function ProjectSettingsPage() {
         setLoading(false);
       }
     }
-    loadData();
-  }, [orgId, projectId, user]);
+    loadMembers();
+  }, [currentOrgId, user]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!projectId || !isAdmin) return;
+    if (!projectId || !currentOrgId || !isAdmin) return;
     try {
       setSaving(true);
-      const res = await updateProjectApi(projectId, { name, description, status });
+      const res = await updateProjectApi(currentOrgId, projectId, { name, description, status });
       dispatch(updateProject(res));
       toast.success('Project updated successfully');
     } catch {
@@ -82,10 +91,10 @@ export default function ProjectSettingsPage() {
   };
 
   const handleArchive = async () => {
-    if (!projectId || !isAdmin) return;
+    if (!projectId || !currentOrgId || !isAdmin) return;
     try {
       setSaving(true);
-      const res = await updateProjectApi(projectId, { status: 'ARCHIVED' });
+      const res = await updateProjectApi(currentOrgId, projectId, { status: 'ARCHIVED' });
       dispatch(updateProject(res));
       setStatus('ARCHIVED');
       toast.success('Project archived');
@@ -97,13 +106,13 @@ export default function ProjectSettingsPage() {
   };
 
   const handleDelete = async () => {
-    if (!projectId || !isAdmin || !orgId) return;
+    if (!projectId || !isAdmin || !currentOrgId) return;
     try {
       setDeleting(true);
-      await deleteProject(projectId);
+      await deleteProject(currentOrgId, projectId);
       dispatch(removeProject(projectId));
       toast.success('Project deleted');
-      navigate(`/orgs/${orgId}/projects`);
+      navigate(`/workspace/orgs/${currentOrgId}/projects`);
     } catch {
       toast.error('Failed to delete project');
       setDeleting(false);
@@ -111,7 +120,9 @@ export default function ProjectSettingsPage() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading settings...</div>;
+  if (projectLoading || loading) return <PageLoader />;
+
+  if (is404 || !project) return <NotFound />;
 
   if (!isAdmin) {
     return (

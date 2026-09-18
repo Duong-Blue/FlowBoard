@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAppDispatch } from '../../store';
 import { setCredentials } from '../../store/slices/authSlice';
 import { apiPost } from '../../utils/api_helper';
@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +34,10 @@ export default function LoginPage() {
       }));
       localStorage.setItem('refreshToken', response.refreshToken);
       toast.success('Logged in successfully');
-      navigate('/');
+      const from = (location.state as { from?: { pathname?: string; search?: string } })?.from?.pathname;
+      const fromSearch = (location.state as { from?: { pathname?: string; search?: string } })?.from?.search;
+      const redirectUrl = from + (fromSearch || '/workspace');
+      navigate(redirectUrl, { replace: true });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to login';
       toast.error(message);

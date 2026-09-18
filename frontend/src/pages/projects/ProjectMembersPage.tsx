@@ -10,11 +10,15 @@ import { SemanticBadge } from '../../components/shared/SemanticBadge';
 import { getProjectMembers, addProjectMember, updateProjectMemberRole, removeProjectMember, getOrgMembers } from '../../services/memberService';
 import type { Member } from '../../store/types';
 import { useAppSelector } from '../../store';
+import { useResolvedProject } from '@/hooks/useResolvedProject';
+import NotFound from '../NotFound';
 
 export default function ProjectMembersPage() {
-  const { orgId, projectId } = useParams<{ orgId: string; projectId: string }>();
+  const { orgId } = useParams<{ orgId: string }>();
+  const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
+  const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
   const [projectMembers, setProjectMembers] = useState<Member[]>([]);
   const [orgMembers, setOrgMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,14 +26,16 @@ export default function ProjectMembersPage() {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<string>('VIEWER');
 
+  const currentOrgId = orgId || activeOrgId || project?.organizationId || project?.orgId;
+
   useEffect(() => {
-    if (!orgId || !projectId) return;
+    if (!currentOrgId || !projectId) return;
     
     const loadMembers = async () => {
       try {
         const [projRes, orgRes] = await Promise.all([
           getProjectMembers(projectId),
-          getOrgMembers(orgId)
+          getOrgMembers(currentOrgId)
         ]);
         setProjectMembers(projRes);
         setOrgMembers(orgRes);
@@ -41,7 +47,7 @@ export default function ProjectMembersPage() {
     };
     
     loadMembers();
-  }, [orgId, projectId]);
+  }, [currentOrgId, projectId]);
 
   const handleAddMember = async () => {
     if (!projectId || !selectedUserId) return;
@@ -76,7 +82,8 @@ export default function ProjectMembersPage() {
     }
   };
 
-  if (loading) return <PageLoader />;
+  if (projectLoading || loading) return <PageLoader />;
+  if (is404 || !project) return <NotFound />;
 
   const currentUserProjectMember = projectMembers.find(m => m.userId === user?.id);
   const isAdmin = currentUserProjectMember?.role === 'ADMIN';
@@ -92,7 +99,7 @@ export default function ProjectMembersPage() {
           <h1 className="text-3xl font-bold tracking-tight">Project Members</h1>
           <p className="text-muted-foreground mt-2">Manage access to this project.</p>
         </div>
-        <Button variant="outline" onClick={() => navigate(`/orgs/${orgId}/projects`)}>
+        <Button variant="outline" onClick={() => navigate(`/workspace/orgs/${currentOrgId}/projects`)}>
           Back to Projects
         </Button>
       </div>

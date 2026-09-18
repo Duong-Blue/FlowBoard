@@ -1,7 +1,9 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import RootLayout from './layouts/RootLayout';
+import { createBrowserRouter, RouterProvider, useSearchParams, Outlet, Navigate } from 'react-router-dom';
+import PublicLayout from './layouts/PublicLayout';
 import AuthLayout from './layouts/AuthLayout';
-import AppLayout from './layouts/AppLayout';
+import WorkspaceLayout from './layouts/WorkspaceLayout';
+import { RequireAuth } from './components/shared/RequireAuth';
+import WorkspaceIndexRedirect from './components/shared/WorkspaceIndexRedirect';
 import NotFound from './pages/NotFound';
 import OrgMembersPage from './pages/orgs/OrgMembersPage';
 import OrgDashboard from './pages/orgs/OrgDashboard';
@@ -19,18 +21,34 @@ import InvitationsPage from './pages/invitations/InvitationsPage';
 import AcceptInvitationPage from './pages/invitations/AcceptInvitationPage';
 import DocumentTitleHelper from './components/DocumentTitleHelper';
 import OrgSettingsPage from './pages/orgs/OrgSettingsPage';
+import { Toaster } from './components/ui/sonner';
+import { SocketProvider } from './providers/SocketProvider';
+
+function ProjectIssuesRoute() {
+  const [searchParams] = useSearchParams();
+  const view = searchParams.get('view');
+  if (view === 'list') {
+    return <IssueListPage />;
+  }
+  return <BoardPage />;
+}
 
 const router = createBrowserRouter([
   {
-    path: '/',
     element: (
       <>
         <DocumentTitleHelper />
-        <RootLayout />
+        <Outlet />
       </>
     ),
     errorElement: <NotFound />,
     children: [
+      {
+        element: <PublicLayout />,
+        children: [
+          { path: '/', element: <Navigate to="/workspace" replace /> },
+        ],
+      },
       {
         element: <AuthLayout />,
         children: [
@@ -40,26 +58,30 @@ const router = createBrowserRouter([
         ],
       },
       {
-        element: <AppLayout />,
+        path: 'workspace',
+        element: <RequireAuth />,
         children: [
-          { index: true, element: <OrgDashboard /> },
-          { path: 'orgs/new', element: <CreateOrgPage /> },
-          { path: 'orgs/:orgId/projects', element: <ProjectListPage /> },
-          { path: 'orgs/:orgId/projects/new', element: <CreateProjectPage /> },
-          { path: 'orgs/:orgId/projects/:projectId/members', element: <ProjectMembersPage /> },
-          { path: 'projects/:projectId/members', element: <ProjectMembersPage /> },
-          { path: 'orgs/:orgId/projects/:projectId/settings', element: <ProjectSettingsPage /> },
-          { path: 'projects/:projectId/settings', element: <ProjectSettingsPage /> },
-          { path: 'orgs/:orgId/projects/:projectId/issues/:issueId', element: <IssueDetailPage /> },
-          { path: 'projects/:projectId/issues/:issueId', element: <IssueDetailPage /> },
-          { path: 'orgs/:orgId/projects/:projectId/issues', element: <IssueListPage /> },
-          { path: 'projects/:projectId/issues', element: <IssueListPage /> },
-          { path: 'orgs/:orgId/projects/:projectId/board', element: <BoardPage /> },
-          { path: 'projects/:projectId/board', element: <BoardPage /> },
-          { path: 'orgs/:orgId/members', element: <OrgMembersPage /> },
-          { path: 'orgs/:orgId/invitations', element: <InvitationsPage /> },
-          { path: 'orgs/:orgId/settings', element: <OrgSettingsPage /> },
-          { path: 'settings', element: <div>TODO Settings Page</div> },
+          {
+            element: <WorkspaceLayout />,
+            children: [
+              { index: true, element: <WorkspaceIndexRedirect /> },
+              { path: 'orgs/new', element: <CreateOrgPage /> },
+              { path: 'orgs/:orgId/overview', element: <OrgDashboard /> },
+              { path: 'orgs/:orgId', element: <Navigate to="overview" replace /> },
+              { path: 'orgs/:orgId/projects', element: <ProjectListPage /> },
+              { path: 'orgs/:orgId/projects/new', element: <CreateProjectPage /> },
+              { path: 'orgs/:orgId/projects/:projectKey', element: <ProjectIssuesRoute /> },
+              { path: 'orgs/:orgId/projects/:projectKey/issues', element: <ProjectIssuesRoute /> },
+              { path: 'orgs/:orgId/projects/:projectKey/issues/:issueId', element: <IssueDetailPage /> },
+              { path: 'orgs/:orgId/projects/:projectKey/board', element: <BoardPage /> },
+              { path: 'orgs/:orgId/projects/:projectKey/members', element: <ProjectMembersPage /> },
+              { path: 'orgs/:orgId/projects/:projectKey/settings', element: <ProjectSettingsPage /> },
+              { path: 'orgs/:orgId/members', element: <OrgMembersPage /> },
+              { path: 'orgs/:orgId/invitations', element: <InvitationsPage /> },
+              { path: 'orgs/:orgId/settings', element: <OrgSettingsPage /> },
+              { path: 'settings', element: <div>TODO Settings Page</div> },
+            ],
+          },
         ],
       },
       { path: '*', element: <NotFound /> },
@@ -67,13 +89,11 @@ const router = createBrowserRouter([
   },
 ]);
 
-import { Toaster } from './components/ui/sonner';
-
 export default function App() {
   return (
-    <>
+    <SocketProvider>
       <RouterProvider router={router} />
       <Toaster position="top-right" />
-    </>
+    </SocketProvider>
   );
 }

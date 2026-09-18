@@ -80,7 +80,7 @@ export default function OrgSettingsPage() {
     try {
       await deleteOrgApi(orgId);
       dispatch(removeOrg(orgId));
-      navigate('/');
+      navigate('/workspace');
     } catch (error) {
       console.error('Delete failed', error);
       toast.error('Failed to delete organization');
