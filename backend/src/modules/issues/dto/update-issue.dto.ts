@@ -1,5 +1,5 @@
 import { IsOptional, IsString, IsEnum } from 'class-validator';
-import { IssueStatus, IssuePriority } from '@prisma/client';
+import { IssueStatus, IssuePriority, IssueType } from '@prisma/client';
 
 export class UpdateIssueDto {
   @IsOptional()
@@ -17,6 +17,10 @@ export class UpdateIssueDto {
   @IsOptional()
   @IsEnum(IssuePriority)
   priority?: IssuePriority;
+
+  @IsOptional()
+  @IsEnum(IssueType)
+  type?: IssueType;
 
   @IsOptional()
   @IsString()

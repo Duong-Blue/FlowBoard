@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsOptional, IsString, IsEnum } from 'class-validator';
-import { IssueStatus, IssuePriority } from '@prisma/client';
+import { IssueStatus, IssuePriority, IssueType } from '@prisma/client';
 
 export class CreateIssueDto {
   @IsNotEmpty()
@@ -17,6 +17,10 @@ export class CreateIssueDto {
   @IsOptional()
   @IsEnum(IssuePriority)
   priority?: IssuePriority;
+
+  @IsOptional()
+  @IsEnum(IssueType)
+  type?: IssueType;
 
   @IsOptional()
   @IsString()
