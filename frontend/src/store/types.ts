@@ -57,6 +57,7 @@ export interface IssueUser {
   avatarUrl?: string;
 }
 
+export type IssueType = 'TASK' | 'BUG' | 'FEATURE' | 'IMPROVEMENT';
 export type IssueStatus = 'TODO' | 'IN_PROGRESS' | 'IN_PREVIEW' | 'DONE';
 
 export interface Issue {
@@ -66,6 +67,7 @@ export interface Issue {
   title: string;
   description?: string;
   status: IssueStatus | string;
+  type?: IssueType | string;
   priority: string;
   assigneeId?: string;
   reporterId: string;
