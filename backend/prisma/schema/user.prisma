@@ -13,6 +13,8 @@ model User {
   updatedAt       DateTime             @updatedAt
   refreshTokens   RefreshToken[]
   orgMemberships  OrganizationMember[]
+  notifications Notification[] @relation("UserNotifications")
+  actedNotifications Notification[] @relation("NotificationActor")
   reportedIssues  Issue[]              @relation("IssueReporter")
   assignedIssues  Issue[]              @relation("IssueAssignee")
 

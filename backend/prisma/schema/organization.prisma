@@ -10,4 +10,5 @@ model Organization {
   members     OrganizationMember[]
   invitations Invitation[]
   projects    Project[]
+  notifications Notification[]
 }

@@ -18,6 +18,7 @@ model Project {
   issues         Issue[]
 
   members ProjectMember[]
+  notifications Notification[]
 
   @@unique([organizationId, key])
 }
