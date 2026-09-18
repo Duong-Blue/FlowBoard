@@ -7,6 +7,8 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { IssueStatus, IssuePriority, ProjectRole, Prisma } from '@prisma/client';
 import { generateKeyBetween } from 'fractional-indexing';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
 import { IssueQueryDto } from './dto/issue-query.dto';
@@ -23,11 +25,15 @@ const USER_SELECT = {
 
 @Injectable()
 export class IssuesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   private async resolveProjectId(projectParam: string): Promise<string> {
     const project = await this.prisma.project.findFirst({
-      where: { OR: [{ id: projectParam }, { key: projectParam }] },
+      where: { OR: [{ id: projectParam }, { key: { equals: projectParam, mode: 'insensitive' } }] },
       select: { id: true },
     });
     return project?.id || projectParam;
@@ -36,7 +42,7 @@ export class IssuesService {
   private async resolveIssueId(projectId: string, issueParam: string): Promise<string> {
     const issue = await this.prisma.issue.findFirst({
       where: {
-        OR: [{ id: issueParam }, { key: issueParam }],
+        OR: [{ id: issueParam }, { key: { equals: issueParam, mode: 'insensitive' } }],
         projectId,
       },
       select: { id: true },
@@ -59,6 +65,7 @@ export class IssuesService {
     reporterId: string,
     dto: CreateIssueDto,
     userRole: ProjectRole,
+    correlationId?: string,
   ) {
     const projectId = await this.resolveProjectId(projectParam);
     if (userRole !== ProjectRole.ADMIN && userRole !== ProjectRole.MEMBER) {
@@ -69,7 +76,7 @@ export class IssuesService {
       await this.validateAssignee(projectId, dto.assigneeId);
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const createdIssue = await this.prisma.$transaction(async (tx) => {
       const project = await tx.project.update({
         where: { id: projectId },
         data: { issueSequence: { increment: 1 } },
@@ -117,6 +124,28 @@ export class IssuesService {
 
       return issue;
     });
+
+    try {
+      this.eventEmitter.emit('issue.created', { projectId, issue: createdIssue, correlationId });
+
+      if (createdIssue.assigneeId && createdIssue.assigneeId !== reporterId) {
+        const notif = await this.notificationsService.createNotification({
+          userId: createdIssue.assigneeId,
+          type: 'ISSUE_ASSIGNED',
+          title: 'You have been assigned to an issue',
+          message: `${createdIssue.reporter.displayName || createdIssue.reporter.firstName} assigned you to ${createdIssue.key}`,
+          metadata: { projectId, issueId: createdIssue.id, key: createdIssue.key },
+          projectId,
+          issueId: createdIssue.id,
+          actorId: reporterId,
+        });
+        this.eventEmitter.emit('notification.new', { userId: createdIssue.assigneeId, notification: notif });
+      }
+    } catch (err) {
+      console.error('Failed to emit events for issue creation', err);
+    }
+
+    return createdIssue;
   }
 
   async findAll(projectParam: string, query: IssueQueryDto) {
@@ -225,8 +254,10 @@ export class IssuesService {
   async moveIssue(
     projectParam: string,
     issueParam: string,
+    actorId: string,
     dto: MoveIssueDto,
     userRole: ProjectRole,
+    correlationId?: string,
   ) {
     const projectId = await this.resolveProjectId(projectParam);
     const issueId = await this.resolveIssueId(projectId, issueParam);
@@ -234,7 +265,7 @@ export class IssuesService {
       throw new ForbiddenException('Insufficient permissions to move issues');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const movedIssue = await this.prisma.$transaction(async (tx) => {
       // Lock the project to serialize concurrent moves within the same project
       await tx.$queryRaw`SELECT 1 FROM "Project" WHERE id = ${projectId} FOR UPDATE`;
 
@@ -322,13 +353,23 @@ export class IssuesService {
 
       return updatedIssue;
     });
+
+    try {
+      this.eventEmitter.emit('issue.moved', { projectId, issue: movedIssue, correlationId });
+    } catch (err) {
+      console.error('Failed to emit events for issue movement', err);
+    }
+
+    return movedIssue;
   }
 
   async update(
     projectParam: string,
     issueParam: string,
+    actorId: string,
     dto: UpdateIssueDto,
     userRole: ProjectRole,
+    correlationId?: string,
   ) {
     if (userRole !== ProjectRole.ADMIN && userRole !== ProjectRole.MEMBER) {
       throw new ForbiddenException('Insufficient permissions to modify issues');
@@ -342,8 +383,8 @@ export class IssuesService {
       await this.validateAssignee(projectId, dto.assigneeId);
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const updatedIssue = await tx.issue.update({
+    const updatedIssue = await this.prisma.$transaction(async (tx) => {
+      const dbUpdatedIssue = await tx.issue.update({
         where: { id: issueId },
         data: {
           title: dto.title,
@@ -426,19 +467,56 @@ export class IssuesService {
         });
       }
 
-      return updatedIssue;
+      return dbUpdatedIssue;
     });
+
+    try {
+      this.eventEmitter.emit('issue.updated', { projectId, issue: updatedIssue, correlationId });
+
+      if (dto.assigneeId && dto.assigneeId !== oldIssue.assigneeId && dto.assigneeId !== actorId) {
+        const notif = await this.notificationsService.createNotification({
+          userId: dto.assigneeId,
+          type: 'ISSUE_ASSIGNED',
+          title: 'You have been assigned to an issue',
+          message: `${updatedIssue.reporter?.displayName || updatedIssue.reporter?.firstName || 'Someone'} assigned you to ${updatedIssue.key}`,
+          metadata: { projectId, issueId: updatedIssue.id, key: updatedIssue.key },
+          projectId,
+          issueId: updatedIssue.id,
+          actorId,
+        });
+        this.eventEmitter.emit('notification.new', { userId: dto.assigneeId, notification: notif });
+      }
+    } catch (err) {
+      console.error('Failed to emit events for issue update', err);
+    }
+
+    return updatedIssue;
   }
 
-  async delete(projectParam: string, issueParam: string, userRole: ProjectRole) {
+  async delete(
+    projectParam: string,
+    issueParam: string,
+    actorId: string,
+    userRole: ProjectRole,
+    correlationId?: string,
+  ) {
     if (userRole !== ProjectRole.ADMIN) {
       throw new ForbiddenException('Insufficient permissions to delete issues');
     }
 
     const issue = await this.findOne(projectParam, issueParam);
+    const projectId = issue.projectId;
 
-    return this.prisma.issue.delete({
+    await this.prisma.issue.delete({
       where: { id: issue.id },
     });
+
+    try {
+      this.eventEmitter.emit('issue.deleted', { projectId, issueId: issue.id, correlationId });
+    } catch (err) {
+      console.error('Failed to emit events for issue deletion', err);
+    }
+
+    return { success: true };
   }
 }

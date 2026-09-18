@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   ForbiddenException,
+  Headers,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto, UpdateCommentDto, QueryCommentDto } from './dto';
@@ -39,11 +40,12 @@ export class CommentsController {
     @CurrentUser('id') userId: string,
     @CurrentProjectMember('role') role: ProjectRole,
     @Body() dto: CreateCommentDto,
+    @Headers('x-correlation-id') correlationId?: string,
   ) {
     if (role === ProjectRole.VIEWER) {
       throw new ForbiddenException('Viewers cannot create comments');
     }
-    return this.commentsService.create(projectId, issueId, userId, dto);
+    return this.commentsService.create(projectId, issueId, userId, dto, correlationId);
   }
 
   @Patch(':commentId')

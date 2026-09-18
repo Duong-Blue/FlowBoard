@@ -3,14 +3,20 @@ import { CommentsService } from './comments.service';
 import { PrismaService } from '../../database/prisma.service';
 import { ProjectRole } from '@prisma/client';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('CommentsService', () => {
   let service: CommentsService;
   let _prisma: PrismaService;
 
   const mockPrisma = {
+    project: {
+      findFirst: vi.fn(),
+    },
     issue: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
     comment: {
       findMany: vi.fn(),
@@ -26,11 +32,21 @@ describe('CommentsService', () => {
     },
   };
 
+  const mockEventEmitter = {
+    emit: vi.fn(),
+  };
+
+  const mockNotificationsService = {
+    createNotification: vi.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CommentsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 

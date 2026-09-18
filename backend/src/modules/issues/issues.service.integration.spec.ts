@@ -113,13 +113,13 @@ describe('IssuesService (Integration)', () => {
     });
 
     it('should prevent VIEWER from moving issues', async () => {
-      await expect(service.moveIssue(projectId, i1, { status: IssueStatus.TODO }, ProjectRole.VIEWER))
+      await expect(service.moveIssue(projectId, i1, viewerId, { status: IssueStatus.TODO }, ProjectRole.VIEWER))
         .rejects.toThrow(ForbiddenException);
     });
 
     it('should allow MEMBER and ADMIN to move issues', async () => {
       // Move i1 to DONE
-      await service.moveIssue(projectId, i1, { status: IssueStatus.DONE }, ProjectRole.MEMBER);
+      await service.moveIssue(projectId, i1, memberId, { status: IssueStatus.DONE }, ProjectRole.MEMBER);
       const updated1 = await prisma.issue.findUnique({ where: { id: i1 } });
       expect(updated1?.status).toBe(IssueStatus.DONE);
     });
@@ -127,7 +127,7 @@ describe('IssuesService (Integration)', () => {
     it('should reorder within the same column (between)', async () => {
       // Currently order is: I1, I2, I3, I4
       // Move I4 between I1 and I2
-      await service.moveIssue(projectId, i4, { 
+      await service.moveIssue(projectId, i4, adminId, { 
         status: IssueStatus.TODO, 
         beforeIssueId: i2, 
         afterIssueId: i1 
@@ -145,7 +145,7 @@ describe('IssuesService (Integration)', () => {
 
     it('should move to top of column (prepend)', async () => {
       // Move I3 to top (before I1)
-      await service.moveIssue(projectId, i3, { 
+      await service.moveIssue(projectId, i3, adminId, { 
         status: IssueStatus.TODO, 
         beforeIssueId: i1 
       }, ProjectRole.ADMIN);
@@ -157,7 +157,7 @@ describe('IssuesService (Integration)', () => {
 
     it('should move to bottom of column (append)', async () => {
       // Move I1 to bottom (after I4)
-      await service.moveIssue(projectId, i1, { 
+      await service.moveIssue(projectId, i1, adminId, { 
         status: IssueStatus.TODO, 
         afterIssueId: i4 
       }, ProjectRole.ADMIN);
@@ -169,7 +169,7 @@ describe('IssuesService (Integration)', () => {
 
     it('should handle cross-column move to empty column', async () => {
       // Move I2 to IN_PROGRESS
-      await service.moveIssue(projectId, i2, { 
+      await service.moveIssue(projectId, i2, adminId, { 
         status: IssueStatus.IN_PROGRESS 
       }, ProjectRole.ADMIN);
 
@@ -182,21 +182,21 @@ describe('IssuesService (Integration)', () => {
       // Create issue in other project
       const otherIssue = await service.create(otherProjectId, adminId, { title: 'Other' }, ProjectRole.ADMIN);
       
-      await expect(service.moveIssue(projectId, otherIssue.id, { status: IssueStatus.TODO }, ProjectRole.ADMIN))
+      await expect(service.moveIssue(projectId, otherIssue.id, adminId, { status: IssueStatus.TODO }, ProjectRole.ADMIN))
         .rejects.toThrow(ForbiddenException);
     });
 
     it('should prevent IDOR: neighbors from different project or column', async () => {
       const otherIssue = await service.create(otherProjectId, adminId, { title: 'Other' }, ProjectRole.ADMIN);
       
-      await expect(service.moveIssue(projectId, i1, { 
+      await expect(service.moveIssue(projectId, i1, adminId, { 
         status: IssueStatus.TODO,
         beforeIssueId: otherIssue.id
       }, ProjectRole.ADMIN)).rejects.toThrow(BadRequestException);
 
       // Neighbor in wrong column
       const inProgress = await service.create(projectId, adminId, { title: 'IP', status: IssueStatus.IN_PROGRESS }, ProjectRole.ADMIN);
-      await expect(service.moveIssue(projectId, i1, { 
+      await expect(service.moveIssue(projectId, i1, adminId, { 
         status: IssueStatus.TODO,
         afterIssueId: inProgress.id
       }, ProjectRole.ADMIN)).rejects.toThrow(BadRequestException);
@@ -211,7 +211,7 @@ describe('IssuesService (Integration)', () => {
       const created = await Promise.all(p);
 
       const movePromises = created.map(issue => 
-        service.moveIssue(projectId, issue.id, { status: IssueStatus.IN_PROGRESS }, ProjectRole.ADMIN)
+        service.moveIssue(projectId, issue.id, adminId, { status: IssueStatus.IN_PROGRESS }, ProjectRole.ADMIN)
       );
       
       await Promise.all(movePromises);
@@ -227,7 +227,7 @@ describe('IssuesService (Integration)', () => {
     });
 
     it('should rollback transaction on failure (invalid fractional indexing combination)', async () => {
-      await expect(service.moveIssue(projectId, i3, {
+      await expect(service.moveIssue(projectId, i3, adminId, {
         status: IssueStatus.TODO,
         afterIssueId: i2,
         beforeIssueId: i1

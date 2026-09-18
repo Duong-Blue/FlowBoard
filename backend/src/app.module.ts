@@ -10,6 +10,10 @@ import { InvitationsModule } from './modules/invitations/invitations.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { ProjectMembersModule } from './modules/project-members/project-members.module';
 import { IssuesModule } from './modules/issues/issues.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { RealtimeModule } from './modules/realtime/realtime.module';
 
 @Module({
   imports: [
@@ -17,6 +21,7 @@ import { IssuesModule } from './modules/issues/issues.module';
       isGlobal: true,
       // load: [jwtConfig], // ponytial: load jwtConfig when available
     }),
+    EventEmitterModule.forRoot(),
     DatabaseModule,
     HealthModule,
     AuthModule,
@@ -27,6 +32,8 @@ import { IssuesModule } from './modules/issues/issues.module';
     ProjectsModule,
     ProjectMembersModule,
     IssuesModule, // Import IssuesModule
+    NotificationsModule,
+    RealtimeModule,
   ],
   controllers: [],
   providers: [],

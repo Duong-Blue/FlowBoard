@@ -1,10 +1,16 @@
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { ProjectRole } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ProjectMembersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   private async checkOrgAdminPermission(orgId: string, userId: string) {
     const member = await this.prisma.organizationMember.findUnique({
@@ -17,7 +23,7 @@ export class ProjectMembersService {
 
   private async resolveProjectId(projectParam: string): Promise<string> {
     const project = await this.prisma.project.findFirst({
-      where: { OR: [{ id: projectParam }, { key: projectParam }] },
+      where: { OR: [{ id: projectParam }, { key: { equals: projectParam, mode: 'insensitive' } }] },
       select: { id: true },
     });
     return project?.id || projectParam;
@@ -38,13 +44,30 @@ export class ProjectMembersService {
       throw new BadRequestException('User must be an organization member');
     }
 
-    return this.prisma.projectMember.create({
+    const createdMember = await this.prisma.projectMember.create({
       data: {
         projectId,
         userId: dto.userId,
         role: dto.role,
       },
     });
+
+    try {
+      const notif = await this.notificationsService.createNotification({
+        userId: dto.userId,
+        type: 'PROJECT_MEMBER_ADDED',
+        title: 'You were added to a project',
+        message: `You have been added to project ${project.name}`,
+        metadata: { projectId, role: dto.role, projectName: project.name },
+        projectId,
+        actorId: requesterId,
+      });
+      this.eventEmitter.emit('notification.new', { userId: dto.userId, notification: notif });
+    } catch (err) {
+      console.error('Failed to emit events for project member add', err);
+    }
+
+    return createdMember;
   }
 
   async findAll(projectParam: string, requesterId: string) {
@@ -75,8 +98,16 @@ export class ProjectMembersService {
 
     await this.checkOrgAdminPermission(project.organizationId, requesterId);
 
-    return this.prisma.projectMember.delete({
+    const deletedMember = await this.prisma.projectMember.delete({
       where: { projectId_userId: { projectId, userId: targetUserId } },
     });
+
+    try {
+      this.eventEmitter.emit('project.member.removed', { projectId, userId: targetUserId });
+    } catch (err) {
+      console.error('Failed to emit events for project member remove', err);
+    }
+
+    return deletedMember;
   }
 }

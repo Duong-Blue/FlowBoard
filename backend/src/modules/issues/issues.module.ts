@@ -6,9 +6,10 @@ import { DatabaseModule } from '../../database/database.module';
 import { AuthModule } from '../auth/auth.module';
 import { CommentsModule } from '../comments/comments.module';
 import { ActivityModule } from '../activity/activity.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [DatabaseModule, AuthModule, CommentsModule, ActivityModule],
+  imports: [DatabaseModule, AuthModule, CommentsModule, ActivityModule, NotificationsModule],
   controllers: [IssuesController, BoardController],
   providers: [IssuesService],
   exports: [IssuesService],

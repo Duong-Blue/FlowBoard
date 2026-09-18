@@ -15,7 +15,29 @@ const USER_SELECT = {
 export class ActivityService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(projectId: string, issueId: string, queryDto: QueryActivityDto) {
+  private async resolveProjectId(projectParam: string): Promise<string> {
+    const project = await this.prisma.project.findFirst({
+      where: { OR: [{ id: projectParam }, { key: { equals: projectParam, mode: 'insensitive' } }] },
+      select: { id: true },
+    });
+    return project?.id || projectParam;
+  }
+
+  private async resolveIssueId(projectId: string, issueParam: string): Promise<string> {
+    const issue = await this.prisma.issue.findFirst({
+      where: {
+        OR: [{ id: issueParam }, { key: { equals: issueParam, mode: 'insensitive' } }],
+        projectId,
+      },
+      select: { id: true },
+    });
+    return issue?.id || issueParam;
+  }
+
+  async findAll(projectParam: string, issueParam: string, queryDto: QueryActivityDto) {
+    const projectId = await this.resolveProjectId(projectParam);
+    const issueId = await this.resolveIssueId(projectId, issueParam);
+
     const issue = await this.prisma.issue.findFirst({
       where: { id: issueId, projectId },
     });

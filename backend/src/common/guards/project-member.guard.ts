@@ -19,7 +19,7 @@ export class ProjectMemberGuard implements CanActivate {
     }
 
     const project = await this.prisma.project.findFirst({
-      where: { OR: [{ id: projectParam }, { key: projectParam }] },
+      where: { OR: [{ id: projectParam }, { key: { equals: projectParam, mode: 'insensitive' } }] },
       select: { id: true },
     });
 

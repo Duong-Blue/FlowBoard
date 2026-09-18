@@ -4,6 +4,8 @@ import { IssuesService } from './issues.service';
 import { PrismaService } from '../../database/prisma.service';
 import { ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ProjectRole } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('IssuesService', () => {
   let service: IssuesService;
@@ -23,11 +25,21 @@ describe('IssuesService', () => {
     }
   };
 
+  const mockEventEmitter = {
+    emit: vi.fn(),
+  };
+
+  const mockNotificationsService = {
+    createNotification: vi.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         IssuesService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 

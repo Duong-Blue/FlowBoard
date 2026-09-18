@@ -6,6 +6,8 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { ProjectRole } from '@prisma/client';
 import { CreateCommentDto, UpdateCommentDto, QueryCommentDto } from './dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const USER_SELECT = {
   id: true,
@@ -18,22 +20,49 @@ const USER_SELECT = {
 
 @Injectable()
 export class CommentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
-  private async verifyIssueInProject(projectId: string, issueId: string) {
-    const issue = await this.prisma.issue.findUnique({
-      where: { id: issueId },
+  private async resolveProjectId(projectParam: string): Promise<string> {
+    const project = await this.prisma.project?.findFirst({
+      where: { OR: [{ id: projectParam }, { key: { equals: projectParam, mode: 'insensitive' } }] },
+      select: { id: true },
     });
+    return project?.id || projectParam;
+  }
 
-    if (!issue || issue.projectId !== projectId) {
+  private async resolveIssueId(projectId: string, issueParam: string): Promise<string> {
+    const issue = await this.prisma.issue?.findFirst({
+      where: {
+        OR: [{ id: issueParam }, { key: { equals: issueParam, mode: 'insensitive' } }],
+        projectId,
+      },
+      select: { id: true },
+    });
+    return issue?.id || issueParam;
+  }
+
+  private async verifyIssueInProject(projectParam: string, issueParam: string) {
+    const projectId = await this.resolveProjectId(projectParam);
+    const issueId = await this.resolveIssueId(projectId, issueParam);
+
+    let issue = await this.prisma.issue?.findFirst({ where: { id: issueId, projectId } });
+    if (!issue) {
+      issue = await this.prisma.issue?.findUnique({ where: { id: issueId } });
+    }
+
+    if (!issue || (issue.projectId && issue.projectId !== projectId)) {
       throw new NotFoundException('Issue not found in project');
     }
 
-    return issue;
+    return { projectId, issueId, issue };
   }
 
-  async findAll(projectId: string, issueId: string, queryDto: QueryCommentDto) {
-    await this.verifyIssueInProject(projectId, issueId);
+  async findAll(projectParam: string, issueParam: string, queryDto: QueryCommentDto) {
+    const { issueId } = await this.verifyIssueInProject(projectParam, issueParam);
 
     const page = queryDto.page || 1;
     const limit = queryDto.limit || 20;
@@ -62,14 +91,15 @@ export class CommentsService {
   }
 
   async create(
-    projectId: string,
-    issueId: string,
+    projectParam: string,
+    issueParam: string,
     authorId: string,
     dto: CreateCommentDto,
+    correlationId?: string,
   ) {
-    await this.verifyIssueInProject(projectId, issueId);
+    const { projectId, issueId, issue } = await this.verifyIssueInProject(projectParam, issueParam);
 
-    return this.prisma.$transaction(async (tx) => {
+    const createdComment = await this.prisma.$transaction(async (tx) => {
       const comment = await tx.comment.create({
         data: {
           issueId,
@@ -93,17 +123,59 @@ export class CommentsService {
 
       return comment;
     });
+
+    try {
+      this.eventEmitter.emit('comment.created', { projectId, issueId, comment: createdComment, correlationId });
+
+      const mentionMatches = dto.content.match(/@([\w.-]+)/g);
+      if (mentionMatches && mentionMatches.length > 0) {
+        const potentialNames = mentionMatches.map(m => m.substring(1));
+        
+        const members = await this.prisma.projectMember.findMany({
+          where: {
+            projectId,
+            user: {
+              OR: potentialNames.flatMap(name => [
+                { displayName: { equals: name, mode: 'insensitive' } },
+                { firstName: { equals: name, mode: 'insensitive' } },
+              ])
+            }
+          },
+          include: { user: true }
+        });
+
+        for (const member of members) {
+          if (member.userId !== authorId) {
+            const notif = await this.notificationsService.createNotification({
+              userId: member.userId,
+              type: 'COMMENT_MENTION',
+              title: 'You were mentioned in a comment',
+              message: `${createdComment.author?.displayName || createdComment.author?.firstName || 'Someone'} mentioned you in ${issue.key}`,
+              metadata: { projectId, issueId, commentId: createdComment.id, key: issue.key },
+              projectId,
+              issueId,
+              actorId: authorId,
+            });
+            this.eventEmitter.emit('notification.new', { userId: member.userId, notification: notif });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to emit events for comment creation', err);
+    }
+
+    return createdComment;
   }
 
   async update(
-    projectId: string,
-    issueId: string,
+    projectParam: string,
+    issueParam: string,
     commentId: string,
     userId: string,
     userRole: ProjectRole,
     dto: UpdateCommentDto,
   ) {
-    await this.verifyIssueInProject(projectId, issueId);
+    const { issueId } = await this.verifyIssueInProject(projectParam, issueParam);
 
     const comment = await this.prisma.comment.findUnique({
       where: { id: commentId },
@@ -138,13 +210,13 @@ export class CommentsService {
   }
 
   async remove(
-    projectId: string,
-    issueId: string,
+    projectParam: string,
+    issueParam: string,
     commentId: string,
     userId: string,
     userRole: ProjectRole,
   ) {
-    await this.verifyIssueInProject(projectId, issueId);
+    const { issueId } = await this.verifyIssueInProject(projectParam, issueParam);
 
     const comment = await this.prisma.comment.findUnique({
       where: { id: commentId },

@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  Headers,
 } from '@nestjs/common';
 import { IssuesService } from './issues.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
@@ -42,8 +43,9 @@ export class IssuesController {
     @CurrentUser('id') userId: string,
     @CurrentProjectMember('role') role: ProjectRole,
     @Body() dto: CreateIssueDto,
+    @Headers('x-correlation-id') correlationId?: string,
   ) {
-    return this.issuesService.create(projectId, userId, dto, role);
+    return this.issuesService.create(projectId, userId, dto, role, correlationId);
   }
 
   @Get()
@@ -66,28 +68,34 @@ export class IssuesController {
   move(
     @Param('projectId') projectId: string,
     @Param('issueId') issueId: string,
+    @CurrentUser('id') userId: string,
     @CurrentProjectMember('role') role: ProjectRole,
     @Body() dto: MoveIssueDto,
+    @Headers('x-correlation-id') correlationId?: string,
   ) {
-    return this.issuesService.moveIssue(projectId, issueId, dto, role);
+    return this.issuesService.moveIssue(projectId, issueId, userId, dto, role, correlationId);
   }
 
   @Patch(':issueId')
   update(
     @Param('projectId') projectId: string,
     @Param('issueId') issueId: string,
+    @CurrentUser('id') userId: string,
     @CurrentProjectMember('role') role: ProjectRole,
     @Body() dto: UpdateIssueDto,
+    @Headers('x-correlation-id') correlationId?: string,
   ) {
-    return this.issuesService.update(projectId, issueId, dto, role);
+    return this.issuesService.update(projectId, issueId, userId, dto, role, correlationId);
   }
 
   @Delete(':issueId')
   delete(
     @Param('projectId') projectId: string,
     @Param('issueId') issueId: string,
+    @CurrentUser('id') userId: string,
     @CurrentProjectMember('role') role: ProjectRole,
+    @Headers('x-correlation-id') correlationId?: string,
   ) {
-    return this.issuesService.delete(projectId, issueId, role);
+    return this.issuesService.delete(projectId, issueId, userId, role, correlationId);
   }
 }
