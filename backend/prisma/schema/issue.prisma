@@ -12,6 +12,13 @@ enum IssuePriority {
   URGENT
 }
 
+enum IssueType {
+  TASK
+  BUG
+  FEATURE
+  IMPROVEMENT
+}
+
 model Issue {
   id          String        @id @default(uuid())
   projectId   String
@@ -20,6 +27,7 @@ model Issue {
   description String?
   order       String
   status      IssueStatus   @default(TODO)
+  type        IssueType     @default(TASK)
   priority    IssuePriority @default(MEDIUM)
   reporterId  String
   assigneeId  String?
