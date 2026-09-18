@@ -84,6 +84,21 @@ describe('IssueDetailView Component', () => {
     expect(screen.getAllByText('Bob Assignee')[0]).toBeInTheDocument();
   });
 
+  it('renders and allows updating issue type from sidebar', () => {
+    renderWithProviders(
+      <IssueDetailView
+        issue={mockIssue}
+        members={mockMembers}
+        onUpdate={onUpdateMock}
+      />
+    );
+
+    expect(screen.getByText('Type')).toBeInTheDocument();
+    const selects = screen.getAllByTestId('mock-select');
+    fireEvent.change(selects[0], { target: { value: 'BUG' } });
+    expect(onUpdateMock).toHaveBeenCalledWith({ type: 'BUG' });
+  });
+
   it('allows editing title and triggers onUpdate on blur/Enter', () => {
     renderWithProviders(
       <IssueDetailView

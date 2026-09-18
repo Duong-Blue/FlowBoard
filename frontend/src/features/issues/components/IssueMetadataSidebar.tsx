@@ -1,4 +1,4 @@
-import { type Issue, type IssueUser } from '@/store/types';
+import { type Issue, type IssueUser, type IssueType } from '@/store/types';
 import { SemanticBadge } from '@/components/shared/SemanticBadge';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +9,7 @@ interface IssueMetadataSidebarProps {
   onUpdate: (data: Partial<Issue>) => void;
 }
 
+const TYPE_OPTIONS: IssueType[] = ['TASK', 'BUG', 'FEATURE', 'IMPROVEMENT'];
 const STATUS_OPTIONS = ['TODO', 'IN_PROGRESS', 'IN_PREVIEW', 'DONE'];
 const PRIORITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
@@ -22,6 +23,30 @@ export function IssueMetadataSidebar({ issue, members, onUpdate }: IssueMetadata
 
   return (
     <div className="space-y-6">
+      {/* Type */}
+      <div>
+        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Type</h4>
+        <Select 
+          value={issue.type || 'TASK'} 
+          onValueChange={(val) => onUpdate({ type: val as IssueType })}
+        >
+          <SelectTrigger className="w-full h-8 px-2 border-transparent hover:border-border hover:bg-slate-50 justify-start">
+            <SemanticBadge status={issue.type === 'BUG' ? 'destructive' : issue.type === 'FEATURE' ? 'active' : issue.type === 'IMPROVEMENT' ? 'member' : 'pending'}>
+              {issue.type || 'TASK'}
+            </SemanticBadge>
+          </SelectTrigger>
+          <SelectContent>
+            {TYPE_OPTIONS.map(type => (
+              <SelectItem key={type} value={type}>
+                <SemanticBadge status={type === 'BUG' ? 'destructive' : type === 'FEATURE' ? 'active' : type === 'IMPROVEMENT' ? 'member' : 'pending'}>
+                  {type}
+                </SemanticBadge>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Status */}
       <div>
         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Status</h4>

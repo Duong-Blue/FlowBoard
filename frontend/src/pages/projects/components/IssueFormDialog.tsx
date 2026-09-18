@@ -18,6 +18,7 @@ interface IssueFormDialogProps {
 export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }: IssueFormDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [type, setType] = useState('TASK');
   const [status, setStatus] = useState('TODO');
   const [priority, setPriority] = useState('MEDIUM');
   const [assigneeId, setAssigneeId] = useState<string>('unassigned');
@@ -27,6 +28,7 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
     if (open) {
       setTitle(issue?.title || '');
       setDescription(issue?.description || '');
+      setType(issue?.type || 'TASK');
       setStatus(issue?.status || 'TODO');
       setPriority(issue?.priority || 'MEDIUM');
       setAssigneeId(issue?.assigneeId || 'unassigned');
@@ -42,6 +44,7 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
       await onSubmit({
         title,
         description,
+        type,
         status,
         priority,
         assigneeId: assigneeId === 'unassigned' ? undefined : assigneeId,
@@ -81,6 +84,20 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Brief description"
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="type">Type</Label>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger id="type">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TASK">Task</SelectItem>
+                  <SelectItem value="BUG">Bug</SelectItem>
+                  <SelectItem value="FEATURE">Feature</SelectItem>
+                  <SelectItem value="IMPROVEMENT">Improvement</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="status">Status</Label>
