@@ -1,8 +1,9 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useAppSelector } from '../../store';
 
 const KEYWORD_MAP: Record<string, string> = {
+  workspace: 'Workspace',
   orgs: 'Organizations',
   projects: 'Projects',
   issues: 'Issues',
@@ -15,31 +16,51 @@ const KEYWORD_MAP: Record<string, string> = {
 
 export const AppBreadcrumb = () => {
   const location = useLocation();
+    const { orgId, projectKey } = useParams<{ orgId?: string; projectKey?: string }>();
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
   const activeProjectId = useAppSelector((state) => state.project.activeProjectId);
+  const effectiveOrgId = orgId || activeOrgId;
+  const effectiveProjectKey = projectKey || activeProjectId;
+
   const pathnames = location.pathname.split('/').filter((x) => x);
 
   const breadcrumbItems: { label: string; to: string }[] = [];
 
   pathnames.forEach((segment) => {
-    if (KEYWORD_MAP[segment]) {
-      let targetPath = `/${segment}`;
-      if (segment === 'projects' && activeOrgId) {
-        targetPath = `/orgs/${activeOrgId}/projects`;
-      } else if (segment === 'issues' && activeProjectId) {
-        targetPath = activeOrgId 
-          ? `/orgs/${activeOrgId}/projects/${activeProjectId}/issues`
-          : `/projects/${activeProjectId}/issues`;
-      } else if (segment === 'board' && activeProjectId) {
-        targetPath = activeOrgId 
-          ? `/orgs/${activeOrgId}/projects/${activeProjectId}/board`
-          : `/projects/${activeProjectId}/board`;
+    if (segment === 'workspace') {
+        breadcrumbItems.push({
+          label: KEYWORD_MAP[segment],
+          to: '/workspace',
+        });
+      } else if (segment === 'orgs' && effectiveOrgId) {
+        breadcrumbItems.push({
+          label: KEYWORD_MAP[segment],
+          to: `/workspace/orgs/${effectiveOrgId}`,
+        });
+      } else if (segment === 'projects' && effectiveOrgId) {
+        breadcrumbItems.push({
+          label: KEYWORD_MAP[segment],
+          to: `/workspace/orgs/${effectiveOrgId}/projects`,
+        });
+      } else if (KEYWORD_MAP[segment]) { 
+        let targetPath = effectiveOrgId && effectiveProjectKey
+          ? `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/${segment}`
+          : '/workspace';
+
+        if (segment === 'issues' && effectiveOrgId && effectiveProjectKey) {
+          targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/issues`;
+        } else if (segment === 'board' && effectiveOrgId && effectiveProjectKey) {
+          targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/board`;
+        } else if (segment === 'members' && effectiveOrgId && effectiveProjectKey) {
+          targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/members`;
+        } else if (segment === 'settings' && effectiveOrgId && effectiveProjectKey) {
+          targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/settings`;
+        }
+        breadcrumbItems.push({
+          label: KEYWORD_MAP[segment],
+          to: targetPath,
+        });
       }
-      breadcrumbItems.push({
-        label: KEYWORD_MAP[segment],
-        to: targetPath,
-      });
-    }
   });
 
   if (breadcrumbItems.length === 0) {

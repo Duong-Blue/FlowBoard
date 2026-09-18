@@ -1,11 +1,18 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../store';
 
 export default function AuthLayout() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const location = useLocation();
 
+  // If the user is authenticated and tries to access auth routes, redirect them to /workspace
+  // or to the location they were trying to reach if it's available.
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    const fromPath = location.state?.from?.pathname;
+    const fromSearch = location.state?.from?.search;
+    const from = fromPath + fromSearch || '/workspace';
+
+    return <Navigate to={from} replace />;
   }
 
   return (
