@@ -5,6 +5,7 @@ import authReducer from './slices/authSlice';
 import orgReducer from './slices/orgSlice';
 import projectReducer from './slices/projectSlice';
 import issueReducer from './slices/issueSlice';
+import notificationReducer from './slices/notificationSlice';
 import type { RootState, AppDispatch } from './types';
 
 export const store = configureStore({
@@ -13,6 +14,7 @@ export const store = configureStore({
     org: orgReducer,
     project: projectReducer,
     issue: issueReducer,
+    notification: notificationReducer,
   },
 });
 

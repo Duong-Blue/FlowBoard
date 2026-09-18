@@ -11,6 +11,7 @@ import authReducer from '../store/slices/authSlice';
 import orgReducer from '../store/slices/orgSlice';
 import projectReducer from '../store/slices/projectSlice';
 import issueReducer from '../store/slices/issueSlice';
+import notificationReducer from '../store/slices/notificationSlice';
 import type { RootState } from '../store/types';
 import { Toaster } from 'sonner';
 
@@ -31,6 +32,7 @@ export function renderWithProviders(
         org: orgReducer,
         project: projectReducer,
         issue: issueReducer,
+        notification: notificationReducer,
       },
       preloadedState: preloadedState as any,
     }),

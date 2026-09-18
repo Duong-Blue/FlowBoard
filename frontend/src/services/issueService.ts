@@ -14,7 +14,7 @@ export const getIssues = (projectId: string, filters: IssueFilters) => {
   return apiGet<IssueListResponse>(`/projects/${projectId}/issues${query ? `?${query}` : ''}`);
 };
 
-export const getBoardIssues = (projectId: string) => apiGet<Issue[]>(`/projects/${projectId}/board`);
+export const getBoardIssues = (projectId: string) => apiGet<Issue[] | Record<string, Issue[]>>(`/projects/${projectId}/board`);
 
 export const getIssue = (projectId: string, id: string) => apiGet<Issue>(`/projects/${projectId}/issues/${id}`);
 export const createIssue = (projectId: string, data: Partial<Issue>) => apiPost<Issue>(`/projects/${projectId}/issues`, data);

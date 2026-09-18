@@ -21,10 +21,17 @@ export interface Organization {
 export interface Project {
   id: string;
   orgId: string;
+  organizationId?: string;
   name: string;
   key?: string;
   status?: string;
   description?: string;
+  issueCount?: number;
+  memberCount?: number;
+  _count?: {
+    issues?: number;
+    members?: number;
+  };
 }
 
 export interface Member {
@@ -94,3 +101,52 @@ export interface IssueListResponse {
     totalPages: number;
   };
 }
+
+export type NotificationType = 'ISSUE_ASSIGNED' | 'COMMENT_MENTION' | 'PROJECT_MEMBER_ADDED';
+export const NotificationType = {
+  ISSUE_ASSIGNED: 'ISSUE_ASSIGNED',
+  COMMENT_MENTION: 'COMMENT_MENTION',
+  PROJECT_MEMBER_ADDED: 'PROJECT_MEMBER_ADDED',
+} as const;
+
+
+export interface NotificationActor {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+  avatarUrl?: string;
+}
+
+export interface NotificationProject {
+  id: string;
+  name: string;
+  key: string;
+}
+
+export interface NotificationIssue {
+  id: string;
+  title: string;
+  key: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  userId: string;
+  actorId?: string | null;
+  organizationId?: string | null;
+  projectId?: string | null;
+  issueId?: string | null;
+  type: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  readAt?: string | null;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt?: string;
+  actor?: NotificationActor | null;
+  project?: NotificationProject | null;
+  issue?: NotificationIssue | null;
+}
+

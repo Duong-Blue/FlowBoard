@@ -28,6 +28,7 @@ interface IssueState {
   board: {
     columns: BoardColumns;
     previousBoardState: BoardColumns | null;
+    pendingCorrelationIds: string[];
     loading: boolean;
   };
   comments: {
@@ -63,6 +64,7 @@ const initialState: IssueState = {
   board: {
     columns: initialBoardColumns,
     previousBoardState: null,
+    pendingCorrelationIds: [],
     loading: false,
   },
   comments: {
@@ -158,11 +160,17 @@ const issueSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    moveCardOptimistic: (state, action: PayloadAction<MoveIssuePayload>) => {
+    moveCardOptimistic: (state, action: PayloadAction<MoveIssuePayload & { correlationId?: string }>) => {
       // Create deep copy of previous state
       state.board.previousBoardState = JSON.parse(JSON.stringify(state.board.columns));
       
-      const { issueId, sourceStatus, targetStatus, beforeIssueId, afterIssueId } = action.payload;
+      const { issueId, sourceStatus, targetStatus, beforeIssueId, afterIssueId, correlationId } = action.payload;
+      if (correlationId) {
+        if (!state.board.pendingCorrelationIds) {
+          state.board.pendingCorrelationIds = [];
+        }
+        state.board.pendingCorrelationIds.push(correlationId);
+      }
       
       const sourceCol = state.board.columns[sourceStatus];
       const targetCol = state.board.columns[targetStatus];
@@ -188,31 +196,71 @@ const issueSlice = createSlice({
         state.board.columns = state.board.previousBoardState;
         state.board.previousBoardState = null;
       }
+    },
+    reconcileBoardIssue: (
+      state,
+      action: PayloadAction<{ correlationId?: string; issue?: Partial<Issue> & { id: string } }>
+    ) => {
+      const { correlationId, issue } = action.payload;
+      if (!issue || !issue.id) return;
+
+      if (correlationId && state.board.pendingCorrelationIds?.includes(correlationId)) {
+        state.board.pendingCorrelationIds = state.board.pendingCorrelationIds.filter(
+          (id) => id !== correlationId
+        );
+
+        for (const colKey of Object.keys(state.board.columns) as (keyof BoardColumns)[]) {
+          const col = state.board.columns[colKey];
+          const item = col.find((i) => i.id === issue.id);
+          if (item) {
+            if (issue.updatedAt !== undefined) item.updatedAt = issue.updatedAt;
+            if (issue.status !== undefined) item.status = issue.status;
+            if (issue.title !== undefined) item.title = issue.title;
+            break;
+          }
+        }
+      }
     }
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchBoardIssues.pending, (state) => {
-        state.board.loading = true;
+        const hasData = Object.values(state.board.columns).some((col) => col.length > 0);
+        if (!hasData) {
+          state.board.loading = true;
+        }
       })
       .addCase(fetchBoardIssues.fulfilled, (state, action) => {
         state.board.loading = false;
         
-        state.board.columns = {
+        const defaultColumns: BoardColumns = {
           TODO: [],
           IN_PROGRESS: [],
           IN_PREVIEW: [],
           DONE: []
         };
         
-        action.payload.forEach(issue => {
-          const status = issue.status as keyof BoardColumns;
-          if (state.board.columns[status]) {
-            state.board.columns[status].push(issue);
-          } else {
-            state.board.columns.TODO.push(issue);
-          }
-        });
+        if (Array.isArray(action.payload)) {
+          state.board.columns = defaultColumns;
+          action.payload.forEach(issue => {
+            const status = issue.status as keyof BoardColumns;
+            if (state.board.columns[status]) {
+              state.board.columns[status].push(issue);
+            } else {
+              state.board.columns.TODO.push(issue);
+            }
+          });
+        } else if (action.payload && typeof action.payload === 'object') {
+          const payloadObj = action.payload as unknown as Record<string, Issue[]>;
+          state.board.columns = {
+            TODO: payloadObj.TODO || [],
+            IN_PROGRESS: payloadObj.IN_PROGRESS || [],
+            IN_PREVIEW: payloadObj.IN_PREVIEW || [],
+            DONE: payloadObj.DONE || [],
+          };
+        } else {
+          state.board.columns = defaultColumns;
+        }
       })
       .addCase(fetchBoardIssues.rejected, (state, action) => {
         state.board.loading = false;
@@ -270,7 +318,8 @@ export const {
   setLoading, 
   setError,
   moveCardOptimistic,
-  rollbackMove
+  rollbackMove,
+  reconcileBoardIssue
 } = issueSlice.actions;
 
 export default issueSlice.reducer;

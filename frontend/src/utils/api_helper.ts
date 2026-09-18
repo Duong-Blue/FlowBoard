@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosError } from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 
 const getApiUrl = () => {
   let envUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -41,6 +42,12 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  const mutationMethods = ['post', 'put', 'patch', 'delete'];
+  if (config.method && mutationMethods.includes(config.method.toLowerCase())) {
+    config.headers['X-Correlation-ID'] = uuidv4();
+  }
+
   return config;
 });
 
