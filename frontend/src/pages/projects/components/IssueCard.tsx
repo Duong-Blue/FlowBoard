@@ -11,8 +11,9 @@ interface IssueCardProps {
 }
 
 export function IssueCard({ issue, disabled }: IssueCardProps) {
-  const { orgId, projectId } = useParams<{ orgId: string; projectId: string }>();
+  const { orgId, projectKey, projectId } = useParams<{ orgId?: string; projectKey?: string; projectId?: string }>();
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
+  const projectList = useAppSelector((state) => state.project.list);
   const navigate = useNavigate();
   const {
     attributes,
@@ -48,12 +49,11 @@ export function IssueCard({ issue, disabled }: IssueCardProps) {
   const handleClick = () => {
     if (isDragging) return;
     const targetOrgId = orgId || activeOrgId;
-    const targetProjectId = projectId || issue.projectId;
+    const foundProject = projectList.find((p) => p.id === projectId || p.key === projectKey || p.id === issue.projectId);
+    const targetProjectKey = projectKey || foundProject?.key;
     const issueKey = issue.key || issue.id;
-    if (targetOrgId && targetProjectId) {
-      navigate(`/orgs/${targetOrgId}/projects/${targetProjectId}/issues/${issueKey}`);
-    } else if (targetProjectId) {
-      navigate(`/projects/${targetProjectId}/issues/${issueKey}`);
+    if (targetOrgId && targetProjectKey) {
+      navigate(`/workspace/orgs/${targetOrgId}/projects/${targetProjectKey}/issues/${issueKey}`);
     }
   };
 

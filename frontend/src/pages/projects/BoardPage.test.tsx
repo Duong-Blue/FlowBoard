@@ -8,9 +8,23 @@ import * as issueService from '../../services/issueService';
 import * as memberService from '../../services/memberService';
 import type { Issue } from '../../store/types';
 
+vi.mock('@/hooks/useResolvedProject', () => ({
+  useResolvedProject: () => ({
+    project: { id: 'proj1', key: 'proj1', organizationId: 'org1' },
+    projectId: 'proj1',
+    loading: false,
+    error: null,
+    is404: false,
+  }),
+}));
+
 vi.mock('../../services/issueService', () => ({
   getBoardIssues: vi.fn(),
   moveIssue: vi.fn(),
+}));
+
+vi.mock('../../services/projectService', () => ({
+  getProject: vi.fn().mockResolvedValue({ id: 'proj1', key: 'proj1', organizationId: 'org1' }),
 }));
 
 vi.mock('../../services/memberService', () => ({
@@ -21,7 +35,7 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useParams: () => ({ orgId: 'org1', projectId: 'proj1' }),
+    useParams: () => ({ orgId: 'org1', projectKey: 'proj1', projectId: 'proj1' }),
   };
 });
 

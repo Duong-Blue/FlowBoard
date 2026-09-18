@@ -14,9 +14,12 @@ import { IssueFormDialog } from './components/IssueFormDialog';
 import { toast } from 'sonner';
 import { Plus, Search, Edit2, Trash2, LayoutList, LayoutDashboard } from 'lucide-react';
 import type { Issue, IssueUser, Member } from '../../store/types';
+import { useResolvedProject } from '@/hooks/useResolvedProject';
+import NotFound from '../NotFound';
 
 export default function IssueListPage() {
-  const { orgId, projectId } = useParams<{ orgId: string; projectId: string }>();
+  const { orgId } = useParams<{ orgId: string }>();
+  const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
@@ -97,9 +100,15 @@ export default function IssueListPage() {
     }
   };
 
-  if (!initialLoaded) {
+  if (projectLoading || !initialLoaded) {
     return <PageLoader />;
   }
+
+  if (is404 || !project) {
+    return <NotFound />;
+  }
+
+  const currentOrgId = orgId || activeOrgId || project.organizationId || project.orgId;
 
   return (
     <div className="flex flex-col gap-6">
@@ -108,15 +117,15 @@ export default function IssueListPage() {
           <h1 className="text-2xl font-bold text-slate-900">Issues</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="default" className="pointer-events-none opacity-50">
-            <LayoutList className="mr-2 h-4 w-4" />
-            List View
-          </Button>
           <Button variant="outline" asChild>
-            <Link to={`/orgs/${orgId}/projects/${projectId}/board`}>
+            <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/board`}>
               <LayoutDashboard className="mr-2 h-4 w-4" />
               Board View
             </Link>
+          </Button>
+          <Button variant="default" className="pointer-events-none opacity-50">
+            <LayoutList className="mr-2 h-4 w-4" />
+            List View
           </Button>
           {canCreateOrEdit && (
             <Button onClick={() => { setEditingIssue(undefined); setDialogOpen(true); }}>
@@ -209,13 +218,11 @@ export default function IssueListPage() {
                     key={issue.id} 
                     className="hover:bg-slate-50/50 cursor-pointer"
                     onClick={() => {
-                      const targetOrgId = orgId || activeOrgId;
-                      const targetProjectId = projectId || issue.projectId;
+                      const targetOrgId = currentOrgId;
+                      const targetProjectKey = project.key;
                       const issueKey = issue.key || issue.id;
-                      if (targetOrgId && targetProjectId) {
-                        navigate(`/orgs/${targetOrgId}/projects/${targetProjectId}/issues/${issueKey}`);
-                      } else if (targetProjectId) {
-                        navigate(`/projects/${targetProjectId}/issues/${issueKey}`);
+                      if (targetOrgId && targetProjectKey) {
+                        navigate(`/workspace/orgs/${targetOrgId}/projects/${targetProjectKey}/issues/${issueKey}`);
                       }
                     }}
                   >

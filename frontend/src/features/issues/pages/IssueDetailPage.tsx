@@ -7,27 +7,34 @@ import { getIssue, updateIssue as updateIssueApi, deleteIssue as deleteIssueApi 
 import { getProjectMembers } from '@/services/memberService';
 import { updateIssue, addIssue, removeIssue } from '@/store/slices/issueSlice';
 import { type Issue, type IssueUser } from '@/store/types';
+import { useResolvedProject } from '@/hooks/useResolvedProject';
 
 export function IssueDetailPage() {
-  const { orgId, projectId, issueId } = useParams<{ orgId?: string; projectId: string; issueId: string }>();
+  const { orgId, projectKey, projectId, issueId } = useParams<{ orgId?: string; projectKey?: string; projectId?: string; issueId?: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  
+  const { project, projectId: resolvedProjectId } = useResolvedProject();
+  const activeOrgId = useSelector((state: RootState) => state.org.activeOrgId);
+
+  const effectiveOrgId = orgId || activeOrgId || project?.organizationId || project?.orgId;
+  const effectiveProjectKey = projectKey || project?.key;
+  const effectiveProjectId = resolvedProjectId || projectId || project?.id;
+
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [members, setMembers] = React.useState<IssueUser[]>([]);
   
   const issue = useSelector((state: RootState) => 
-    state.issue.list.find(i => i.id === issueId || i.key === issueId)
+    state.issue.list.find(i => i.id === issueId || i.key?.toLowerCase() === issueId?.toLowerCase())
   );
 
   React.useEffect(() => {
     let mounted = true;
     async function loadData() {
-      if (!projectId || !issueId) return;
+      if (!effectiveProjectId || !issueId) return;
       try {
         setLoading(true);
-        const membersData = await getProjectMembers(projectId);
+        const membersData = await getProjectMembers(effectiveProjectId);
         if (!mounted) return;
         
         const mappedMembers = membersData.map(m => ({
@@ -37,7 +44,7 @@ export function IssueDetailPage() {
         }));
         setMembers(mappedMembers);
 
-        const issueData = await getIssue(projectId, issueId);
+        const issueData = await getIssue(effectiveProjectId, issueId);
         if (!mounted) return;
         
         // Dispatch to update Redux store
@@ -55,12 +62,13 @@ export function IssueDetailPage() {
     
     loadData();
     return () => { mounted = false; };
-  }, [projectId, issueId, dispatch]); // omitting 'issue' from dependencies to prevent infinite loops
+  }, [effectiveProjectId, issueId, dispatch]); // omitting 'issue' from dependencies to prevent infinite loops
 
   const handleUpdate = async (data: Partial<Issue>) => {
-    if (!projectId || !issueId) return;
+    if (!effectiveProjectId || !issueId) return;
     try {
-      const updatedIssue = await updateIssueApi(projectId, issueId, data);
+      const targetIssueId = issue?.id || issueId;
+      const updatedIssue = await updateIssueApi(effectiveProjectId, targetIssueId, data);
       dispatch(updateIssue(updatedIssue));
     } catch (err) {
       console.error('Failed to update issue:', err);
@@ -68,15 +76,14 @@ export function IssueDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!projectId || !issueId) return;
+    if (!effectiveProjectId || !issueId) return;
     if (window.confirm('Are you sure you want to delete this issue?')) {
       try {
-        await deleteIssueApi(projectId, issueId);
-        dispatch(removeIssue(issueId));
-        if (orgId) {
-          navigate(`/orgs/${orgId}/projects/${projectId}/board`);
-        } else {
-          navigate(`/projects/${projectId}/board`);
+        const targetIssueId = issue?.id || issueId;
+        await deleteIssueApi(effectiveProjectId, targetIssueId);
+        dispatch(removeIssue(targetIssueId));
+        if (effectiveOrgId && effectiveProjectKey) {
+          navigate(`/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/issues`);
         }
       } catch (err) {
         console.error('Failed to delete issue:', err);

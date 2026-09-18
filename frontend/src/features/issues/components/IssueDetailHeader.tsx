@@ -1,23 +1,24 @@
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAppSelector } from '@/store';
 
 interface IssueDetailHeaderProps {
   issueKey: string;
-  projectId: string;
   canDelete?: boolean;
   onDelete?: () => void;
 }
 
-export function IssueDetailHeader({ issueKey, projectId, canDelete = false, onDelete }: IssueDetailHeaderProps) {
+export function IssueDetailHeader({ issueKey, canDelete = false, onDelete }: Omit<IssueDetailHeaderProps, 'projectId'>) {
   const navigate = useNavigate();
-  const { orgId } = useParams<{ orgId?: string }>();
+  const { orgId, projectKey } = useParams<{ orgId?: string; projectKey?: string }>();
+  const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
 
   const handleBack = () => {
-    if (orgId && projectId) {
-      navigate(`/orgs/${orgId}/projects/${projectId}/board`);
-    } else {
-      navigate(`/projects/${projectId}/board`);
+    const targetOrgId = orgId || activeOrgId;
+
+    if (targetOrgId && projectKey) {
+      navigate(`/workspace/orgs/${targetOrgId}/projects/${projectKey}/issues`);
     }
   };
 

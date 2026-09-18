@@ -45,7 +45,6 @@ export function IssueDetailView({ issue, members, canDelete, onUpdate, onDelete 
     <div className="flex flex-col h-full">
       <IssueDetailHeader 
         issueKey={issue.key} 
-        projectId={issue.projectId} 
         canDelete={canDelete} 
         onDelete={onDelete} 
       />

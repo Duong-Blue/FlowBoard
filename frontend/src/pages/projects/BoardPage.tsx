@@ -23,6 +23,9 @@ import type { Issue, IssueStatus, Member } from '../../store/types';
 import { toast } from 'sonner';
 import { LayoutList, LayoutDashboard } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+import { useResolvedProject } from '@/hooks/useResolvedProject';
+import { useBoardRealtime } from '@/hooks/useBoardRealtime';
+import NotFound from '../NotFound';
 
 const COLUMNS: { id: IssueStatus; title: string }[] = [
   { id: 'TODO', title: 'To Do' },
@@ -32,8 +35,11 @@ const COLUMNS: { id: IssueStatus; title: string }[] = [
 ];
 
 export default function BoardPage() {
-  const { orgId, projectId } = useParams<{ orgId: string; projectId: string }>();
+  const { orgId } = useParams<{ orgId: string }>();
+  const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
+  const { isConnected } = useBoardRealtime(projectId);
   const dispatch = useAppDispatch();
+  const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
   const currentUser = useAppSelector((state) => state.auth.user);
   const { columns, loading } = useAppSelector((state) => state.issue.board);
   
@@ -135,13 +141,16 @@ export default function BoardPage() {
       }
     }
 
+    const correlationId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `corr-${Date.now()}`;
+
     // Dispatch optimistic update
     dispatch(moveCardOptimistic({
       issueId: activeId,
       sourceStatus,
       targetStatus,
       beforeIssueId,
-      afterIssueId
+      afterIssueId,
+      correlationId
     }));
 
     try {
@@ -156,9 +165,15 @@ export default function BoardPage() {
     }
   };
 
-  if (loading && !Object.values(columns).some(col => col.length > 0)) {
+  if (projectLoading || (loading && !Object.values(columns).some(col => col.length > 0))) {
     return <PageLoader />;
   }
+
+  if (is404 || !project) {
+    return <NotFound />;
+  }
+
+  const currentOrgId = orgId || activeOrgId || project.organizationId || project.orgId;
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
@@ -167,9 +182,18 @@ export default function BoardPage() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Board</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'
+                }`}
+                title={isConnected ? 'Realtime Connected' : 'Disconnected'}
+              />
+              <span>{isConnected ? 'Live' : 'Offline'}</span>
+            </div>
             <Button variant="outline" asChild>
-              <Link to={`/orgs/${orgId}/projects/${projectId}/issues`}>
+              <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/issues?view=list`}>
                 <LayoutList className="mr-2 h-4 w-4" />
                 List View
               </Link>
