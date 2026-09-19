@@ -1,14 +1,14 @@
 import { Controller, Post, Body, Get, Param, Patch, Delete, UseGuards, Req } from '@nestjs/common';
 import { ProjectMembersService } from './project-members.service';
-import { AddProjectMemberDto } from './add-project-member.dto';
-import { UpdateProjectMemberRoleDto } from './update-project-member-role.dto';
+import { AddProjectMemberDto } from './dto/add-project-member.dto';
+import { UpdateProjectMemberRoleDto } from './dto/update-project-member-role.dto';
 import { ProjectMemberGuard } from '../../common/guards/project-member.guard';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard, ProjectMemberGuard)
 @Controller('projects/:projectId/members')
 export class ProjectMembersController {
-  constructor(private readonly service: ProjectMembersService) {}
+  constructor(private readonly service: ProjectMembersService) { }
 
   @Post()
   add(@Param('projectId') projectId: string, @Req() req, @Body() dto: AddProjectMemberDto) {
