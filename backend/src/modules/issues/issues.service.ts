@@ -226,6 +226,8 @@ export class IssuesService {
     const projectId = await this.resolveProjectId(projectParam);
     const issues = await this.prisma.issue.findMany({
       where: { projectId },
+      // Circuit breaker: limit board fetch to 2000 items to prevent Node/DB OOM
+      take: 2000,
       orderBy: { order: 'asc' },
       include: {
         reporter: { select: USER_SELECT },
