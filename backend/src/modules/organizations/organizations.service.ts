@@ -1,32 +1,47 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { CreateOrganizationDto } from './create-organization.dto';
-import { UpdateOrganizationDto } from './update-organization.dto';
+import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(userId: string, dto: CreateOrganizationDto) {
     const slugBase = (dto.slug || dto.name).toLowerCase().replace(/[^a-z0-9]/g, '-');
     const slug = dto.slug ? dto.slug : `${slugBase}-${Date.now().toString(36)}`;
-    return this.prisma.$transaction(async (tx) => {
-      const org = await tx.organization.create({
-        data: {
-          name: dto.name,
-          slug,
-          description: dto.description,
-        },
-      });
-      await tx.organizationMember.create({
-        data: {
-          organizationId: org.id,
-          userId,
-          role: 'OWNER',
-        },
-      });
-      return org;
+
+    const existing = await this.prisma.organization.findUnique({
+      where: { slug },
     });
+    if (existing) {
+      throw new ConflictException('Organization slug already in use');
+    }
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const org = await tx.organization.create({
+          data: {
+            name: dto.name,
+            slug,
+            description: dto.description,
+          },
+        });
+        await tx.organizationMember.create({
+          data: {
+            organizationId: org.id,
+            userId,
+            role: 'OWNER',
+          },
+        });
+        return org;
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2002') {
+        throw new ConflictException('Organization slug already in use');
+      }
+      throw error;
+    }
   }
 
   async findAllForUser(userId: string) {
