@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store';
-import { logout } from '../store/slices/authSlice';
 import { setActiveOrg } from '../store/slices/orgSlice';
 import {
   Kanban,
@@ -15,13 +14,11 @@ import {
   Sliders,
   ChevronDown,
   ChevronRight,
-  LogOut,
   Plus,
   X,
   Briefcase,
   Info,
 } from 'lucide-react';
-import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +29,8 @@ import {
 
 interface WorkspaceSidebarProps {
   closeMobileMenu?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 interface SidebarNavItemProps {
@@ -41,22 +40,26 @@ interface SidebarNavItemProps {
   isActive?: boolean;
   onClick?: () => void;
   badge?: string | number;
+  isCollapsed?: boolean;
 }
 
-function SidebarNavItem({ to, icon: Icon, label, isActive, onClick, badge }: SidebarNavItemProps) {
+function SidebarNavItem({ to, icon: Icon, label, isActive, onClick, badge, isCollapsed }: SidebarNavItemProps) {
   return (
     <Link
       to={to}
       onClick={onClick}
-      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
+      title={isCollapsed ? label : undefined}
+      className={`flex items-center gap-2.5 rounded-lg text-sm transition-all duration-150 ${
+        isCollapsed ? 'justify-center p-2.5' : 'px-3 py-2'
+      } ${
         isActive
           ? 'bg-blue-600/15 text-blue-400 font-semibold border border-blue-500/30 shadow-sm'
           : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
       }`}
     >
       <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
-      <span className="truncate flex-1">{label}</span>
-      {badge !== undefined && (
+      {!isCollapsed && <span className="truncate flex-1">{label}</span>}
+      {!isCollapsed && badge !== undefined && (
         <span className="text-[10px] font-semibold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-full">
           {badge}
         </span>
@@ -65,8 +68,7 @@ function SidebarNavItem({ to, icon: Icon, label, isActive, onClick, badge }: Sid
   );
 }
 
-export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
-  const { user } = useAppSelector((state) => state.auth);
+export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggleCollapse }: WorkspaceSidebarProps) {
   const { list: orgs, activeOrgId } = useAppSelector((state) => state.org);
   const { list: projects, activeProjectId } = useAppSelector((state) => state.project);
   const dispatch = useAppDispatch();
@@ -89,28 +91,39 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
     return name.substring(0, 2).toUpperCase();
   };
 
-  const displayName = user?.name || user?.email || 'User';
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
-    closeMobileMenu?.();
-  };
-
   return (
-    <aside className="w-64 bg-[#0b1120] text-slate-300 flex flex-col shrink-0 h-full border-r border-slate-800 select-none z-20">
+    <aside
+      className={`bg-[#0b1120] text-slate-300 flex flex-col shrink-0 h-full border-r border-slate-800 select-none z-20 transition-all duration-200 ${
+        isCollapsed ? 'w-16' : 'w-64'
+      }`}
+    >
       {/* Top Bar / Logo */}
-      <div className="h-14 border-b border-slate-800 flex items-center justify-between px-4 shrink-0">
-        <Link
-          to="/workspace"
-          className="flex items-center gap-2.5 font-bold text-lg text-white tracking-tight"
-          onClick={closeMobileMenu}
-        >
-          <div className="bg-blue-600 p-1.5 rounded-lg text-white flex items-center justify-center">
+      <div className={`h-14 border-b border-slate-800 flex items-center shrink-0 ${isCollapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              if (onToggleCollapse) {
+                e.preventDefault();
+                onToggleCollapse();
+              }
+            }}
+            className="bg-blue-600 hover:bg-blue-500 p-1.5 rounded-lg text-white flex items-center justify-center shrink-0 transition-colors shadow-sm cursor-pointer outline-none"
+            title={isCollapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
+            aria-label="Toggle sidebar"
+          >
             <Kanban className="h-5 w-5" />
-          </div>
-          <span>FlowBoard</span>
-        </Link>
+          </button>
+          {!isCollapsed && (
+            <Link
+              to="/workspace"
+              className="font-bold text-lg text-white tracking-tight truncate hover:text-blue-400 transition-colors"
+              onClick={closeMobileMenu}
+            >
+              FlowBoard
+            </Link>
+          )}
+        </div>
         {closeMobileMenu && (
           <button
             className="lg:hidden p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
@@ -122,26 +135,35 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
       </div>
 
       {/* Navigation Scroll Area */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5 text-sm font-medium">
+      <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-4 space-y-5 text-sm font-medium">
         {/* Organization Switcher Capsule */}
         <DropdownMenu>
           <DropdownMenuTrigger className="w-full text-left outline-none">
-            <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors flex items-center justify-between">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0 border border-blue-500/20">
-                  {getInitials(activeOrg?.name || 'FB')}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-sm text-slate-200 truncate">
-                    {activeOrg?.name || 'Select Organization'}
-                  </div>
-                  <div className="text-[11px] text-slate-500 truncate">
-                    {activeOrg?.slug ? `@${activeOrg.slug}` : 'Organization'}
-                  </div>
-                </div>
+            {isCollapsed ? (
+              <div
+                className="w-10 h-10 mx-auto rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors flex items-center justify-center text-blue-400 font-bold text-xs border-blue-500/20"
+                title={activeOrg?.name || 'Organization'}
+              >
+                {getInitials(activeOrg?.name || 'FB')}
               </div>
-              <ChevronDown className="h-4 w-4 text-slate-500 shrink-0 ml-1" />
-            </div>
+            ) : (
+              <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors flex items-center justify-between">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0 border border-blue-500/20">
+                    {getInitials(activeOrg?.name || 'FB')}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm text-slate-200 truncate">
+                      {activeOrg?.name || 'Select Organization'}
+                    </div>
+                    <div className="text-[11px] text-slate-500 truncate">
+                      {activeOrg?.slug ? `@${activeOrg.slug}` : 'Organization'}
+                    </div>
+                  </div>
+                </div>
+                <ChevronDown className="h-4 w-4 text-slate-500 shrink-0 ml-1" />
+              </div>
+            )}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56 bg-slate-900 border-slate-800 text-slate-200">
             <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
@@ -182,9 +204,13 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
 
         {/* Section 1: Organization Navigation */}
         <div className="space-y-1">
-          <div className="px-2 pb-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Organization
-          </div>
+          {!isCollapsed ? (
+            <div className="px-2 pb-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Organization
+            </div>
+          ) : (
+            <div className="h-px bg-slate-800/80 my-2" />
+          )}
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}`}
             icon={LayoutDashboard}
@@ -195,6 +221,7 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
               location.pathname === `/workspace/`
             }
             onClick={closeMobileMenu}
+            isCollapsed={isCollapsed}
           />
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}/projects`}
@@ -205,12 +232,14 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
               location.pathname === `/workspace/orgs/${orgSlug}/projects/new`
             }
             onClick={closeMobileMenu}
+            isCollapsed={isCollapsed}
           />
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}`}
             icon={CheckSquare}
             label="My Work"
             onClick={closeMobileMenu}
+            isCollapsed={isCollapsed}
           />
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}/members`}
@@ -218,6 +247,7 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
             label="Members"
             isActive={location.pathname === `/workspace/orgs/${orgSlug}/members`}
             onClick={closeMobileMenu}
+            isCollapsed={isCollapsed}
           />
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}/invitations`}
@@ -225,6 +255,7 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
             label="Activity"
             isActive={location.pathname === `/workspace/orgs/${orgSlug}/invitations`}
             onClick={closeMobileMenu}
+            isCollapsed={isCollapsed}
           />
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}/settings`}
@@ -232,27 +263,32 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
             label="Settings"
             isActive={location.pathname === `/workspace/orgs/${orgSlug}/settings`}
             onClick={closeMobileMenu}
+            isCollapsed={isCollapsed}
           />
         </div>
 
         {/* Section 2: Current Project Navigation */}
         <div className="pt-2 space-y-1">
-          <button
-            type="button"
-            onClick={() => setIsProjectSectionOpen(!isProjectSectionOpen)}
-            className="w-full flex items-center justify-between px-2 pb-1 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-300 transition-colors select-none text-left"
-          >
-            <div className="flex items-center gap-1.5 truncate">
-              <Briefcase className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              <span className="truncate">{activeProject ? activeProject.name : 'Current Project'}</span>
-            </div>
-            {isProjectSectionOpen ? (
-              <ChevronDown className="h-3.5 w-3.5 text-slate-500 shrink-0 ml-1" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5 text-slate-500 shrink-0 ml-1" />
-            )}
-          </button>
-          {isProjectSectionOpen && (
+          {!isCollapsed ? (
+            <button
+              type="button"
+              onClick={() => setIsProjectSectionOpen(!isProjectSectionOpen)}
+              className="w-full flex items-center justify-between px-2 pb-1 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-300 transition-colors select-none text-left"
+            >
+              <div className="flex items-center gap-1.5 truncate">
+                <Briefcase className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                <span className="truncate">{activeProject ? activeProject.name : 'Current Project'}</span>
+              </div>
+              {isProjectSectionOpen ? (
+                <ChevronDown className="h-3.5 w-3.5 text-slate-500 shrink-0 ml-1" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5 text-slate-500 shrink-0 ml-1" />
+              )}
+            </button>
+          ) : (
+            <div className="h-px bg-slate-800/80 my-2" />
+          )}
+          {(isProjectSectionOpen || isCollapsed) && (
             <div className="space-y-1">
               {currentProjectKey ? (
                 <>
@@ -264,6 +300,7 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
                       location.pathname === `/workspace/orgs/${orgSlug}/projects/${currentProjectKey}`
                     }
                     onClick={closeMobileMenu}
+                    isCollapsed={isCollapsed}
                   />
                   <SidebarNavItem
                     to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/issues?view=list`}
@@ -274,6 +311,7 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
                       location.search.includes('view=list')
                     }
                     onClick={closeMobileMenu}
+                    isCollapsed={isCollapsed}
                   />
                   <SidebarNavItem
                     to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/issues`}
@@ -285,6 +323,7 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
                       !location.search.includes('view=list')
                     }
                     onClick={closeMobileMenu}
+                    isCollapsed={isCollapsed}
                   />
                   <SidebarNavItem
                     to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/members`}
@@ -292,6 +331,7 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
                     label="Members"
                     isActive={location.pathname.includes(`/projects/${currentProjectKey}/members`)}
                     onClick={closeMobileMenu}
+                    isCollapsed={isCollapsed}
                   />
                   <SidebarNavItem
                     to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/settings`}
@@ -299,59 +339,19 @@ export function WorkspaceSidebar({ closeMobileMenu }: WorkspaceSidebarProps) {
                     label="Settings"
                     isActive={location.pathname.includes(`/projects/${currentProjectKey}/settings`)}
                     onClick={closeMobileMenu}
+                    isCollapsed={isCollapsed}
                   />
                 </>
               ) : (
-                <div className="px-3 py-2 text-xs text-slate-500 italic">
-                  Select a project to view navigation
-                </div>
+                !isCollapsed && (
+                  <div className="px-3 py-2 text-xs text-slate-500 italic">
+                    Select a project to view navigation
+                  </div>
+                )
               )}
             </div>
           )}
         </div>
-      </div>
-
-      {/* Footer: User Profile Widget */}
-      <div className="p-3 border-t border-slate-800 shrink-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="w-full text-left outline-none">
-            <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/70 transition-colors cursor-pointer">
-              <Avatar className="h-9 w-9 border border-slate-700 shrink-0">
-                <AvatarFallback className="bg-blue-600 text-white font-semibold text-xs">
-                  {getInitials(displayName)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-slate-200 truncate">{displayName}</div>
-                <div className="text-xs text-slate-500 truncate">{user?.email || 'user@example.com'}</div>
-              </div>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-slate-900 border-slate-800 text-slate-200">
-            <div className="px-2 py-1.5 text-xs text-slate-400">
-              Signed in as <span className="font-semibold text-slate-200 truncate block">{displayName}</span>
-            </div>
-            <DropdownMenuSeparator className="bg-slate-800" />
-            <DropdownMenuItem
-              onClick={() => {
-                navigate('/workspace/settings');
-                closeMobileMenu?.();
-              }}
-              className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 focus:text-white"
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              Account Settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-slate-800" />
-            <DropdownMenuItem
-              onClick={handleLogout}
-              className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 text-red-400 focus:text-red-300"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </aside>
   );
