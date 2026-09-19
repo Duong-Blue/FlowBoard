@@ -1,4 +1,6 @@
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './modules/health/health.module';
@@ -19,9 +21,9 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      // load: [jwtConfig], // ponytial: load jwtConfig when available
     }),
     EventEmitterModule.forRoot(),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
     DatabaseModule,
     HealthModule,
     AuthModule,
@@ -31,11 +33,16 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
     InvitationsModule,
     ProjectsModule,
     ProjectMembersModule,
-    IssuesModule, // Import IssuesModule
+    IssuesModule,
     NotificationsModule,
     RealtimeModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
