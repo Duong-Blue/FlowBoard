@@ -12,8 +12,10 @@ import {
   Headers,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
-import { CreateCommentDto, UpdateCommentDto, QueryCommentDto } from './dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
+import { QueryCommentDto } from './dto/query-comment.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ProjectMemberGuard } from '../../common/guards/project-member.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CurrentProjectMember } from '../../common/decorators/current-project-member.decorator';

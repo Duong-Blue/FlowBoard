@@ -5,7 +5,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { ProjectRole } from '@prisma/client';
-import { CreateCommentDto, UpdateCommentDto, QueryCommentDto } from './dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
+import { QueryCommentDto } from './dto/query-comment.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationsService } from '../notifications/notifications.service';
 
