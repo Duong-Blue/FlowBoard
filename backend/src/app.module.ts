@@ -1,4 +1,5 @@
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
@@ -23,7 +24,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
       isGlobal: true,
     }),
     EventEmitterModule.forRoot(),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 300 }]),
     DatabaseModule,
     HealthModule,
     AuthModule,
@@ -41,7 +42,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
   ],
 })
