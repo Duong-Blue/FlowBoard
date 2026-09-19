@@ -1,8 +1,9 @@
 import { Controller, Post, Body, Get, Param, UseGuards, Delete } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { InvitationsService } from './invitations.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { OrgMemberGuard } from '../../common/guards/org-member.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -10,6 +11,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseGuards(JwtAuthGuard, OrgMemberGuard)
   @Post()
   create(@Param('orgId') orgId: string, @CurrentUser('id') userId: string, @Body() dto: CreateInvitationDto) {
@@ -28,6 +30,7 @@ export class InvitationsController {
     return this.invitationsService.revoke(orgId, id, userId);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseGuards(JwtAuthGuard, OrgMemberGuard)
   @Post('accept')
   accept(@CurrentUser('id') userId: string, @Body() dto: AcceptInvitationDto) {

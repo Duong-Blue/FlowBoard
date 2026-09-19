@@ -10,12 +10,13 @@ import {
   Query,
   Headers,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { IssuesService } from './issues.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
 import { IssueQueryDto } from './dto/issue-query.dto';
 import { MoveIssueDto } from './dto/move-issue.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ProjectMemberGuard } from '../../common/guards/project-member.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CurrentProjectMember } from '../../common/decorators/current-project-member.decorator';
@@ -37,6 +38,7 @@ export class BoardController {
 export class IssuesController {
   constructor(private readonly issuesService: IssuesService) {}
 
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   @Post()
   create(
     @Param('projectId') projectId: string,
@@ -64,6 +66,7 @@ export class IssuesController {
     return this.issuesService.findOne(projectId, issueId);
   }
 
+  @Throttle({ default: { limit: 120, ttl: 60000 } })
   @Patch(':issueId/move')
   move(
     @Param('projectId') projectId: string,
@@ -76,6 +79,7 @@ export class IssuesController {
     return this.issuesService.moveIssue(projectId, issueId, userId, dto, role, correlationId);
   }
 
+  @Throttle({ default: { limit: 120, ttl: 60000 } })
   @Patch(':issueId')
   update(
     @Param('projectId') projectId: string,
@@ -88,6 +92,7 @@ export class IssuesController {
     return this.issuesService.update(projectId, issueId, userId, dto, role, correlationId);
   }
 
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Delete(':issueId')
   delete(
     @Param('projectId') projectId: string,

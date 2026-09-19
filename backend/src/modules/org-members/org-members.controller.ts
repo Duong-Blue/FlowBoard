@@ -1,7 +1,7 @@
 import { Controller, Get, Patch, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { OrgMembersService } from './org-members.service';
 import { UpdateMemberRoleDto } from './update-member-role.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { OrgMemberGuard } from '../../common/guards/org-member.guard';
 
 @UseGuards(JwtAuthGuard)
