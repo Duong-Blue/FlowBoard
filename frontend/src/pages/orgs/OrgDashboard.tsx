@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { setOrgs, setActiveOrg } from '../../store/slices/orgSlice';
 import * as orgService from '../../services/orgService';
@@ -19,12 +20,12 @@ import {
   Clock,
   ExternalLink,
   Shield,
-  Sparkles,
   Layers,
 } from 'lucide-react';
 import type { Organization, Project, Member } from '../../store/types';
 
 export default function OrgDashboard() {
+  const { t } = useTranslation(['workspace', 'common']);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { orgId: paramOrgId } = useParams<{ orgId?: string }>();
@@ -43,12 +44,12 @@ export default function OrgDashboard() {
           const data = await orgService.getOrgs();
           dispatch(setOrgs(data));
         } catch (err: unknown) {
-          setError(err instanceof Error ? err.message : 'Failed to load organization data');
+          setError(err instanceof Error ? err.message : t('common:status.error'));
         }
       };
       fetchOrgs();
     }
-  }, [dispatch, orgs.length]);
+  }, [dispatch, orgs.length, t]);
 
   useEffect(() => {
     if (orgs.length === 0) return;
@@ -92,7 +93,7 @@ export default function OrgDashboard() {
       } catch (err: unknown) {
         if (isMounted) {
           console.error('Failed to load organization dashboard details:', err);
-          setError(err instanceof Error ? err.message : 'Failed to load organization metrics');
+          setError(err instanceof Error ? err.message : t('common:status.error'));
         }
       } finally {
         if (isMounted) {
@@ -106,21 +107,21 @@ export default function OrgDashboard() {
     return () => {
       isMounted = false;
     };
-  }, [activeOrg?.id]);
+  }, [activeOrg?.id, t]);
 
   if (orgsLoading || (dataLoading && !activeOrg)) {
-    return <PageLoader text="Loading organization dashboard..." className="min-h-[400px]" />;
+    return <PageLoader text={t('common:status.loading')} className="min-h-[400px]" />;
   }
 
   if (!activeOrg && orgs.length === 0 && !dataLoading) {
     return (
       <EmptyState
         icon={Building2}
-        title="No organizations found"
-        description="Create your first organization to get started managing projects and teams."
+        title={t('sidebar.noOrganizations')}
+        description={t('createOrg.subtitle')}
         action={
           <Button onClick={() => navigate('/workspace/orgs/new')}>
-            <Plus className="mr-2 h-4 w-4" /> Create Organization
+            <Plus className="mr-2 h-4 w-4" /> {t('createOrg.title')}
           </Button>
         }
       />
@@ -160,7 +161,7 @@ export default function OrgDashboard() {
                 )}
               </div>
               <p className="text-slate-300 text-sm max-w-2xl">
-                {activeOrg?.description || 'Manage your organization and projects efficiently.'}
+                {activeOrg?.description || t('orgDashboard.subtitle')}
               </p>
             </div>
           </div>
@@ -173,7 +174,7 @@ export default function OrgDashboard() {
               onClick={() => navigate(`/workspace/orgs/${orgKey}/members`)}
             >
               <Users className="mr-2 h-4 w-4 text-indigo-300" />
-              Members
+              {t('sidebar.members')}
             </Button>
             <Button
               size="sm"
@@ -181,7 +182,7 @@ export default function OrgDashboard() {
               onClick={() => navigate(`/workspace/orgs/${orgKey}/projects/new`)}
             >
               <Plus className="mr-2 h-4 w-4" />
-              New Project
+              {t('orgDashboard.createProject')}
             </Button>
           </div>
         </div>
@@ -199,7 +200,7 @@ export default function OrgDashboard() {
           className="group relative bg-white p-6 rounded-xl border border-slate-200 hover:border-indigo-200 shadow-sm hover:shadow-md transition-all cursor-pointer"
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-500">Total Projects</span>
+            <span className="text-sm font-medium text-slate-500">{t('orgDashboard.totalProjects')}</span>
             <div className="p-2.5 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
               <FolderKanban className="h-5 w-5" />
             </div>
@@ -213,10 +214,9 @@ export default function OrgDashboard() {
               )}
             </div>
             <span className="text-xs font-medium text-indigo-600 flex items-center group-hover:translate-x-0.5 transition-transform">
-              View all <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              {t('orgDashboard.viewAllProjects')} <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-500">Active repositories & workspaces</p>
         </div>
 
         <div
@@ -224,7 +224,7 @@ export default function OrgDashboard() {
           className="group relative bg-white p-6 rounded-xl border border-slate-200 hover:border-indigo-200 shadow-sm hover:shadow-md transition-all cursor-pointer"
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-500">Team Members</span>
+            <span className="text-sm font-medium text-slate-500">{t('orgDashboard.totalMembers')}</span>
             <div className="p-2.5 rounded-lg bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
               <Users className="h-5 w-5" />
             </div>
@@ -238,10 +238,9 @@ export default function OrgDashboard() {
               )}
             </div>
             <span className="text-xs font-medium text-purple-600 flex items-center group-hover:translate-x-0.5 transition-transform">
-              Manage <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              {t('orgDashboard.manageMembers')} <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-500">Collaborators & organization admins</p>
         </div>
 
         <div
@@ -249,7 +248,7 @@ export default function OrgDashboard() {
           className="group relative bg-white p-6 rounded-xl border border-slate-200 hover:border-indigo-200 shadow-sm hover:shadow-md transition-all cursor-pointer sm:col-span-2 lg:col-span-1"
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-500">Organization Status</span>
+            <span className="text-sm font-medium text-slate-500">{t('sidebar.settings')}</span>
             <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
               <Shield className="h-5 w-5" />
             </div>
@@ -257,13 +256,12 @@ export default function OrgDashboard() {
           <div className="mt-4 flex items-baseline justify-between">
             <div className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              Active Workspace
+              {t('common:status.active')}
             </div>
             <span className="text-xs font-medium text-slate-500 group-hover:text-slate-700 flex items-center">
-              Settings <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              {t('sidebar.settings')} <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-500">Standard Plan • All services running</p>
         </div>
       </div>
 
@@ -272,13 +270,13 @@ export default function OrgDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Layers className="h-5 w-5 text-indigo-600" />
-              <h2 className="text-xl font-bold tracking-tight text-slate-900">Your Projects</h2>
+              <h2 className="text-xl font-bold tracking-tight text-slate-900">{t('orgDashboard.recentProjects')}</h2>
             </div>
             <Link
               to={`/workspace/orgs/${orgKey}/projects`}
               className="text-xs font-medium text-indigo-600 hover:text-indigo-700 flex items-center"
             >
-              View all ({projects.length}) <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              {t('orgDashboard.viewAllProjects')} ({projects.length}) <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Link>
           </div>
 
@@ -295,16 +293,13 @@ export default function OrgDashboard() {
           ) : projects.length === 0 ? (
             <div className="p-8 text-center bg-white border border-slate-200 border-dashed rounded-xl space-y-3">
               <FolderKanban className="mx-auto h-8 w-8 text-slate-400" />
-              <p className="text-sm font-medium text-slate-900">No projects created yet</p>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Create a project to start managing tasks, issues, and tracking progress with your team.
-              </p>
+              <p className="text-sm font-medium text-slate-900">{t('orgDashboard.noProjects')}</p>
               <Button
                 size="sm"
                 onClick={() => navigate(`/workspace/orgs/${orgKey}/projects/new`)}
                 className="mt-2"
               >
-                <Plus className="mr-2 h-4 w-4" /> Create First Project
+                <Plus className="mr-2 h-4 w-4" /> {t('orgDashboard.createProject')}
               </Button>
             </div>
           ) : (
@@ -331,17 +326,17 @@ export default function OrgDashboard() {
                       )}
                     </div>
                     <p className="text-xs text-slate-500 line-clamp-2 min-h-[2rem]">
-                      {project.description || 'No description provided.'}
+                      {project.description || ''}
                     </p>
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                     <SemanticBadge status={project.status || 'active'}>
-                      {project.status || 'Active'}
+                      {project.status || t('common:status.active')}
                     </SemanticBadge>
 
                     <span className="text-indigo-600 font-medium flex items-center group-hover:translate-x-0.5 transition-transform">
-                      Open Board <ExternalLink className="ml-1 h-3 w-3" />
+                      {t('sidebar.board')} <ExternalLink className="ml-1 h-3 w-3" />
                     </span>
                   </div>
                 </div>
@@ -353,7 +348,7 @@ export default function OrgDashboard() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-indigo-600" />
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">Recent Activity</h2>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">{t('sidebar.activity')}</h2>
           </div>
 
           <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
@@ -374,47 +369,12 @@ export default function OrgDashboard() {
                 <div className="relative group">
                   <span className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-white" />
                   <div>
-                    <p className="text-xs font-medium text-slate-900">Organization Initialized</p>
-                    <p className="text-xs text-slate-500">
-                      Welcome to <span className="font-semibold text-slate-700">{activeOrg?.name}</span>
-                    </p>
+                    <p className="text-xs font-medium text-slate-900">{activeOrg?.name}</p>
                     <span className="text-[10px] text-slate-400 flex items-center mt-1">
-                      <Clock className="w-3 h-3 mr-1 inline" /> Active workspace
+                      <Clock className="w-3 h-3 mr-1 inline" /> {t('common:status.active')}
                     </span>
                   </div>
                 </div>
-
-                {projects.slice(0, 3).map((project, idx) => (
-                  <div key={project.id} className="relative group">
-                    <span className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-purple-500 ring-4 ring-white" />
-                    <div>
-                      <p className="text-xs font-medium text-slate-900">
-                        Project <span className="font-semibold text-indigo-600">{project.name}</span>
-                      </p>
-                      <p className="text-xs text-slate-500 line-clamp-1">
-                        Key: {project.key || 'N/A'} • Ready for issue tracking
-                      </p>
-                      <span className="text-[10px] text-slate-400 flex items-center mt-1">
-                        <Sparkles className="w-3 h-3 mr-1 inline" /> Project #{idx + 1}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-
-                {members.length > 0 && (
-                  <div className="relative group">
-                    <span className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-white" />
-                    <div>
-                      <p className="text-xs font-medium text-slate-900">Team Active</p>
-                      <p className="text-xs text-slate-500">
-                        {members.length} {members.length === 1 ? 'member' : 'members'} enrolled in organization
-                      </p>
-                      <span className="text-[10px] text-slate-400 flex items-center mt-1">
-                        <Users className="w-3 h-3 mr-1 inline" /> Active roster
-                      </span>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>

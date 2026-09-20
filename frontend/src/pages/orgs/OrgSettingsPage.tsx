@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { getOrg, updateOrg as updateOrgApi, deleteOrg as deleteOrgApi } from '../../services/orgService';
 import { getOrgMembers } from '../../services/memberService';
@@ -20,6 +21,7 @@ import {
 import type { Organization, Member as OrgMember, RootState } from '../../store/types';
 
 export default function OrgSettingsPage() {
+  const { t } = useTranslation(['workspace', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -52,7 +54,7 @@ export default function OrgSettingsPage() {
         }
       } catch (error) {
         console.error('Error loading org', error);
-        toast.error('Failed to load organization data');
+        toast.error(t('common:status.error'));
       } finally {
         setLoading(false);
       }
@@ -60,7 +62,7 @@ export default function OrgSettingsPage() {
     if (user?.id) {
       loadData();
     }
-  }, [orgId, user?.id]);
+  }, [orgId, user?.id, t]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,10 +70,10 @@ export default function OrgSettingsPage() {
     try {
       const updated = await updateOrgApi(orgId, { name, description, logoUrl });
       dispatch(updateOrg(updated));
-      toast.success('Organization updated successfully');
+      toast.success(t('orgSettings.successMessage'));
     } catch (error) {
       console.error('Update failed', error);
-      toast.error('Failed to update organization');
+      toast.error(t('common:status.error'));
     }
   };
 
@@ -83,29 +85,29 @@ export default function OrgSettingsPage() {
       navigate('/workspace');
     } catch (error) {
       console.error('Delete failed', error);
-      toast.error('Failed to delete organization');
+      toast.error(t('orgSettings.cannotDeleteWithProjects'));
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (!org) return <div>Organization not found</div>;
+  if (loading) return <div>{t('common:status.loading')}</div>;
+  if (!org) return <div>{t('sidebar.noOrganizations')}</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Organization Settings</h2>
-        <p className="text-muted-foreground">Manage organization details and preferences.</p>
+        <h2 className="text-3xl font-bold tracking-tight">{t('orgSettings.title')}</h2>
+        <p className="text-muted-foreground">{t('orgSettings.subtitle')}</p>
       </div>
 
       <Separator />
 
       <form onSubmit={handleUpdate} className="space-y-6">
         <div>
-          <h3 className="text-lg font-medium">General</h3>
-          <p className="text-sm text-muted-foreground mb-4">Basic organization information.</p>
+          <h3 className="text-lg font-medium">{t('orgSettings.generalSettings')}</h3>
+          <p className="text-sm text-muted-foreground mb-4">{t('orgSettings.subtitle')}</p>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t('orgSettings.nameLabel')}</Label>
               <Input
                 id="name"
                 value={name}
@@ -115,7 +117,7 @@ export default function OrgSettingsPage() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('orgSettings.descriptionLabel')}</Label>
               <textarea
                 id="description"
                 value={description}
@@ -137,7 +139,7 @@ export default function OrgSettingsPage() {
         </div>
 
         <Button type="submit">
-          Save Changes
+          {t('common:buttons.save')}
         </Button>
       </form>
 
@@ -147,15 +149,15 @@ export default function OrgSettingsPage() {
           
           <div className="space-y-4">
             <div>
-              <h3 className="text-lg font-medium text-destructive">Danger Zone</h3>
-              <p className="text-sm text-muted-foreground">Irreversible actions for this organization.</p>
+              <h3 className="text-lg font-medium text-destructive">{t('orgSettings.dangerZone')}</h3>
+              <p className="text-sm text-muted-foreground">{t('orgSettings.deleteOrgDescription')}</p>
             </div>
             
             <div className="border border-red-200 bg-red-50/50 rounded-md p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-destructive">Delete Organization</p>
-                  <p className="text-sm text-muted-foreground">Permanently delete this organization and all its projects.</p>
+                  <p className="font-medium text-destructive">{t('orgSettings.deleteOrgTitle')}</p>
+                  <p className="text-sm text-muted-foreground">{t('orgSettings.deleteOrgDescription')}</p>
                 </div>
                 <Button 
                   variant="destructive" 
@@ -165,7 +167,7 @@ export default function OrgSettingsPage() {
                     setIsDeleteDialogOpen(true);
                   }}
                 >
-                  Delete
+                  {t('common:buttons.delete')}
                 </Button>
               </div>
             </div>
@@ -176,18 +178,17 @@ export default function OrgSettingsPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogTitle>{t('orgSettings.deleteConfirmTitle')}</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. This will permanently delete the 
-              <strong> {org.name}</strong> organization and remove all associated data.
+              {t('orgSettings.deleteConfirmDesc')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
+              {t('common:buttons.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Yes, delete organization
+              {t('orgSettings.deleteOrgButton')}
             </Button>
           </DialogFooter>
         </DialogContent>

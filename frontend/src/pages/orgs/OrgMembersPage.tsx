@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Users } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -12,6 +13,7 @@ import type { Member } from '../../store/types';
 import { useAppSelector } from '../../store';
 
 export default function OrgMembersPage() {
+  const { t } = useTranslation(['workspace', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,14 +33,14 @@ export default function OrgMembersPage() {
       })
       .catch((err: unknown) => {
         if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Failed to load members');
+          setError(err instanceof Error ? err.message : t('common:status.error'));
           setLoading(false);
         }
       });
     return () => {
       isMounted = false;
     };
-  }, [orgId]);
+  }, [orgId, t]);
 
   const loadMembers = async () => {
     if (!orgId) return;
@@ -46,7 +48,7 @@ export default function OrgMembersPage() {
       const data = await getOrgMembers(orgId);
       setMembers(data);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to load members');
+      toast.error(err instanceof Error ? err.message : t('common:status.error'));
     }
   };
 
@@ -55,18 +57,18 @@ export default function OrgMembersPage() {
       await updateOrgMemberRole(orgId!, memberId, newRole);
       await loadMembers();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to update role';
+      const message = err instanceof Error ? err.message : t('common:status.error');
       toast.error(message);
     }
   };
 
   const handleRemove = async (memberId: string) => {
-    if (!window.confirm('Are you sure you want to remove this member?')) return;
+    if (!window.confirm(t('common:buttons.confirm'))) return;
     try {
       await removeOrgMember(orgId!, memberId);
       await loadMembers();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to remove member';
+      const message = err instanceof Error ? err.message : t('common:status.error');
       toast.error(message);
     }
   };
@@ -75,16 +77,16 @@ export default function OrgMembersPage() {
   const isOwnerOrAdmin = currentMember?.role === 'OWNER' || currentMember?.role === 'ADMIN';
   const isOwner = currentMember?.role === 'OWNER';
 
-  if (loading) return <PageLoader />;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return <PageLoader text={t('common:status.loading')} />;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Organization Members</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('orgMembers.title')}</h1>
       <div className="border border-slate-200 rounded-md divide-y divide-slate-200 bg-white">
         {members.length === 0 ? (
           <div className="p-8">
-            <EmptyState icon={Users} title="No members found" description="Add members to get started." className="border-none" />
+            <EmptyState icon={Users} title={t('orgMembers.noMembers')} description={t('orgMembers.subtitle')} className="border-none" />
           </div>
         ) : (
           members.map((member) => {
@@ -115,9 +117,9 @@ export default function OrgMembersPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {isOwner && <SelectItem value="OWNER">Owner</SelectItem>}
-                        <SelectItem value="ADMIN">Admin</SelectItem>
-                        <SelectItem value="MEMBER">Member</SelectItem>
+                        {isOwner && <SelectItem value="OWNER">{t('orgMembers.roleOwner')}</SelectItem>}
+                        <SelectItem value="ADMIN">{t('orgMembers.roleAdmin')}</SelectItem>
+                        <SelectItem value="MEMBER">{t('orgMembers.roleMember')}</SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
@@ -131,7 +133,7 @@ export default function OrgMembersPage() {
                       className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 px-2"
                       onClick={() => handleRemove(member.userId)}
                     >
-                      Remove
+                      {t('common:buttons.remove')}
                     </Button>
                   )}
                 </div>
