@@ -11,6 +11,7 @@ import { WorkspaceSidebar } from './WorkspaceSidebar';
 import { Menu, Settings, LogOut } from 'lucide-react';
 import { AppBreadcrumb } from '../components/shared/AppBreadcrumb';
 import { NotificationCenter } from '../components/shared/NotificationCenter';
+import { LanguageSwitcher } from '../components/shared/LanguageSwitcher';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import {
   DropdownMenu,
@@ -164,6 +165,7 @@ export default function WorkspaceLayout() {
             <AppBreadcrumb />
           </div>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <NotificationCenter />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

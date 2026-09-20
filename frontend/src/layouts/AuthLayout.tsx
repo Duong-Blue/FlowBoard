@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../store';
+import { LanguageSwitcher } from '../components/shared/LanguageSwitcher';
 
 export default function AuthLayout() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
@@ -16,7 +17,10 @@ export default function AuthLayout() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-140px)] items-center justify-center py-8">
+    <div className="relative flex min-h-[calc(100vh-140px)] items-center justify-center py-8">
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-md">
         <Outlet />
       </div>

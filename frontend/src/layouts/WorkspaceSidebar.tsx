@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppSelector, useAppDispatch } from '../store';
 import { setActiveOrg } from '../store/slices/orgSlice';
 import {
@@ -69,6 +70,7 @@ function SidebarNavItem({ to, icon: Icon, label, isActive, onClick, badge, isCol
 }
 
 export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggleCollapse }: WorkspaceSidebarProps) {
+  const { t } = useTranslation('workspace');
   const { list: orgs, activeOrgId } = useAppSelector((state) => state.org);
   const { list: projects, activeProjectId } = useAppSelector((state) => state.project);
   const dispatch = useAppDispatch();
@@ -109,7 +111,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
               }
             }}
             className="bg-blue-600 hover:bg-blue-500 p-1.5 rounded-lg text-white flex items-center justify-center shrink-0 transition-colors shadow-sm cursor-pointer outline-none"
-            title={isCollapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
+            title={isCollapsed ? t('sidebar.expandSidebar') : t('sidebar.collapseSidebar')}
             aria-label="Toggle sidebar"
           >
             <Kanban className="h-5 w-5" />
@@ -153,12 +155,13 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
                     {getInitials(activeOrg?.name || 'FB')}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-sm text-slate-200 truncate">
-                      {activeOrg?.name || 'Select Organization'}
-                    </div>
-                    <div className="text-[11px] text-slate-500 truncate">
-                      {activeOrg?.slug ? `@${activeOrg.slug}` : 'Organization'}
-                    </div>
+                  <div className="font-semibold text-sm text-slate-200 truncate">
+                    {activeOrg?.name || t('sidebar.selectOrganization')}
+                  </div>
+                  <div className="text-[11px] text-slate-500 truncate">
+                    {activeOrg?.slug ? `@${activeOrg.slug}` : t('sidebar.organizationSection')}
+                  </div>
+
                   </div>
                 </div>
                 <ChevronDown className="h-4 w-4 text-slate-500 shrink-0 ml-1" />
@@ -167,7 +170,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56 bg-slate-900 border-slate-800 text-slate-200">
             <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Organizations
+              {t('sidebar.organizations')}
             </div>
             {orgs.map((org) => (
               <DropdownMenuItem
@@ -186,7 +189,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
               </DropdownMenuItem>
             ))}
             {orgs.length === 0 && (
-              <div className="px-2 py-1 text-xs text-slate-500">No organizations found</div>
+              <div className="px-2 py-1 text-xs text-slate-500">{t('sidebar.noOrganizations')}</div>
             )}
             <DropdownMenuSeparator className="bg-slate-800" />
             <DropdownMenuItem
@@ -197,7 +200,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
               className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 text-blue-400 focus:text-blue-300"
             >
               <Plus className="mr-2 h-4 w-4" />
-              Create Organization
+              {t('sidebar.createOrganization')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -206,7 +209,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
         <div className="space-y-1">
           {!isCollapsed ? (
             <div className="px-2 pb-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Organization
+              {t('sidebar.organizationSection')}
             </div>
           ) : (
             <div className="h-px bg-slate-800/80 my-2" />
@@ -214,7 +217,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}`}
             icon={LayoutDashboard}
-            label="Overview"
+            label={t('sidebar.overview')}
             isActive={
               location.pathname === `/workspace/orgs/${orgSlug}` ||
               location.pathname === `/workspace` ||
@@ -226,7 +229,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}/projects`}
             icon={FolderKanban}
-            label="Projects"
+            label={t('sidebar.projects')}
             isActive={
               location.pathname === `/workspace/orgs/${orgSlug}/projects` ||
               location.pathname === `/workspace/orgs/${orgSlug}/projects/new`
@@ -237,14 +240,14 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}`}
             icon={CheckSquare}
-            label="My Work"
+            label={t('sidebar.myWork')}
             onClick={closeMobileMenu}
             isCollapsed={isCollapsed}
           />
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}/members`}
             icon={Users}
-            label="Members"
+            label={t('sidebar.members')}
             isActive={location.pathname === `/workspace/orgs/${orgSlug}/members`}
             onClick={closeMobileMenu}
             isCollapsed={isCollapsed}
@@ -252,7 +255,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}/invitations`}
             icon={Activity}
-            label="Activity"
+            label={t('sidebar.activity')}
             isActive={location.pathname === `/workspace/orgs/${orgSlug}/invitations`}
             onClick={closeMobileMenu}
             isCollapsed={isCollapsed}
@@ -260,7 +263,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
           <SidebarNavItem
             to={`/workspace/orgs/${orgSlug}/settings`}
             icon={Settings}
-            label="Settings"
+            label={t('sidebar.settings')}
             isActive={location.pathname === `/workspace/orgs/${orgSlug}/settings`}
             onClick={closeMobileMenu}
             isCollapsed={isCollapsed}
@@ -275,10 +278,11 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
               onClick={() => setIsProjectSectionOpen(!isProjectSectionOpen)}
               className="w-full flex items-center justify-between px-2 pb-1 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-300 transition-colors select-none text-left"
             >
-              <div className="flex items-center gap-1.5 truncate">
-                <Briefcase className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                <span className="truncate">{activeProject ? activeProject.name : 'Current Project'}</span>
-              </div>
+                <div className="flex items-center gap-1.5 truncate">
+                  <Briefcase className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <span className="truncate">{activeProject ? activeProject.name : t('sidebar.currentProject')}</span>
+                </div>
+
               {isProjectSectionOpen ? (
                 <ChevronDown className="h-3.5 w-3.5 text-slate-500 shrink-0 ml-1" />
               ) : (
@@ -295,7 +299,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
                   <SidebarNavItem
                     to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}`}
                     icon={Info}
-                    label="Project Overview"
+                    label={t('sidebar.projectOverview')}
                     isActive={
                       location.pathname === `/workspace/orgs/${orgSlug}/projects/${currentProjectKey}`
                     }
@@ -305,7 +309,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
                   <SidebarNavItem
                     to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/issues?view=list`}
                     icon={ListTodo}
-                    label="Issues"
+                    label={t('sidebar.issues')}
                     isActive={
                       location.pathname.includes(`/projects/${currentProjectKey}`) &&
                       location.search.includes('view=list')
@@ -316,7 +320,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
                   <SidebarNavItem
                     to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/issues`}
                     icon={Kanban}
-                    label="Board"
+                    label={t('sidebar.board')}
                     isActive={
                       (location.pathname.includes(`/projects/${currentProjectKey}/issues`) ||
                         location.pathname.includes(`/projects/${currentProjectKey}/board`)) &&
@@ -328,7 +332,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
                   <SidebarNavItem
                     to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/members`}
                     icon={Users}
-                    label="Members"
+                    label={t('sidebar.members')}
                     isActive={location.pathname.includes(`/projects/${currentProjectKey}/members`)}
                     onClick={closeMobileMenu}
                     isCollapsed={isCollapsed}
@@ -336,7 +340,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
                   <SidebarNavItem
                     to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/settings`}
                     icon={Sliders}
-                    label="Settings"
+                    label={t('sidebar.settings')}
                     isActive={location.pathname.includes(`/projects/${currentProjectKey}/settings`)}
                     onClick={closeMobileMenu}
                     isCollapsed={isCollapsed}
@@ -345,7 +349,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
               ) : (
                 !isCollapsed && (
                   <div className="px-3 py-2 text-xs text-slate-500 italic">
-                    Select a project to view navigation
+                    {t('sidebar.selectProjectHint')}
                   </div>
                 )
               )}
