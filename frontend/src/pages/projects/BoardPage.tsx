@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
@@ -27,14 +28,15 @@ import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { useBoardRealtime } from '@/hooks/useBoardRealtime';
 import NotFound from '../NotFound';
 
-const COLUMNS: { id: IssueStatus; title: string }[] = [
-  { id: 'TODO', title: 'To Do' },
-  { id: 'IN_PROGRESS', title: 'In Progress' },
-  { id: 'IN_PREVIEW', title: 'In Preview' },
-  { id: 'DONE', title: 'Done' }
-];
+const COLUMN_KEY_MAP: Record<IssueStatus, string> = {
+  TODO: 'columns.todo',
+  IN_PROGRESS: 'columns.inProgress',
+  IN_PREVIEW: 'columns.inPreview',
+  DONE: 'columns.done',
+};
 
 export default function BoardPage() {
+  const { t } = useTranslation('issues');
   const { orgId } = useParams<{ orgId: string }>();
   const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
   const { isConnected } = useBoardRealtime(projectId);
@@ -45,6 +47,13 @@ export default function BoardPage() {
   
   const [members, setMembers] = useState<Member[]>([]);
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
+
+  const COLUMNS: { id: IssueStatus; title: string }[] = [
+    { id: 'TODO', title: t(COLUMN_KEY_MAP['TODO'] as any) },
+    { id: 'IN_PROGRESS', title: t(COLUMN_KEY_MAP['IN_PROGRESS'] as any) },
+    { id: 'IN_PREVIEW', title: t(COLUMN_KEY_MAP['IN_PREVIEW'] as any) },
+    { id: 'DONE', title: t(COLUMN_KEY_MAP['DONE'] as any) }
+  ];
 
   const currentMember = members.find((m) => m.userId === currentUser?.id);
   const userRole = currentMember?.role;
@@ -180,7 +189,7 @@ export default function BoardPage() {
       <div className="flex-none pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Board</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{t('board.title')}</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
@@ -188,19 +197,19 @@ export default function BoardPage() {
                 className={`h-2 w-2 rounded-full ${
                   isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'
                 }`}
-                title={isConnected ? 'Realtime Connected' : 'Disconnected'}
+                title={isConnected ? t('board.realtimeConnected') : t('board.disconnected')}
               />
-              <span>{isConnected ? 'Live' : 'Offline'}</span>
+              <span>{isConnected ? t('board.live') : t('board.offline')}</span>
             </div>
             <Button variant="outline" asChild>
               <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/issues?view=list`}>
                 <LayoutList className="mr-2 h-4 w-4" />
-                List View
+                {t('board.listView')}
               </Link>
             </Button>
             <Button variant="default" className="pointer-events-none opacity-50">
               <LayoutDashboard className="mr-2 h-4 w-4" />
-              Board View
+              {t('board.boardView')}
             </Button>
           </div>
         </div>

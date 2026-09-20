@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { getIssues, createIssue, updateIssue, deleteIssue } from '../../services/issueService';
 import { getProjectMembers } from '../../services/memberService';
@@ -18,8 +19,9 @@ import { useResolvedProject } from '@/hooks/useResolvedProject';
 import NotFound from '../NotFound';
 
 export default function IssueListPage() {
+  const { t } = useTranslation(['issues', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
-  const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
+  const { project, projectId, loading: projectLoading, is404, loading: resolvedLoading } = useResolvedProject();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
@@ -28,7 +30,6 @@ export default function IssueListPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingIssue, setEditingIssue] = useState<Issue | undefined>();
-  const [initialLoaded, setInitialLoaded] = useState(false);
 
   const currentMember = members.find((m) => m.userId === currentUser?.id);
   const userRole = currentMember?.role;
@@ -36,10 +37,10 @@ export default function IssueListPage() {
   const canDelete = userRole === 'ADMIN';
 
   const getUserDisplayName = (user?: IssueUser) => {
-    if (!user) return 'Unassigned';
+    if (!user) return t('form.unassigned');
     if (user.displayName) return user.displayName;
     if (user.firstName || user.lastName) return `${user.firstName || ''} ${user.lastName || ''}`.trim();
-    return user.email || 'Unassigned';
+    return user.email || t('form.unassigned');
   };
 
   useEffect(() => {
@@ -55,16 +56,15 @@ export default function IssueListPage() {
         dispatch(setIssues({ items: issuesRes.items, total: issuesRes.meta.total }));
         setMembers(membersRes);
       } catch (err) {
-        dispatch(setError('Failed to load issues'));
-        toast.error('Failed to load issues');
+        dispatch(setError(t('common:status.error')));
+        toast.error(t('common:status.error'));
       } finally {
         dispatch(setLoading(false));
-        setInitialLoaded(true);
       }
     };
 
     fetchIssuesAndMembers();
-  }, [projectId, filters, dispatch]);
+  }, [projectId, filters, dispatch, t]);
 
   const handleFilterChange = (key: keyof typeof filters, value: any) => {
     dispatch(setFilters({ [key]: value, page: 1 }));
@@ -76,32 +76,32 @@ export default function IssueListPage() {
       if (editingIssue) {
         const updated = await updateIssue(projectId, editingIssue.id, data);
         dispatch(updateIssueAction(updated));
-        toast.success('Issue updated');
+        toast.success(t('common:status.success'));
       } else {
         const created = await createIssue(projectId, data);
         dispatch(addIssue(created));
-        toast.success('Issue created');
+        toast.success(t('common:status.success'));
       }
     } catch (err) {
-      toast.error('Failed to save issue');
+      toast.error(t('common:status.error'));
       throw err;
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!projectId) return;
-    if (!confirm('Are you sure you want to delete this issue?')) return;
+    if (!confirm(t('detail.deleteConfirm'))) return;
     try {
       await deleteIssue(projectId, id);
       dispatch(removeIssue(id));
-      toast.success('Issue deleted');
+      toast.success(t('common:status.success'));
     } catch (err) {
-      toast.error('Failed to delete issue');
+      toast.error(t('common:status.error'));
     }
   };
 
-  if (projectLoading || !initialLoaded) {
-    return <PageLoader />;
+  if (projectLoading || (resolvedLoading && !project)) {
+    return <PageLoader text={t('common:status.loading')} />;
   }
 
   if (is404 || !project) {
@@ -114,23 +114,23 @@ export default function IssueListPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Issues</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t('board.title')}</h1>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" asChild>
             <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/board`}>
               <LayoutDashboard className="mr-2 h-4 w-4" />
-              Board View
+              {t('board.boardView')}
             </Link>
           </Button>
           <Button variant="default" className="pointer-events-none opacity-50">
             <LayoutList className="mr-2 h-4 w-4" />
-            List View
+            {t('board.listView')}
           </Button>
           {canCreateOrEdit && (
             <Button onClick={() => { setEditingIssue(undefined); setDialogOpen(true); }}>
               <Plus className="mr-2 h-4 w-4" />
-              New Issue
+              {t('board.createIssue')}
             </Button>
           )}
         </div>
@@ -140,7 +140,7 @@ export default function IssueListPage() {
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
           <Input
-            placeholder="Search issues..."
+            placeholder={t('board.searchPlaceholder')}
             className="pl-9"
             value={filters.search || ''}
             onChange={(e) => handleFilterChange('search', e.target.value)}
@@ -148,33 +148,33 @@ export default function IssueListPage() {
         </div>
         <Select value={filters.status || 'ALL'} onValueChange={(v) => handleFilterChange('status', v === 'ALL' ? undefined : v)}>
           <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t('detail.status')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All Statuses</SelectItem>
-            <SelectItem value="TODO">To Do</SelectItem>
-            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-            <SelectItem value="DONE">Done</SelectItem>
+            <SelectItem value="ALL">{t('board.all')}</SelectItem>
+            <SelectItem value="TODO">{t('columns.todo')}</SelectItem>
+            <SelectItem value="IN_PROGRESS">{t('columns.inProgress')}</SelectItem>
+            <SelectItem value="DONE">{t('columns.done')}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filters.priority || 'ALL'} onValueChange={(v) => handleFilterChange('priority', v === 'ALL' ? undefined : v)}>
           <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Priority" />
+            <SelectValue placeholder={t('detail.priority')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All Priorities</SelectItem>
-            <SelectItem value="LOW">Low</SelectItem>
-            <SelectItem value="MEDIUM">Medium</SelectItem>
-            <SelectItem value="HIGH">High</SelectItem>
+            <SelectItem value="ALL">{t('board.all')}</SelectItem>
+            <SelectItem value="LOW">{t('priorities.low')}</SelectItem>
+            <SelectItem value="MEDIUM">{t('priorities.medium')}</SelectItem>
+            <SelectItem value="HIGH">{t('priorities.high')}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filters.assigneeId || 'ALL'} onValueChange={(v) => handleFilterChange('assigneeId', v === 'ALL' ? undefined : v)}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Assignee" />
+            <SelectValue placeholder={t('detail.assignee')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All Assignees</SelectItem>
-            <SelectItem value="unassigned">Unassigned</SelectItem>
+            <SelectItem value="ALL">{t('board.all')}</SelectItem>
+            <SelectItem value="unassigned">{t('form.unassigned')}</SelectItem>
             {members.map(m => (
               <SelectItem key={m.userId} value={m.userId}>{m.name}</SelectItem>
             ))}
@@ -183,17 +183,17 @@ export default function IssueListPage() {
       </div>
 
       {loading && issues.length === 0 ? (
-        <PageLoader />
+        <PageLoader text={t('common:status.loading')} />
       ) : issues.length === 0 ? (
         <EmptyState
           icon={LayoutList}
-          title="No issues found"
-          description="Create your first issue to get started."
+          title={t('common:emptyState.noData')}
+          description={t('board.createIssue')}
           action={
             canCreateOrEdit ? (
               <Button onClick={() => { setEditingIssue(undefined); setDialogOpen(true); }}>
                 <Plus className="mr-2 h-4 w-4" />
-                New Issue
+                {t('board.createIssue')}
               </Button>
             ) : undefined
           }
@@ -205,11 +205,11 @@ export default function IssueListPage() {
               <thead className="bg-slate-50 text-slate-700 border-b">
                 <tr>
                   <th className="px-4 py-3 font-medium">Key</th>
-                  <th className="px-4 py-3 font-medium">Title</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Priority</th>
-                  <th className="px-4 py-3 font-medium">Assignee</th>
-                  <th className="px-4 py-3 font-medium text-right">Actions</th>
+                  <th className="px-4 py-3 font-medium">{t('form.titleLabel')}</th>
+                  <th className="px-4 py-3 font-medium">{t('detail.status')}</th>
+                  <th className="px-4 py-3 font-medium">{t('detail.priority')}</th>
+                  <th className="px-4 py-3 font-medium">{t('detail.assignee')}</th>
+                  <th className="px-4 py-3 font-medium text-right">{t('common:labels.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -269,7 +269,7 @@ export default function IssueListPage() {
           
           <div className="flex items-center justify-between border-t px-4 py-3">
             <div className="text-sm text-slate-500">
-              Total {total} issues
+              Total {total}
             </div>
             <div className="flex items-center gap-2">
               <Button 

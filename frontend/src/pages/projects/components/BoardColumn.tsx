@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { Issue, IssueStatus } from '../../../store/types';
@@ -12,6 +13,7 @@ interface BoardColumnProps {
 }
 
 export function BoardColumn({ id, title, issues, disabled }: BoardColumnProps) {
+  const { t } = useTranslation('issues');
   const { setNodeRef, isOver } = useDroppable({
     id,
     data: {
@@ -40,7 +42,7 @@ export function BoardColumn({ id, title, issues, disabled }: BoardColumnProps) {
           ))}
           {issues.length === 0 && (
             <div className="h-full min-h-[100px] flex items-center justify-center border-2 border-dashed border-slate-200 rounded-md text-slate-400 text-sm">
-              Drop here
+              {t('columns.dropHere')}
             </div>
           )}
         </SortableContext>
