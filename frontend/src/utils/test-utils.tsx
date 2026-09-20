@@ -14,6 +14,7 @@ import issueReducer from '../store/slices/issueSlice';
 import notificationReducer from '../store/slices/notificationSlice';
 import type { RootState } from '../store/types';
 import { Toaster } from 'sonner';
+import '../i18n/config';
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
   preloadedState?: Partial<RootState>;
