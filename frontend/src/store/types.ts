@@ -59,6 +59,31 @@ export interface IssueUser {
 
 export type IssueType = 'TASK' | 'BUG' | 'FEATURE' | 'IMPROVEMENT';
 export type IssueStatus = 'TODO' | 'IN_PROGRESS' | 'IN_PREVIEW' | 'DONE';
+export type RelationType = 'BLOCKS' | 'IS_BLOCKED_BY' | 'BLOCKED_BY' | 'RELATES_TO' | 'DUPLICATES';
+
+export interface Attachment {
+  id: string;
+  filename: string;
+  url: string;
+  size: number;
+  mimeType: string;
+  createdAt: string;
+}
+
+export interface IssueRelation {
+  id: string;
+  sourceIssueId: string;
+  targetIssueId: string;
+  type: RelationType;
+  createdAt: string;
+  sourceIssue?: Partial<Issue>;
+  targetIssue?: Partial<Issue>;
+}
+
+export interface SubtaskProgress {
+  total: number;
+  completed: number;
+}
 
 export interface Issue {
   id: string;
@@ -75,6 +100,10 @@ export interface Issue {
   updatedAt: string;
   assignee?: IssueUser;
   reporter?: IssueUser;
+  subtasks?: Issue[];
+  subtaskMetrics?: SubtaskProgress | null;
+  relations?: IssueRelation[];
+  attachments?: Attachment[];
 }
 
 export interface MoveIssuePayload {

@@ -1,3 +1,4 @@
+import { api } from '@/utils/api_helper';
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { type Issue, type IssueFilters, type MoveIssuePayload } from '../types';
 import {
@@ -43,6 +44,9 @@ interface IssueState {
     loading: boolean;
     error: string | null;
   };
+  isSubtasksLoading: boolean;
+  isRelationsLoading: boolean;
+  isAttachmentsLoading: boolean;
 }
 
 const initialBoardColumns: BoardColumns = {
@@ -79,6 +83,9 @@ const initialState: IssueState = {
     loading: false,
     error: null,
   },
+  isSubtasksLoading: false,
+  isRelationsLoading: false,
+  isAttachmentsLoading: false,
 };
 
 export const fetchBoardIssues = createAsyncThunk(
@@ -121,6 +128,82 @@ export const fetchActivities = createAsyncThunk(
   'issue/fetchActivities',
   async ({ projectId, issueId, page, limit }: { projectId: string; issueId: string; page?: number; limit?: number }) => {
     return await getActivities(projectId, issueId, page, limit);
+  }
+);
+
+export const fetchSubtasks = createAsyncThunk(
+  'issue/fetchSubtasks',
+  async ({ projectId, issueId }: { projectId: string; issueId: string }) => {
+    const response = await api.get(`/projects/${projectId}/issues/${issueId}/subtasks`);
+    return response.data;
+  }
+);
+
+export const createSubtask = createAsyncThunk(
+  'issue/createSubtask',
+  async ({ projectId, issueId, data }: { projectId: string; issueId: string; data: any }) => {
+    const response = await api.post(`/projects/${projectId}/issues/${issueId}/subtasks`, data);
+    return response.data;
+  }
+);
+
+export const updateIssueStatus = createAsyncThunk(
+  'issue/updateIssueStatus',
+  async ({ projectId, issueId, status }: { projectId: string; issueId: string; status: string }) => {
+    const response = await api.patch(`/projects/${projectId}/issues/${issueId}`, { status });
+    return response.data;
+  }
+);
+
+export const fetchRelations = createAsyncThunk(
+  'issue/fetchRelations',
+  async ({ projectId, issueId }: { projectId: string; issueId: string }) => {
+    const response = await api.get(`/projects/${projectId}/issues/${issueId}/relations`);
+    return response.data;
+  }
+);
+
+export const createRelation = createAsyncThunk(
+  'issue/createRelation',
+  async ({ projectId, issueId, targetIssueId, type }: { projectId: string; issueId: string; targetIssueId: string; type: string }) => {
+    const response = await api.post(`/projects/${projectId}/issues/${issueId}/relations`, { targetIssueId, type });
+    return response.data;
+  }
+);
+
+export const deleteRelation = createAsyncThunk(
+  'issue/deleteRelation',
+  async ({ projectId, issueId, relationId }: { projectId: string; issueId: string; relationId: string }) => {
+    await api.delete(`/projects/${projectId}/issues/${issueId}/relations/${relationId}`);
+    return relationId;
+  }
+);
+
+export const fetchAttachments = createAsyncThunk(
+  'issue/fetchAttachments',
+  async ({ projectId, issueId }: { projectId: string; issueId: string }) => {
+    const response = await api.get(`/projects/${projectId}/issues/${issueId}/attachments`);
+    return response.data;
+  }
+);
+
+export const uploadAttachment = createAsyncThunk(
+  'issue/uploadAttachment',
+  async ({ projectId, issueId, file }: { projectId: string; issueId: string; file: File }) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(`/projects/${projectId}/issues/${issueId}/attachments`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+);
+
+export const deleteAttachment = createAsyncThunk(
+  'issue/deleteAttachment',
+  async ({ projectId, issueId, attachmentId }: { projectId: string; issueId: string; attachmentId: string }) => {
+    await api.delete(`/projects/${projectId}/issues/${issueId}/attachments/${attachmentId}`);
+    return attachmentId;
   }
 );
 
@@ -305,6 +388,75 @@ const issueSlice = createSlice({
       .addCase(fetchActivities.rejected, (state, action) => {
         state.activities.loading = false;
         state.activities.error = action.error.message || 'Failed to fetch activities';
+      })
+      .addCase(fetchSubtasks.pending, (state) => { state.isSubtasksLoading = true; })
+      .addCase(fetchSubtasks.fulfilled, (state, action) => {
+        state.isSubtasksLoading = false;
+        const issue = state.list.find(i => i.id === action.meta.arg.issueId);
+        if (issue) {
+          issue.subtasks = action.payload;
+        }
+      })
+      .addCase(createSubtask.fulfilled, (state, action) => {
+        const issue = state.list.find(i => i.id === action.meta.arg.issueId);
+        if (issue) {
+          if (!issue.subtasks) issue.subtasks = [];
+          issue.subtasks.push(action.payload);
+        }
+      })
+      .addCase(updateIssueStatus.fulfilled, (state, action) => {
+        const updated = action.payload;
+        if (!updated || !updated.id) return;
+        const index = state.list.findIndex(i => i.id === updated.id);
+        if (index !== -1) {
+          state.list[index] = { ...state.list[index], ...updated };
+        }
+        state.list.forEach(parent => {
+          if (parent.subtasks) {
+            const subIndex = parent.subtasks.findIndex(s => s.id === updated.id);
+            if (subIndex !== -1) {
+              parent.subtasks[subIndex] = { ...parent.subtasks[subIndex], ...updated };
+            }
+          }
+        });
+      })
+      .addCase(fetchRelations.pending, (state) => { state.isRelationsLoading = true; })
+      .addCase(fetchRelations.fulfilled, (state, action) => {
+        state.isRelationsLoading = false;
+        const issue = state.list.find(i => i.id === action.meta.arg.issueId);
+        if (issue) issue.relations = action.payload;
+      })
+      .addCase(createRelation.fulfilled, (state, action) => {
+        const issue = state.list.find(i => i.id === action.meta.arg.issueId);
+        if (issue) {
+          if (!issue.relations) issue.relations = [];
+          issue.relations.push(action.payload);
+        }
+      })
+      .addCase(deleteRelation.fulfilled, (state, action) => {
+        const issue = state.list.find(i => i.id === action.meta.arg.issueId);
+        if (issue && issue.relations) {
+          issue.relations = issue.relations.filter(r => r.id !== action.payload);
+        }
+      })
+      .addCase(fetchAttachments.pending, (state) => { state.isAttachmentsLoading = true; })
+      .addCase(fetchAttachments.fulfilled, (state, action) => {
+        state.isAttachmentsLoading = false;
+        const issue = state.list.find(i => i.id === action.meta.arg.issueId);
+        if (issue) issue.attachments = action.payload;
+      })
+      .addCase(uploadAttachment.fulfilled, (state, action) => {
+        const issue = state.list.find(i => i.id === action.meta.arg.issueId);
+        if (issue) {
+          if (!issue.attachments) issue.attachments = [];
+          issue.attachments.push(action.payload);
+        }
+      })
+      .addCase(deleteAttachment.fulfilled, (state, action) => {
+        const issue = state.list.find(i => i.id === action.meta.arg.issueId);
+        if (issue && issue.attachments) {
+          issue.attachments = issue.attachments.filter(a => a.id !== action.payload);
+        }
       });
   }
 });
@@ -323,3 +475,4 @@ export const {
 } = issueSlice.actions;
 
 export default issueSlice.reducer;
+
