@@ -4,6 +4,7 @@ import AuthLayout from './layouts/AuthLayout';
 import WorkspaceLayout from './layouts/WorkspaceLayout';
 import { RequireAuth } from './components/shared/RequireAuth';
 import WorkspaceIndexRedirect from './components/shared/WorkspaceIndexRedirect';
+import { RouteErrorPage } from './pages/RouteErrorPage';
 import NotFound from './pages/NotFound';
 import OrgMembersPage from './pages/orgs/OrgMembersPage';
 import OrgDashboard from './pages/orgs/OrgDashboard';
@@ -24,13 +25,16 @@ import OrgSettingsPage from './pages/orgs/OrgSettingsPage';
 import { Toaster } from './components/ui/sonner';
 import { SocketProvider } from './providers/SocketProvider';
 
-function ProjectIssuesRoute() {
+function ProjectIssuesLayout() {
   const [searchParams] = useSearchParams();
   const view = searchParams.get('view');
-  if (view === 'list') {
-    return <IssueListPage />;
-  }
-  return <BoardPage />;
+  const baseView = view === 'list' ? <IssueListPage /> : <BoardPage />;
+  return (
+    <>
+      {baseView}
+      <Outlet />
+    </>
+  );
 }
 
 const router = createBrowserRouter([
@@ -41,7 +45,7 @@ const router = createBrowserRouter([
         <Outlet />
       </>
     ),
-    errorElement: <NotFound />,
+    errorElement: <RouteErrorPage />,
     children: [
       {
         element: <PublicLayout />,
@@ -70,10 +74,30 @@ const router = createBrowserRouter([
               { path: 'orgs/:orgId', element: <Navigate to="overview" replace /> },
               { path: 'orgs/:orgId/projects', element: <ProjectListPage /> },
               { path: 'orgs/:orgId/projects/new', element: <CreateProjectPage /> },
-              { path: 'orgs/:orgId/projects/:projectKey', element: <ProjectIssuesRoute /> },
-              { path: 'orgs/:orgId/projects/:projectKey/issues', element: <ProjectIssuesRoute /> },
-              { path: 'orgs/:orgId/projects/:projectKey/issues/:issueId', element: <IssueDetailPage /> },
-              { path: 'orgs/:orgId/projects/:projectKey/board', element: <BoardPage /> },
+              {
+                path: 'orgs/:orgId/projects/:projectKey',
+                element: <ProjectIssuesLayout />,
+                children: [
+                  { index: true, element: null },
+                  { path: 'issues/:issueId', element: <IssueDetailPage /> },
+                ],
+              },
+              {
+                path: 'orgs/:orgId/projects/:projectKey/issues',
+                element: <ProjectIssuesLayout />,
+                children: [
+                  { index: true, element: null },
+                  { path: ':issueId', element: <IssueDetailPage /> },
+                ],
+              },
+              {
+                path: 'orgs/:orgId/projects/:projectKey/board',
+                element: <ProjectIssuesLayout />,
+                children: [
+                  { index: true, element: null },
+                  { path: 'issues/:issueId', element: <IssueDetailPage /> },
+                ],
+              },
               { path: 'orgs/:orgId/projects/:projectKey/members', element: <ProjectMembersPage /> },
               { path: 'orgs/:orgId/projects/:projectKey/settings', element: <ProjectSettingsPage /> },
               { path: 'orgs/:orgId/members', element: <OrgMembersPage /> },
