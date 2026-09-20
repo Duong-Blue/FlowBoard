@@ -8,10 +8,12 @@ import { CommentsModule } from '../comments/comments.module';
 import { ActivityModule } from '../activity/activity.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
+import { SubtasksService } from './subtasks.service';
+
 @Module({
   imports: [DatabaseModule, AuthModule, CommentsModule, ActivityModule, NotificationsModule],
   controllers: [IssuesController, BoardController],
-  providers: [IssuesService],
-  exports: [IssuesService],
+  providers: [IssuesService, SubtasksService],
+  exports: [IssuesService, SubtasksService],
 })
 export class IssuesModule {}

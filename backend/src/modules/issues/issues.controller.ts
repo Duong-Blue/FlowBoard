@@ -12,7 +12,9 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { IssuesService } from './issues.service';
+import { SubtasksService } from './subtasks.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
+import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
 import { IssueQueryDto } from './dto/issue-query.dto';
 import { MoveIssueDto } from './dto/move-issue.dto';
@@ -36,7 +38,10 @@ export class BoardController {
 @UseGuards(JwtAuthGuard, ProjectMemberGuard)
 @Controller('projects/:projectId/issues')
 export class IssuesController {
-  constructor(private readonly issuesService: IssuesService) {}
+  constructor(
+    private readonly issuesService: IssuesService,
+    private readonly subtasksService: SubtasksService,
+  ) {}
 
   @Throttle({ default: { limit: 60, ttl: 60000 } })
   @Post()
@@ -48,6 +53,24 @@ export class IssuesController {
     @Headers('x-correlation-id') correlationId?: string,
   ) {
     return this.issuesService.create(projectId, userId, dto, role, correlationId);
+  }
+
+  @Post(':issueId/subtasks')
+  createSubtask(
+    @Param('projectId') projectId: string,
+    @Param('issueId') issueId: string,
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateSubtaskDto,
+  ) {
+    return this.subtasksService.create(projectId, issueId, userId, dto);
+  }
+
+  @Get(':issueId/subtasks')
+  getSubtasks(
+    @Param('projectId') projectId: string,
+    @Param('issueId') issueId: string,
+  ) {
+    return this.subtasksService.findAll(projectId, issueId);
   }
 
   @Get()

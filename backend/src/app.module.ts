@@ -14,6 +14,8 @@ import { ProjectsModule } from './modules/projects/projects.module';
 import { ProjectMembersModule } from './modules/project-members/project-members.module';
 import { IssuesModule } from './modules/issues/issues.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AttachmentsModule } from './modules/attachments/attachments.module';
+import { RelationsModule } from './modules/relations/relations.module';
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RealtimeModule } from './modules/realtime/realtime.module';
@@ -35,6 +37,8 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
     ProjectsModule,
     ProjectMembersModule,
     IssuesModule,
+    AttachmentsModule,
+    RelationsModule,
     NotificationsModule,
     RealtimeModule,
   ],

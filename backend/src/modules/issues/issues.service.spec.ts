@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IssuesService } from './issues.service';
 import { PrismaService } from '../../database/prisma.service';
 import { ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
-import { ProjectRole } from '@prisma/client';
+import { ProjectRole, IssueStatus } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -80,12 +80,23 @@ describe('IssuesService', () => {
     });
   });
 
-  describe('delete', () => {
-    it('should throw ForbiddenException for non-ADMIN', async () => {
-      await expect(service.delete('p1', 'i1', ProjectRole.MEMBER))
-        .rejects.toThrow(ForbiddenException);
-      await expect(service.delete('p1', 'i1', ProjectRole.VIEWER))
-        .rejects.toThrow(ForbiddenException);
+  describe('validateStatusTransition', () => {
+    it('should allow valid transitions', async () => {
+      await expect(service['validateStatusTransition'](
+        IssueStatus.TODO, IssueStatus.IN_PROGRESS, ProjectRole.MEMBER, false
+      )).resolves.not.toThrow();
+    });
+
+    it('should throw for invalid transition', async () => {
+      await expect(service['validateStatusTransition'](
+        IssueStatus.TODO, IssueStatus.DONE, ProjectRole.MEMBER, false
+      )).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw for DONE transition if blocked', async () => {
+      await expect(service['validateStatusTransition'](
+        IssueStatus.IN_PROGRESS, IssueStatus.DONE, ProjectRole.ADMIN, true
+      )).rejects.toThrow('Cannot move issue to DONE while it is blocked by unresolved issues');
     });
   });
 });

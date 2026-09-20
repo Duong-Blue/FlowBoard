@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { QueryActivityDto } from './dto/query-activity.dto';
+import { ActivityType } from '@prisma/client';
 
 const USER_SELECT = {
   id: true,
@@ -14,6 +15,17 @@ const USER_SELECT = {
 @Injectable()
 export class ActivityService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async createActivity(issueId: string, actorId: string | null, type: ActivityType, metadata: Record<string, any> = {}) {
+    return this.prisma.issueActivity.create({
+      data: {
+        issueId,
+        actorId,
+        type,
+        metadata,
+      },
+    });
+  }
 
   private async resolveProjectId(projectParam: string): Promise<string> {
     const project = await this.prisma.project.findFirst({

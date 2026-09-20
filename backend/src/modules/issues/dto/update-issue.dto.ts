@@ -1,5 +1,27 @@
-import { IsOptional, IsString, IsEnum } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsDateString, ValidationArguments, registerDecorator, ValidationOptions } from 'class-validator';
 import { IssueStatus, IssuePriority, IssueType } from '@prisma/client';
+
+export function IsAfter(property: string, validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      name: 'isAfter',
+      target: object.constructor,
+      propertyName: propertyName,
+      constraints: [property],
+      options: validationOptions,
+      validator: {
+        validate(value: any, args: ValidationArguments) {
+          const [relatedPropertyName] = args.constraints;
+          const relatedValue = (args.object as any)[relatedPropertyName];
+          return !value || !relatedValue || new Date(value) >= new Date(relatedValue);
+        },
+        defaultMessage(args: ValidationArguments) {
+          return `${args.property} must be after or equal to ${args.constraints[0]}`;
+        },
+      },
+    });
+  };
+}
 
 export class UpdateIssueDto {
   @IsOptional()
@@ -25,4 +47,13 @@ export class UpdateIssueDto {
   @IsOptional()
   @IsString()
   assigneeId?: string;
+
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  @IsAfter('startDate', { message: 'dueDate must be after or equal to startDate' })
+  dueDate?: string;
 }

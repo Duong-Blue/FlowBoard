@@ -60,6 +60,49 @@ export class IssuesService {
     }
   }
 
+  private async validateStatusTransition(
+    currentStatus: IssueStatus,
+    targetStatus: IssueStatus,
+    userRole: ProjectRole,
+    hasActiveBlockers: boolean,
+    isSubtask: boolean = false,
+  ): Promise<void> {
+    if (currentStatus === targetStatus) return;
+
+    const allowed: Record<IssueStatus, IssueStatus[]> = {
+      [IssueStatus.TODO]: isSubtask ? [IssueStatus.IN_PROGRESS, IssueStatus.DONE] : [IssueStatus.IN_PROGRESS],
+      [IssueStatus.IN_PROGRESS]: [IssueStatus.TODO, IssueStatus.IN_PREVIEW, IssueStatus.DONE],
+      [IssueStatus.IN_PREVIEW]: [IssueStatus.IN_PROGRESS, IssueStatus.DONE],
+      [IssueStatus.DONE]: isSubtask ? [IssueStatus.TODO, IssueStatus.IN_PROGRESS] : [IssueStatus.IN_PROGRESS],
+    };
+
+    if (!allowed[currentStatus].includes(targetStatus)) {
+      throw new BadRequestException(`Invalid status transition from ${currentStatus} to ${targetStatus}`);
+    }
+
+    if (targetStatus === IssueStatus.DONE) {
+      if (currentStatus === IssueStatus.IN_PROGRESS && userRole !== ProjectRole.ADMIN && !isSubtask) {
+        throw new BadRequestException('Direct transition from IN_PROGRESS to DONE requires ADMIN role');
+      }
+
+      if (hasActiveBlockers) {
+        throw new BadRequestException('Cannot move issue to DONE while it is blocked by unresolved issues');
+      }
+    }
+  }
+
+  private async checkHasActiveBlockers(issueId: string): Promise<boolean> {
+    const blockers = await this.prisma.issueRelation.findMany({
+      where: {
+        OR: [
+          { targetIssueId: issueId, type: 'BLOCKS', sourceIssue: { status: { not: IssueStatus.DONE } } },
+          { sourceIssueId: issueId, type: 'IS_BLOCKED_BY', targetIssue: { status: { not: IssueStatus.DONE } } }
+        ]
+      }
+    });
+    return blockers.length > 0;
+  }
+
   async create(
     projectParam: string,
     reporterId: string,
@@ -225,7 +268,7 @@ export class IssuesService {
   async getBoard(projectParam: string) {
     const projectId = await this.resolveProjectId(projectParam);
     const issues = await this.prisma.issue.findMany({
-      where: { projectId },
+      where: { projectId, parentId: null },
       // Circuit breaker: limit board fetch to 2000 items to prevent Node/DB OOM
       take: 2000,
       orderBy: { order: 'asc' },
@@ -344,6 +387,10 @@ export class IssuesService {
       });
 
       if (issue.status !== dto.status) {
+        const hasBlockers = await this.checkHasActiveBlockers(issueId);
+        const isSubtask = issue.parentId !== null;
+        await this.validateStatusTransition(issue.status, dto.status, userRole, hasBlockers, isSubtask);
+
         await tx.issueActivity.create({
           data: {
             issueId,
@@ -422,6 +469,10 @@ export class IssuesService {
       }
 
       if (dto.status !== undefined && dto.status !== oldIssue.status) {
+        const hasBlockers = await this.checkHasActiveBlockers(issueId);
+        const isSubtask = oldIssue.parentId !== null;
+        await this.validateStatusTransition(oldIssue.status, dto.status, userRole, hasBlockers, isSubtask);
+
         await tx.issueActivity.create({
           data: {
             issueId,
