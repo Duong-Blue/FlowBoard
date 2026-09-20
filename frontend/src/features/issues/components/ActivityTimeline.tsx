@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../../store/index';
 import { fetchActivities } from '../../../store/slices/issueSlice';
 import { ActivityItem } from './ActivityItem';
@@ -9,6 +10,7 @@ interface ActivityTimelineProps {
 }
 
 export function ActivityTimeline({ projectId, issueId }: ActivityTimelineProps) {
+  const { t } = useTranslation(['issues', 'common']);
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector((state) => state.issue.activities);
 
@@ -18,7 +20,7 @@ export function ActivityTimeline({ projectId, issueId }: ActivityTimelineProps) 
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="font-semibold text-slate-900">Activity</h3>
+      <h3 className="font-semibold text-slate-900">{t('detail.activity')}</h3>
       
       {loading && items.length === 0 ? (
         <div className="flex justify-center p-4">
@@ -27,7 +29,7 @@ export function ActivityTimeline({ projectId, issueId }: ActivityTimelineProps) 
       ) : error ? (
         <div className="text-sm text-rose-500">{error}</div>
       ) : items.length === 0 ? (
-        <div className="text-sm text-slate-500 italic">No activity recorded yet</div>
+        <div className="text-sm text-slate-500 italic">{t('detail.noActivity', 'No activity recorded yet')}</div>
       ) : (
         <div className="relative space-y-4">
           <div className="absolute bottom-4 left-[15px] top-4 w-px bg-slate-200" aria-hidden="true" />

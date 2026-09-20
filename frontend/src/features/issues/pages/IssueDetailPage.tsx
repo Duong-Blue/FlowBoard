@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/store/types';
@@ -8,8 +9,10 @@ import { getProjectMembers } from '@/services/memberService';
 import { updateIssue, addIssue, removeIssue } from '@/store/slices/issueSlice';
 import { type Issue, type IssueUser } from '@/store/types';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 
 export function IssueDetailPage() {
+  const { t } = useTranslation('issues');
   const { orgId, projectKey, projectId, issueId } = useParams<{ orgId?: string; projectKey?: string; projectId?: string; issueId?: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -62,7 +65,7 @@ export function IssueDetailPage() {
     
     loadData();
     return () => { mounted = false; };
-  }, [effectiveProjectId, issueId, dispatch]); // omitting 'issue' from dependencies to prevent infinite loops
+  }, [effectiveProjectId, issueId, dispatch]);
 
   const handleUpdate = async (data: Partial<Issue>) => {
     if (!effectiveProjectId || !issueId) return;
@@ -77,7 +80,7 @@ export function IssueDetailPage() {
 
   const handleDelete = async () => {
     if (!effectiveProjectId || !issueId) return;
-    if (window.confirm('Are you sure you want to delete this issue?')) {
+    if (window.confirm(t('detail.deleteConfirm'))) {
       try {
         const targetIssueId = issue?.id || issueId;
         await deleteIssueApi(effectiveProjectId, targetIssueId);
@@ -91,37 +94,44 @@ export function IssueDetailPage() {
     }
   };
 
-  const canDelete = true; 
+  const handleClose = () => {
+    if (effectiveOrgId && effectiveProjectKey) {
+      navigate(`/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/issues`);
+    } else {
+      navigate(-1);
+    }
+  };
 
-  if (loading && !issue) {
-    return (
-      <div className="flex h-full items-center justify-center p-8">
-        <div className="text-muted-foreground animate-pulse">Loading issue details...</div>
-      </div>
-    );
-  }
-
-  if (error && !issue) {
-    return (
-      <div className="flex h-full items-center justify-center p-8 text-destructive">
-        {error}
-      </div>
-    );
-  }
-
-  if (!issue) {
-    return null;
-  }
+  const canDelete = true;
 
   return (
-    <div className="h-full bg-background overflow-hidden">
-      <IssueDetailView 
-        issue={issue} 
-        members={members}
-        canDelete={canDelete}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-      />
-    </div>
+    <Sheet open={true} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <SheetContent side="right">
+        <SheetTitle className="sr-only">
+          {issue ? issue.key : t('detail.title', 'Issue Detail')}
+        </SheetTitle>
+        <SheetDescription className="sr-only">
+          {issue ? issue.title : 'Issue details side drawer'}
+        </SheetDescription>
+
+        {loading && !issue ? (
+          <div className="flex h-full items-center justify-center p-8">
+            <div className="text-muted-foreground animate-pulse">{t('detail.loading')}</div>
+          </div>
+        ) : error && !issue ? (
+          <div className="flex h-full items-center justify-center p-8 text-destructive">
+            {error}
+          </div>
+        ) : issue ? (
+          <IssueDetailView 
+            issue={issue} 
+            members={members}
+            canDelete={canDelete}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+          />
+        ) : null}
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import type { AppDispatch, RootState } from '../../../store/types';
 import { fetchComments } from '../../../store/slices/issueSlice';
 import { CommentComposer } from './CommentComposer';
@@ -12,6 +13,7 @@ interface CommentSectionProps {
 }
 
 export function CommentSection({ projectId, issueId, userRole = 'MEMBER' }: CommentSectionProps) {
+  const { t } = useTranslation('issues');
   const dispatch = useDispatch<AppDispatch>();
   const comments = useSelector((state: RootState) => state.issue.comments.items);
   const totalComments = useSelector((state: RootState) => state.issue.comments.meta.total);
@@ -24,7 +26,7 @@ export function CommentSection({ projectId, issueId, userRole = 'MEMBER' }: Comm
   return (
     <div className="flex flex-col gap-6">
       <h3 className="text-sm font-semibold text-slate-900">
-        Comments ({totalComments})
+        {t('detail.comments')} ({totalComments})
       </h3>
       
       {currentUser && (
