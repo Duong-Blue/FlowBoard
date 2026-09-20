@@ -33,6 +33,9 @@ model Issue {
   assigneeId  String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  startDate   DateTime?
+  dueDate     DateTime?
+  completedAt DateTime?
 
   project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   reporter User    @relation("IssueReporter", fields: [reporterId], references: [id])
@@ -46,5 +49,14 @@ model Issue {
   comments Comment[]
   activities IssueActivity[]
   notifications Notification[]
+
+  parentId          String?         @map("parent_id")
+  parent            Issue?          @relation("IssueParentSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks          Issue[]         @relation("IssueParentSubtasks")
+  relationsAsSource IssueRelation[] @relation("RelationSource")
+  relationsAsTarget IssueRelation[] @relation("RelationTarget")
+  attachments       Attachment[]
+
+  @@index([parentId])
 }
 

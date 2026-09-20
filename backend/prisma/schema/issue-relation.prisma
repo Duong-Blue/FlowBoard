@@ -1,0 +1,22 @@
+enum RelationType {
+  BLOCKS
+  IS_BLOCKED_BY
+  RELATES_TO
+  DUPLICATES
+}
+
+model IssueRelation {
+  id            String       @id @default(uuid())
+  sourceIssueId String       @map("source_issue_id")
+  targetIssueId String       @map("target_issue_id")
+  type          RelationType
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  sourceIssue   Issue        @relation("RelationSource", fields: [sourceIssueId], references: [id], onDelete: Cascade)
+  targetIssue   Issue        @relation("RelationTarget", fields: [targetIssueId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceIssueId, targetIssueId, type])
+  @@index([sourceIssueId])
+  @@index([targetIssueId])
+  @@map("issue_relations")
+}

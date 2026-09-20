@@ -1,0 +1,20 @@
+model Attachment {
+  id              String   @id @default(uuid())
+  issueId         String   @map("issue_id")
+  uploaderId      String?  @map("uploader_id")
+  originalName    String   @map("original_name")
+  storedName      String   @map("stored_name")
+  storagePath     String   @map("storage_path")
+  mimeType        String   @map("mime_type")
+  sizeBytes       Int      @map("size_bytes")
+  storageProvider String   @default("LOCAL") @map("storage_provider")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  issue    Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  uploader User? @relation("AttachmentUploader", fields: [uploaderId], references: [id], onDelete: SetNull)
+
+  @@index([issueId])
+  @@index([uploaderId])
+  @@map("attachments")
+}
