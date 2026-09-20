@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiPost } from '../../utils/api_helper';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -14,6 +15,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation('auth');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,20 +40,20 @@ export default function RegisterPage() {
   return (
     <Card className="w-full shadow-none border border-slate-200 bg-white">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t('register.title')}</CardTitle>
         <CardDescription>
-          Enter your details below to create your account
+          {t('register.subtitle')}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First name</Label>
+              <Label htmlFor="firstName">{t('register.firstNameLabel')}</Label>
               <Input
                 id="firstName"
                 type="text"
-                placeholder="John"
+                placeholder={t('register.firstNamePlaceholder')}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 disabled={isLoading}
@@ -59,11 +61,11 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last name</Label>
+              <Label htmlFor="lastName">{t('register.lastNameLabel')}</Label>
               <Input
                 id="lastName"
                 type="text"
-                placeholder="Doe"
+                placeholder={t('register.lastNamePlaceholder')}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 disabled={isLoading}
@@ -72,7 +74,7 @@ export default function RegisterPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('register.emailLabel')}</Label>
             <Input
               id="email"
               type="email"
@@ -84,7 +86,7 @@ export default function RegisterPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('register.passwordLabel')}</Label>
             <Input
               id="password"
               type="password"
@@ -97,12 +99,12 @@ export default function RegisterPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? 'Creating account...' : 'Create account'}
+            {isLoading ? t('register.submittingButton') : t('register.submitButton')}
           </Button>
           <div className="text-center text-sm text-slate-500">
-            Already have an account?{' '}
-            <Link to="/register" className="font-semibold text-primary hover:underline">
-              Sign in
+            {t('register.hasAccount')}{' '}
+            <Link to="/login" className="font-semibold text-primary hover:underline">
+              {t('register.loginLink')}
             </Link>
           </div>
         </CardFooter>

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { acceptInvitation } from '../../services/invitationService';
 import { Button } from '../../components/ui/button';
 
 export default function AcceptInvitationPage() {
+  const { t } = useTranslation(['workspace', 'common']);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get('token');
@@ -21,7 +23,7 @@ export default function AcceptInvitationPage() {
       await acceptInvitation(orgId, token);
       navigate(`/workspace/orgs/${orgId}`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to accept invitation');
+      setError(err instanceof Error ? err.message : t('common:status.error'));
       setAccepting(false);
     }
   };
@@ -30,8 +32,8 @@ export default function AcceptInvitationPage() {
     return (
       <div className="border border-slate-200 bg-white p-6 rounded-lg w-full space-y-8">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-slate-900">Invalid Invitation</h2>
-          <p className="mt-2 text-sm text-red-600">{error || 'Invalid invitation link. Missing token or organization ID.'}</p>
+          <h2 className="mt-6 text-3xl font-extrabold text-slate-900">{t('common:status.error')}</h2>
+          <p className="mt-2 text-sm text-red-600">{error || t('invitations.noPending')}</p>
         </div>
       </div>
     );
@@ -41,10 +43,10 @@ export default function AcceptInvitationPage() {
     <div className="border border-slate-200 bg-white p-6 rounded-lg w-full space-y-8">
       <div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
-          Join Organization
+          {t('invitations.acceptTitle')}
         </h2>
         <p className="mt-2 text-center text-sm text-slate-500">
-          You have been invited to join an organization.
+          {t('invitations.acceptDesc')}
         </p>
       </div>
       
@@ -65,7 +67,7 @@ export default function AcceptInvitationPage() {
           className="w-full"
           size="default"
         >
-          {accepting ? 'Joining...' : 'Join Organization'}
+          {accepting ? t('common:buttons.submitting') : t('invitations.acceptButton')}
         </Button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch } from '../../store';
 import { setCredentials } from '../../store/slices/authSlice';
 import { apiPost } from '../../utils/api_helper';
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation('auth');
 
   const location = useLocation();
 
@@ -49,19 +51,19 @@ export default function LoginPage() {
   return (
     <Card className="w-full shadow-none border border-slate-200 bg-white">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
+        <CardTitle className="text-2xl font-bold">{t('login.title')}</CardTitle>
         <CardDescription>
-          Enter your email and password to access your account
+          {t('login.subtitle')}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('login.emailLabel')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="name@example.com"
+              placeholder={'name@example.com'}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
@@ -70,7 +72,7 @@ export default function LoginPage() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('login.passwordLabel')}</Label>
             </div>
             <Input
               id="password"
@@ -84,12 +86,12 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign in'}
+            {isLoading ? t('login.submittingButton') : t('login.submitButton')}
           </Button>
           <div className="text-center text-sm text-slate-500">
-            Don&apos;t have an account?{' '}
+            {t('login.noAccount')}{' '}
             <Link to="/register" className="font-semibold text-primary hover:underline">
-              Sign up
+              {t('login.registerLink')}
             </Link>
           </div>
         </CardFooter>
