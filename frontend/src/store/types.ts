@@ -20,8 +20,8 @@ export interface Organization {
 
 export interface Project {
   id: string;
-  orgId: string;
-  organizationId?: string;
+  organizationId: string;
+  orgId?: string;
   name: string;
   key?: string;
   status?: string;
