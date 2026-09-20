@@ -18,6 +18,7 @@ import BoardPage from './pages/projects/BoardPage';
 import { IssueDetailPage } from './features/issues/pages/IssueDetailPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import HomePage from './pages/public/HomePage';
 import InvitationsPage from './pages/invitations/InvitationsPage';
 import AcceptInvitationPage from './pages/invitations/AcceptInvitationPage';
 import DocumentTitleHelper from './components/DocumentTitleHelper';
@@ -50,7 +51,7 @@ const router = createBrowserRouter([
       {
         element: <PublicLayout />,
         children: [
-          { path: '/', element: <Navigate to="/workspace" replace /> },
+          { path: '/', element: <HomePage /> },
         ],
       },
       {

@@ -1,21 +1,16 @@
-
-import { Link, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { Toaster } from "../components/ui/sonner";
+import PublicHeader from "../components/public/PublicHeader";
+import PublicFooter from "../components/public/PublicFooter";
 
 export default function PublicLayout() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="bg-slate-800 text-white p-4">
-        <nav>
-          <Link to="/" className="mr-4 hover:text-indigo-300">Home</Link>
-        </nav>
-      </header>
-      <main className="flex-grow container mx-auto p-4">
+    <div className="flex flex-col min-h-screen bg-slate-50">
+      <PublicHeader />
+      <main className="flex-1" id="main-content">
         <Outlet />
       </main>
-      <footer className="bg-slate-800 text-white p-4 text-center">
-        © {new Date().getFullYear()} FlowBoard. All rights reserved.
-      </footer>
+      <PublicFooter />
       <Toaster position="top-right" />
     </div>
   );
