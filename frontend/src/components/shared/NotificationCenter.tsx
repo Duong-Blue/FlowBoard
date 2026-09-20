@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Bell, Loader2, CheckCheck } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import {
@@ -54,6 +55,7 @@ function formatRelativeTime(dateString?: string): string {
 }
 
 export function NotificationCenter() {
+  const { t } = useTranslation(['workspace', 'common']);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -125,7 +127,7 @@ export function NotificationCenter() {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-          <h3 className="font-semibold text-sm text-slate-900">Notifications</h3>
+          <h3 className="font-semibold text-sm text-slate-900">{t('sidebar.activity')}</h3>
           {unreadCount > 0 && (
             <button
               type="button"
@@ -133,7 +135,7 @@ export function NotificationCenter() {
               className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer"
             >
               <CheckCheck size={14} />
-              Mark all as read
+              {t('common:buttons.confirm')}
             </button>
           )}
         </div>
@@ -143,12 +145,12 @@ export function NotificationCenter() {
           {loading && items.length === 0 ? (
             <div className="p-8 text-center text-sm text-slate-500 flex flex-col items-center justify-center gap-2">
               <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-              <span>Loading notifications...</span>
+              <span>{t('common:status.loading')}</span>
             </div>
           ) : items.length === 0 ? (
             <div className="p-8 text-center flex flex-col items-center justify-center text-slate-500 gap-2">
               <Bell className="h-8 w-8 text-slate-300 stroke-[1.5]" />
-              <span className="text-sm font-medium text-slate-600">No notifications yet</span>
+              <span className="text-sm font-medium text-slate-600">{t('common:emptyState.noData')}</span>
             </div>
           ) : (
             items.map((item) => (

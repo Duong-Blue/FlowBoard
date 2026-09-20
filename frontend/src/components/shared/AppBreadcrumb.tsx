@@ -1,22 +1,24 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronRight } from 'lucide-react';
 import { useAppSelector } from '../../store';
 
 const KEYWORD_MAP: Record<string, string> = {
-  workspace: 'Workspace',
-  orgs: 'Organizations',
-  projects: 'Projects',
-  issues: 'Issues',
-  board: 'Board',
-  members: 'Members',
-  settings: 'Settings',
-  invitations: 'Invitations',
-  new: 'New',
+  workspace: 'workspace',
+  orgs: 'orgs',
+  projects: 'projects',
+  issues: 'issues',
+  board: 'board',
+  members: 'members',
+  settings: 'settings',
+  invitations: 'invitations',
+  new: 'new',
 };
 
 export const AppBreadcrumb = () => {
+  const { t } = useTranslation('workspace');
   const location = useLocation();
-    const { orgId, projectKey } = useParams<{ orgId?: string; projectKey?: string }>();
+  const { orgId, projectKey } = useParams<{ orgId?: string; projectKey?: string }>();
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
   const activeProjectId = useAppSelector((state) => state.project.activeProjectId);
   const effectiveOrgId = orgId || activeOrgId;
@@ -28,39 +30,39 @@ export const AppBreadcrumb = () => {
 
   pathnames.forEach((segment) => {
     if (segment === 'workspace') {
-        breadcrumbItems.push({
-          label: KEYWORD_MAP[segment],
-          to: '/workspace',
-        });
-      } else if (segment === 'orgs' && effectiveOrgId) {
-        breadcrumbItems.push({
-          label: KEYWORD_MAP[segment],
-          to: `/workspace/orgs/${effectiveOrgId}`,
-        });
-      } else if (segment === 'projects' && effectiveOrgId) {
-        breadcrumbItems.push({
-          label: KEYWORD_MAP[segment],
-          to: `/workspace/orgs/${effectiveOrgId}/projects`,
-        });
-      } else if (KEYWORD_MAP[segment]) { 
-        let targetPath = effectiveOrgId && effectiveProjectKey
-          ? `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/${segment}`
-          : '/workspace';
+      breadcrumbItems.push({
+        label: t(`breadcrumbs.${KEYWORD_MAP[segment]}` as any),
+        to: '/workspace',
+      });
+    } else if (segment === 'orgs' && effectiveOrgId) {
+      breadcrumbItems.push({
+        label: t(`breadcrumbs.${KEYWORD_MAP[segment]}` as any),
+        to: `/workspace/orgs/${effectiveOrgId}`,
+      });
+    } else if (segment === 'projects' && effectiveOrgId) {
+      breadcrumbItems.push({
+        label: t(`breadcrumbs.${KEYWORD_MAP[segment]}` as any),
+        to: `/workspace/orgs/${effectiveOrgId}/projects`,
+      });
+    } else if (KEYWORD_MAP[segment]) {
+      let targetPath = effectiveOrgId && effectiveProjectKey
+        ? `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/${segment}`
+        : '/workspace';
 
-        if (segment === 'issues' && effectiveOrgId && effectiveProjectKey) {
-          targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/issues`;
-        } else if (segment === 'board' && effectiveOrgId && effectiveProjectKey) {
-          targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/board`;
-        } else if (segment === 'members' && effectiveOrgId && effectiveProjectKey) {
-          targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/members`;
-        } else if (segment === 'settings' && effectiveOrgId && effectiveProjectKey) {
-          targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/settings`;
-        }
-        breadcrumbItems.push({
-          label: KEYWORD_MAP[segment],
-          to: targetPath,
-        });
+      if (segment === 'issues' && effectiveOrgId && effectiveProjectKey) {
+        targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/issues`;
+      } else if (segment === 'board' && effectiveOrgId && effectiveProjectKey) {
+        targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/board`;
+      } else if (segment === 'members' && effectiveOrgId && effectiveProjectKey) {
+        targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/members`;
+      } else if (segment === 'settings' && effectiveOrgId && effectiveProjectKey) {
+        targetPath = `/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/settings`;
       }
+      breadcrumbItems.push({
+        label: t(`breadcrumbs.${KEYWORD_MAP[segment]}` as any),
+        to: targetPath,
+      });
+    }
   });
 
   if (breadcrumbItems.length === 0) {
