@@ -119,7 +119,10 @@ api.interceptors.response.use(
     const serverMessage = (error.response?.data as { message?: string | string[] })?.message;
     if (serverMessage) {
       const formatted = Array.isArray(serverMessage) ? serverMessage.join(', ') : serverMessage;
-      return Promise.reject(new Error(formatted));
+      const customError: any = new Error(formatted);
+      customError.status = error.response?.status;
+      customError.response = error.response;
+      return Promise.reject(customError);
     }
     return Promise.reject(error);
   }
