@@ -47,7 +47,7 @@ export class ProjectsService {
   async findOne(projectId: string, userId: string) {
     const project = await this.prisma.project.findFirst({
       where: {
-        OR: [{ id: projectId }, { key: projectId }],
+        OR: [{ id: projectId }, { key: { equals: projectId, mode: 'insensitive' } }],
         members: { some: { userId } },
       },
     });
