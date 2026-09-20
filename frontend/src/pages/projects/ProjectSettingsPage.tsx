@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { updateProject, removeProject } from '../../store/slices/projectSlice';
 import { updateProject as updateProjectApi, deleteProject } from '../../services/projectService';
@@ -31,6 +32,7 @@ import {
 } from '../../components/ui/select';
 
 export default function ProjectSettingsPage() {
+  const { t } = useTranslation(['workspace', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
   const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
   const navigate = useNavigate();
@@ -67,13 +69,13 @@ export default function ProjectSettingsPage() {
         setIsAdmin(me?.role === 'ADMIN' || me?.role === 'OWNER');
       } catch (err) {
         console.error(err);
-        toast.error('Failed to load project details');
+        toast.error(t('common:status.error'));
       } finally {
         setLoading(false);
       }
     }
     loadMembers();
-  }, [currentOrgId, user]);
+  }, [currentOrgId, user, t]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,9 +84,9 @@ export default function ProjectSettingsPage() {
       setSaving(true);
       const res = await updateProjectApi(currentOrgId, projectId, { name, description, status });
       dispatch(updateProject(res));
-      toast.success('Project updated successfully');
+      toast.success(t('common:status.success'));
     } catch {
-      toast.error('Failed to update project');
+      toast.error(t('common:status.error'));
     } finally {
       setSaving(false);
     }
@@ -97,9 +99,9 @@ export default function ProjectSettingsPage() {
       const res = await updateProjectApi(currentOrgId, projectId, { status: 'ARCHIVED' });
       dispatch(updateProject(res));
       setStatus('ARCHIVED');
-      toast.success('Project archived');
+      toast.success(t('common:status.success'));
     } catch {
-      toast.error('Failed to archive project');
+      toast.error(t('common:status.error'));
     } finally {
       setSaving(false);
     }
@@ -111,24 +113,24 @@ export default function ProjectSettingsPage() {
       setDeleting(true);
       await deleteProject(currentOrgId, projectId);
       dispatch(removeProject(projectId));
-      toast.success('Project deleted');
+      toast.success(t('common:status.success'));
       navigate(`/workspace/orgs/${currentOrgId}/projects`);
     } catch {
-      toast.error('Failed to delete project');
+      toast.error(t('common:status.error'));
       setDeleting(false);
       setShowDeleteConfirm(false);
     }
   };
 
-  if (projectLoading || loading) return <PageLoader />;
+  if (projectLoading || loading) return <PageLoader text={t('common:status.loading')} />;
 
   if (is404 || !project) return <NotFound />;
 
   if (!isAdmin) {
     return (
       <div className="p-8">
-        <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-        <p className="text-muted-foreground">Only project administrators can view or modify settings.</p>
+        <h2 className="text-xl font-semibold mb-2">{t('common:status.error')}</h2>
+        <p className="text-muted-foreground">{t('orgSettings.cannotDeleteWithProjects')}</p>
       </div>
     );
   }
@@ -136,19 +138,19 @@ export default function ProjectSettingsPage() {
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Project Settings</h2>
-        <p className="text-muted-foreground">Manage project details and preferences.</p>
+        <h2 className="text-3xl font-bold tracking-tight">{t('projects.settingsTitle')}</h2>
+        <p className="text-muted-foreground">{t('projects.settingsSubtitle')}</p>
       </div>
 
       <Separator />
 
       <form onSubmit={handleUpdate} className="space-y-6">
         <div>
-          <h3 className="text-lg font-medium">General</h3>
-          <p className="text-sm text-muted-foreground mb-4">Basic project information.</p>
+          <h3 className="text-lg font-medium">{t('orgSettings.generalSettings')}</h3>
+          <p className="text-sm text-muted-foreground mb-4">{t('projects.settingsSubtitle')}</p>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Project Name</Label>
+              <Label htmlFor="name">{t('projects.nameLabel')}</Label>
               <Input
                 id="name"
                 value={name}
@@ -158,7 +160,7 @@ export default function ProjectSettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('projects.descriptionLabel')}</Label>
               <Input
                 id="description"
                 value={description}
@@ -167,13 +169,13 @@ export default function ProjectSettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{t('common:labels.role')}</Label>
               <Select value={status} onValueChange={setStatus} disabled={saving}>
                 <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t('common:labels.role')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="ACTIVE">{t('common:status.active')}</SelectItem>
                   <SelectItem value="ARCHIVED">Archived</SelectItem>
                 </SelectContent>
               </Select>
@@ -181,7 +183,7 @@ export default function ProjectSettingsPage() {
           </div>
         </div>
         <Button type="submit" disabled={saving}>
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? t('common:buttons.saving') : t('common:buttons.save')}
         </Button>
       </form>
 
@@ -189,15 +191,15 @@ export default function ProjectSettingsPage() {
 
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-medium text-destructive">Danger Zone</h3>
-          <p className="text-sm text-muted-foreground">Irreversible actions for this project.</p>
+          <h3 className="text-lg font-medium text-destructive">{t('orgSettings.dangerZone')}</h3>
+          <p className="text-sm text-muted-foreground">{t('orgSettings.deleteOrgDescription')}</p>
         </div>
         
         <div className="border border-red-200 bg-red-50/50 rounded-md p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Archive Project</p>
-              <p className="text-sm text-muted-foreground">Mark this project as read-only.</p>
+              <p className="text-sm text-muted-foreground">{t('projects.settingsSubtitle')}</p>
             </div>
             <Button variant="outline" size="sm" onClick={handleArchive} disabled={saving || status === 'ARCHIVED'}>
               {status === 'ARCHIVED' ? 'Archived' : 'Archive'}
@@ -206,11 +208,11 @@ export default function ProjectSettingsPage() {
           <Separator className="bg-red-200/50" />
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-destructive">Delete Project</p>
-              <p className="text-sm text-muted-foreground">Permanently delete this project and all its data.</p>
+              <p className="font-medium text-destructive">{t('orgSettings.deleteOrgTitle')}</p>
+              <p className="text-sm text-muted-foreground">{t('orgSettings.deleteOrgDescription')}</p>
             </div>
             <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)} disabled={deleting}>
-              Delete
+              {t('common:buttons.delete')}
             </Button>
           </div>
         </div>
@@ -219,18 +221,17 @@ export default function ProjectSettingsPage() {
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogTitle>{t('orgSettings.deleteConfirmTitle')}</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. This will permanently delete the project
-              "{name}" and remove all associated data from our servers.
+              {t('orgSettings.deleteConfirmDesc')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} disabled={deleting}>
-              Cancel
+              {t('common:buttons.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting ? 'Deleting...' : 'Yes, delete project'}
+              {deleting ? t('common:buttons.submitting') : t('common:buttons.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

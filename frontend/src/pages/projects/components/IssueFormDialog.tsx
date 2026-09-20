@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../../../components/ui/dialog';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -16,6 +17,7 @@ interface IssueFormDialogProps {
 }
 
 export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }: IssueFormDialogProps) {
+  const { t } = useTranslation(['issues', 'common']);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('TASK');
@@ -60,79 +62,79 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{issue ? 'Edit Issue' : 'Create Issue'}</DialogTitle>
+            <DialogTitle>{issue ? t('form.editTitle') : t('form.createTitle')}</DialogTitle>
             <DialogDescription>
-              {issue ? 'Update the details of this issue.' : 'Add a new issue to the project.'}
+              {issue ? t('form.editTitle') : t('form.createTitle')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">{t('form.titleLabel')}</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Issue title"
+                placeholder={t('form.titlePlaceholder')}
                 required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('form.descriptionLabel')}</Label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief description"
+                placeholder={t('form.descriptionPlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="type">Type</Label>
+              <Label htmlFor="type">{t('form.typeLabel')}</Label>
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger id="type">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t('form.typeLabel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TASK">Task</SelectItem>
-                  <SelectItem value="BUG">Bug</SelectItem>
-                  <SelectItem value="FEATURE">Feature</SelectItem>
-                  <SelectItem value="IMPROVEMENT">Improvement</SelectItem>
+                  <SelectItem value="TASK">{t('types.task')}</SelectItem>
+                  <SelectItem value="BUG">{t('types.bug')}</SelectItem>
+                  <SelectItem value="FEATURE">{t('types.story')}</SelectItem>
+                  <SelectItem value="IMPROVEMENT">{t('types.epic')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{t('form.statusLabel')}</Label>
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t('form.statusLabel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TODO">To Do</SelectItem>
-                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                  <SelectItem value="DONE">Done</SelectItem>
+                  <SelectItem value="TODO">{t('columns.todo')}</SelectItem>
+                  <SelectItem value="IN_PROGRESS">{t('columns.inProgress')}</SelectItem>
+                  <SelectItem value="DONE">{t('columns.done')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">{t('form.priorityLabel')}</Label>
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger id="priority">
-                  <SelectValue placeholder="Select priority" />
+                  <SelectValue placeholder={t('form.priorityLabel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="LOW">Low</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
-                  <SelectItem value="HIGH">High</SelectItem>
+                  <SelectItem value="LOW">{t('priorities.low')}</SelectItem>
+                  <SelectItem value="MEDIUM">{t('priorities.medium')}</SelectItem>
+                  <SelectItem value="HIGH">{t('priorities.high')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="assignee">Assignee</Label>
+              <Label htmlFor="assignee">{t('form.assigneeLabel')}</Label>
               <Select value={assigneeId} onValueChange={setAssigneeId}>
                 <SelectTrigger id="assignee">
-                  <SelectValue placeholder="Select assignee" />
+                  <SelectValue placeholder={t('form.assigneeLabel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">{t('form.unassigned')}</SelectItem>
                   {members.map(member => (
                     <SelectItem key={member.userId} value={member.userId}>
                       {member.name}
@@ -144,10 +146,10 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              Cancel
+              {t('common:buttons.cancel')}
             </Button>
             <Button type="submit" disabled={!title || loading}>
-              {loading ? 'Saving...' : 'Save Issue'}
+              {loading ? t('common:buttons.saving') : (issue ? t('form.submitUpdate') : t('form.submitCreate'))}
             </Button>
           </DialogFooter>
         </form>

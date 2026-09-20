@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -14,6 +15,7 @@ import { useResolvedProject } from '@/hooks/useResolvedProject';
 import NotFound from '../NotFound';
 
 export default function ProjectMembersPage() {
+  const { t } = useTranslation(['workspace', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
   const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
   const navigate = useNavigate();
@@ -82,7 +84,7 @@ export default function ProjectMembersPage() {
     }
   };
 
-  if (projectLoading || loading) return <PageLoader />;
+  if (projectLoading || loading) return <PageLoader text={t('common:status.loading')} />;
   if (is404 || !project) return <NotFound />;
 
   const currentUserProjectMember = projectMembers.find(m => m.userId === user?.id);
@@ -96,25 +98,25 @@ export default function ProjectMembersPage() {
     <div className="p-8 max-w-4xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Project Members</h1>
-          <p className="text-muted-foreground mt-2">Manage access to this project.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('projects.membersTitle')}</h1>
+          <p className="text-muted-foreground mt-2">{t('projects.membersSubtitle')}</p>
         </div>
         <Button variant="outline" onClick={() => navigate(`/workspace/orgs/${currentOrgId}/projects`)}>
-          Back to Projects
+          {t('common:buttons.back')}
         </Button>
       </div>
 
       {isAdmin && (
         <Card>
           <CardHeader>
-            <CardTitle>Add Member</CardTitle>
-            <CardDescription>Add a member from the organization to this project.</CardDescription>
+            <CardTitle>{t('projects.addMember')}</CardTitle>
+            <CardDescription>{t('projects.membersSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent className="flex gap-4">
             <div className="flex-1">
               <Select value={selectedUserId} onValueChange={setSelectedUserId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select user..." />
+                  <SelectValue placeholder={t('projects.selectUser')} />
                 </SelectTrigger>
                 <SelectContent>
                   {availableOrgMembers.map(m => (
@@ -123,7 +125,7 @@ export default function ProjectMembersPage() {
                     </SelectItem>
                   ))}
                   {availableOrgMembers.length === 0 && (
-                    <SelectItem value="none" disabled>No available users</SelectItem>
+                    <SelectItem value="none" disabled>{t('common:emptyState.noResults')}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -135,8 +137,8 @@ export default function ProjectMembersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="MEMBER">Member</SelectItem>
+                  <SelectItem value="ADMIN">{t('orgMembers.roleAdmin')}</SelectItem>
+                  <SelectItem value="MEMBER">{t('orgMembers.roleMember')}</SelectItem>
                   <SelectItem value="VIEWER">Viewer</SelectItem>
                 </SelectContent>
               </Select>
@@ -146,7 +148,7 @@ export default function ProjectMembersPage() {
               onClick={handleAddMember} 
               disabled={!selectedUserId || selectedUserId === 'none'}
             >
-              Add
+              {t('common:buttons.create')}
             </Button>
           </CardContent>
         </Card>
@@ -155,7 +157,7 @@ export default function ProjectMembersPage() {
       <div className="border border-slate-200 rounded-md divide-y divide-slate-200 bg-white">
         {projectMembers.length === 0 ? (
           <div className="p-8">
-            <EmptyState icon={Users} title="No members found" description="Add members to get started." className="border-none" />
+            <EmptyState icon={Users} title={t('orgMembers.noMembers')} description={t('projects.membersSubtitle')} className="border-none" />
           </div>
         ) : (
           projectMembers.map(member => (
@@ -180,8 +182,8 @@ export default function ProjectMembersPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ADMIN">Admin</SelectItem>
-                      <SelectItem value="MEMBER">Member</SelectItem>
+                      <SelectItem value="ADMIN">{t('orgMembers.roleAdmin')}</SelectItem>
+                      <SelectItem value="MEMBER">{t('orgMembers.roleMember')}</SelectItem>
                       <SelectItem value="VIEWER">Viewer</SelectItem>
                     </SelectContent>
                   </Select>
@@ -196,7 +198,7 @@ export default function ProjectMembersPage() {
                     className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 px-2"
                     onClick={() => handleRemove(member.userId)}
                   >
-                    Remove
+                    {t('common:buttons.remove')}
                   </Button>
                 )}
               </div>

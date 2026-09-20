@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { setProjects, setLoading } from '../../store/slices/projectSlice';
 import { getProjects } from '../../services/projectService';
@@ -12,6 +13,7 @@ import { EmptyState } from '../../components/shared/EmptyState';
 import { SemanticBadge } from '../../components/shared/SemanticBadge';
 
 export default function ProjectListPage() {
+  const { t } = useTranslation(['workspace', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -27,14 +29,14 @@ export default function ProjectListPage() {
         const data = await getProjects(orgId);
         dispatch(setProjects(data));
       } catch {
-        toast.error('Failed to fetch projects');
+        toast.error(t('common:status.error'));
       } finally {
         dispatch(setLoading(false));
       }
     };
 
     fetchProjects();
-  }, [orgId, dispatch]);
+  }, [orgId, dispatch, t]);
 
   const filteredProjects = useMemo(() => {
     if (!searchQuery.trim()) return projects;
@@ -65,7 +67,7 @@ export default function ProjectListPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Your Projects</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{t('projects.title')}</h1>
             {!loading && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                 {projects.length}
@@ -73,12 +75,12 @@ export default function ProjectListPage() {
             )}
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            Manage, track, and collaborate on projects across your organization.
+            {t('projects.subtitle')}
           </p>
         </div>
         <Button onClick={handleCreateProject} className="shrink-0 gap-2 shadow-sm">
           <Plus className="h-4 w-4" />
-          Create Project
+          {t('projects.createProject')}
         </Button>
       </div>
 
@@ -89,7 +91,7 @@ export default function ProjectListPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               type="text"
-              placeholder="Filter by name, key, or description..."
+              placeholder={t('projects.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 pr-8 bg-white border-slate-200 text-sm"
@@ -105,7 +107,7 @@ export default function ProjectListPage() {
             )}
           </div>
           <div className="text-xs text-slate-500 w-full sm:w-auto text-right">
-            Showing {filteredProjects.length} of {projects.length} {projects.length === 1 ? 'project' : 'projects'}
+            {filteredProjects.length} / {projects.length}
           </div>
         </div>
       )}
@@ -137,12 +139,12 @@ export default function ProjectListPage() {
         /* Empty State: No Projects Created */
         <EmptyState
           icon={FolderPlus}
-          title="No projects created yet"
-          description="Get started by creating your first project to organize tasks, track issues, and collaborate with your team."
+          title={t('orgDashboard.noProjects')}
+          description={t('projects.createSubtitle')}
           action={
             <Button onClick={handleCreateProject} className="gap-2">
               <Plus className="h-4 w-4" />
-              Create Project
+              {t('projects.createProject')}
             </Button>
           }
           className="my-12 py-16"
@@ -151,11 +153,11 @@ export default function ProjectListPage() {
         /* Empty State: Search Filter No Results */
         <EmptyState
           icon={Search}
-          title="No matching projects"
-          description={`No projects match your filter query "${searchQuery}". Try searching with a different term or clear the filter.`}
+          title={t('common:emptyState.noResults')}
+          description={t('projects.emptyState')}
           action={
             <Button variant="outline" onClick={() => setSearchQuery('')} className="gap-2">
-              Clear Filter
+              {t('common:buttons.cancel')}
             </Button>
           }
           className="my-12 py-12"
@@ -185,7 +187,7 @@ export default function ProjectListPage() {
                       </span>
                     </div>
                     <SemanticBadge status={project.status || 'active'}>
-                      {project.status || 'Active'}
+                      {project.status || t('common:status.active')}
                     </SemanticBadge>
                   </div>
 
@@ -194,7 +196,7 @@ export default function ProjectListPage() {
                       {project.name}
                     </CardTitle>
                     <CardDescription className="mt-1.5 text-sm text-slate-500 line-clamp-2 min-h-[2.5rem]">
-                      {project.description || 'No description provided for this project.'}
+                      {project.description || ''}
                     </CardDescription>
                   </div>
                 </CardHeader>
@@ -203,11 +205,11 @@ export default function ProjectListPage() {
                   <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
                     <div className="flex items-center gap-1.5" title="Issues count">
                       <Layers className="h-3.5 w-3.5 text-slate-400" />
-                      <span>{issueCount} {issueCount === 1 ? 'issue' : 'issues'}</span>
+                      <span>{issueCount} {t('sidebar.issues')}</span>
                     </div>
                     <div className="flex items-center gap-1.5" title="Members count">
                       <Users className="h-3.5 w-3.5 text-slate-400" />
-                      <span>{memberCount} {memberCount === 1 ? 'member' : 'members'}</span>
+                      <span>{memberCount} {t('sidebar.members')}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -218,19 +220,19 @@ export default function ProjectListPage() {
                       onClick={() => navigate(`/workspace/orgs/${orgId}/projects/${projectKey}/members`)}
                       className="hover:text-indigo-600 hover:underline text-slate-500 transition-colors"
                     >
-                      Members
+                      {t('sidebar.members')}
                     </button>
                     <span className="text-slate-300">•</span>
                     <button
                       onClick={() => navigate(`/workspace/orgs/${orgId}/projects/${projectKey}/settings`)}
                       className="hover:text-indigo-600 hover:underline text-slate-500 transition-colors"
                     >
-                      Settings
+                      {t('sidebar.settings')}
                     </button>
                   </div>
 
                   <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-0.5 transition-transform">
-                    <span>Board</span>
+                    <span>{t('sidebar.board')}</span>
                     <ChevronRight className="h-4 w-4 ml-0.5" />
                   </div>
                 </CardFooter>
