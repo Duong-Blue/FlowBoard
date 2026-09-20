@@ -8,13 +8,14 @@ interface IssueMetadataSidebarProps {
   issue: Issue;
   members: IssueUser[];
   onUpdate: (data: Partial<Issue>) => void;
+  onStatusChange?: (status: string) => void;
 }
 
 const TYPE_OPTIONS: IssueType[] = ['TASK', 'BUG', 'FEATURE', 'IMPROVEMENT'];
 const STATUS_OPTIONS = ['TODO', 'IN_PROGRESS', 'IN_PREVIEW', 'DONE'];
 const PRIORITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
-export function IssueMetadataSidebar({ issue, members, onUpdate }: IssueMetadataSidebarProps) {
+export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange }: IssueMetadataSidebarProps) {
   const { t } = useTranslation(['issues', 'common']);
   const reporter = members.find(m => m.id === issue.reporterId) || issue.reporter;
   const assignee = members.find(m => m.id === issue.assigneeId) || issue.assignee;
@@ -50,7 +51,13 @@ export function IssueMetadataSidebar({ issue, members, onUpdate }: IssueMetadata
         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t('detail.status')}</h4>
         <Select 
           value={issue.status} 
-          onValueChange={(val) => onUpdate({ status: val })}
+          onValueChange={(val) => {
+            if (onStatusChange) {
+              onStatusChange(val);
+            } else {
+              onUpdate({ status: val });
+            }
+          }}
         >
           <SelectTrigger className="w-full h-8 px-2 border-transparent hover:border-border hover:bg-slate-50 justify-start">
             <SemanticBadge status={issue.status === 'TODO' ? 'pending' : issue.status === 'DONE' ? 'active' : 'member'}>

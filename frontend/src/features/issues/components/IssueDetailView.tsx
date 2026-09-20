@@ -1,7 +1,16 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { useAppDispatch } from '@/store';
+import { updateIssueStatus } from '@/store/slices/issueSlice';
 import { type Issue, type IssueUser } from '@/store/types';
 import { IssueDetailHeader } from './IssueDetailHeader';
 import { IssueDescriptionSection } from './IssueDescriptionSection';
+import { AttachmentSection } from './AttachmentSection';
+import { SubtaskSection } from './SubtaskSection';
+import { RelationSection } from './RelationSection';
+import { CommentSection } from './CommentSection';
+import { ActivityTimeline } from './ActivityTimeline';
 import { IssueMetadataSidebar } from './IssueMetadataSidebar';
 
 interface IssueDetailViewProps {
@@ -13,8 +22,11 @@ interface IssueDetailViewProps {
 }
 
 export function IssueDetailView({ issue, members, canDelete, onUpdate, onDelete }: IssueDetailViewProps) {
+  const dispatch = useAppDispatch();
+  const { t } = useTranslation('issues');
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [title, setTitle] = React.useState(issue.title);
+  const [activeTab, setActiveTab] = React.useState<'comments' | 'activity'>('comments');
 
   React.useEffect(() => {
     if (!isEditingTitle) {
@@ -38,6 +50,27 @@ export function IssueDetailView({ issue, members, canDelete, onUpdate, onDelete 
     if (e.key === 'Escape') {
       setTitle(issue.title);
       setIsEditingTitle(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === issue.status) return;
+    try {
+      await dispatch(
+        updateIssueStatus({
+          projectId: issue.projectId,
+          issueId: issue.id,
+          status: newStatus,
+        })
+      ).unwrap();
+      toast.success(t('detail.statusUpdated', 'Status updated successfully'));
+      await onUpdate({ status: newStatus });
+    } catch (err: any) {
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        (typeof err === 'string' ? err : 'Invalid or blocked status transition');
+      toast.error(errorMsg);
     }
   };
 
@@ -83,30 +116,63 @@ export function IssueDetailView({ issue, members, canDelete, onUpdate, onDelete 
                 onUpdate={(desc) => onUpdate({ description: desc })} 
               />
 
-              {/* Placeholders for Future Tabs */}
+              {/* Subtasks */}
+              <div className="pt-6 border-t border-border">
+                <SubtaskSection projectId={issue.projectId} issueId={issue.id} subtasks={issue.subtasks} />
+              </div>
+
+              {/* Issue Relations */}
+              <div className="pt-6 border-t border-border">
+                <RelationSection projectId={issue.projectId} issueId={issue.id} issue={issue} />
+              </div>
+
+              {/* Attachments */}
+              <div className="pt-6 border-t border-border">
+                <AttachmentSection projectId={issue.projectId} issueId={issue.id} />
+              </div>
+
               <div className="pt-8 border-t border-border">
-                <div className="mb-4">
-                  <h3 className="text-lg font-medium text-foreground">Activity</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Comments and activity timeline will go here.</p>
+                <div className="flex items-center space-x-4 border-b border-border pb-2 mb-6">
+                  <button
+                    type="button"
+                    className={`text-sm font-semibold transition-colors pb-2 -mb-2 border-b-2 ${
+                      activeTab === 'comments'
+                        ? 'border-primary text-foreground'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                    }`}
+                    onClick={() => setActiveTab('comments')}
+                  >
+                    {t('detail.comments', 'Comments')}
+                  </button>
+                  <button
+                    type="button"
+                    className={`text-sm font-semibold transition-colors pb-2 -mb-2 border-b-2 ${
+                      activeTab === 'activity'
+                        ? 'border-primary text-foreground'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                    }`}
+                    onClick={() => setActiveTab('activity')}
+                  >
+                    {t('detail.activity', 'Activity')}
+                  </button>
                 </div>
-                {/* 
-                  <Tabs>
-                    <TabsList>
-                      <TabsTrigger value="comments">Comments</TabsTrigger>
-                      <TabsTrigger value="history">History</TabsTrigger>
-                    </TabsList>
-                    ...
-                  </Tabs>
-                */}
+
+                {activeTab === 'comments' && (
+                  <CommentSection projectId={issue.projectId} issueId={issue.id} />
+                )}
+                {activeTab === 'activity' && (
+                  <ActivityTimeline projectId={issue.projectId} issueId={issue.id} />
+                )}
               </div>
             </div>
 
             {/* Sidebar */}
-            <div className="lg:col-span-1 border-l border-border pl-8">
+            <div className="lg:col-span-1 border-t lg:border-t-0 lg:border-l border-border pt-8 lg:pt-0 lg:pl-8">
               <IssueMetadataSidebar 
                 issue={issue} 
                 members={members} 
                 onUpdate={(data) => onUpdate(data)} 
+                onStatusChange={handleStatusChange}
               />
             </div>
             
