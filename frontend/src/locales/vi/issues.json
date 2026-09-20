@@ -1,0 +1,70 @@
+{
+  "board": {
+    "title": "Bảng Kanban",
+    "newColumn": "Thêm cột",
+    "createIssue": "Tạo thẻ",
+    "live": "Trực tuyến",
+    "offline": "Ngoại tuyến",
+    "realtimeConnected": "Đã kết nối thời gian thực",
+    "disconnected": "Mất kết nối",
+    "listView": "Xem dạng danh sách",
+    "boardView": "Xem dạng bảng",
+    "searchPlaceholder": "Tìm thẻ theo mã hoặc tiêu đề...",
+    "filterByAssignee": "Lọc theo người thực hiện",
+    "filterByPriority": "Lọc theo độ ưu tiên",
+    "all": "Tất cả"
+  },
+  "form": {
+    "createTitle": "Tạo thẻ công việc",
+    "editTitle": "Chỉnh sửa thẻ công việc",
+    "titleLabel": "Tiêu đề thẻ",
+    "titlePlaceholder": "Ví dụ: Tích hợp đăng nhập OAuth",
+    "typeLabel": "Loại thẻ",
+    "statusLabel": "Trạng thái",
+    "priorityLabel": "Độ ưu tiên",
+    "assigneeLabel": "Người thực hiện",
+    "unassigned": "Chưa giao cho ai",
+    "descriptionLabel": "Mô tả chi tiết",
+    "descriptionPlaceholder": "Nhập mô tả chi tiết về thẻ công việc này...",
+    "submitCreate": "Tạo thẻ",
+    "submitUpdate": "Cập nhật"
+  },
+  "columns": {
+    "todo": "Cần làm",
+    "inProgress": "Đang làm",
+    "inPreview": "Đang duyệt",
+    "done": "Hoàn thành",
+    "dropHere": "Kéo thả vào đây"
+  },
+  "types": {
+    "task": "Nhiệm vụ",
+    "bug": "Lỗi",
+    "story": "Câu chuyện",
+    "epic": "Epic"
+  },
+  "priorities": {
+    "low": "Thấp",
+    "medium": "Trung bình",
+    "high": "Cao",
+    "urgent": "Khẩn cấp"
+  },
+  "detail": {
+    "assignee": "Người được giao",
+    "reporter": "Người báo cáo",
+    "status": "Trạng thái",
+    "priority": "Độ ưu tiên",
+    "description": "Mô tả",
+    "comments": "Bình luận",
+    "activity": "Lịch sử hoạt động",
+    "loading": "Đang tải chi tiết thẻ...",
+    "deleteConfirm": "Bạn có chắc chắn muốn xóa thẻ này không?",
+    "noDescription": "Chưa có mô tả.",
+    "addCommentPlaceholder": "Viết bình luận...",
+    "postComment": "Gửi bình luận",
+    "noComments": "Chưa có bình luận nào.",
+    "activityCreated": "đã tạo thẻ công việc",
+    "activityStatusChanged": "đã thay đổi trạng thái thành",
+    "activityPriorityChanged": "đã thay đổi độ ưu tiên thành",
+    "activityAssigneeChanged": "đã phân công thẻ cho"
+  }
+}

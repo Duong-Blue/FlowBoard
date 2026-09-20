@@ -9,7 +9,7 @@ const getApiUrl = () => {
   return envUrl;
 };
 
-const api: AxiosInstance = axios.create({
+export const api: AxiosInstance = axios.create({
   baseURL: getApiUrl(),
 });
 

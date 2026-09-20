@@ -1,0 +1,51 @@
+{
+  "language": {
+    "en": "English",
+    "vi": "Tiếng Việt"
+  },
+  "buttons": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "confirm": "Xác nhận",
+    "edit": "Chỉnh sửa",
+    "close": "Đóng",
+    "create": "Tạo mới",
+    "creating": "Đang tạo...",
+    "saving": "Đang lưu...",
+    "updating": "Đang cập nhật...",
+    "submitting": "Đang gửi...",
+    "back": "Quay lại",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "actions": "Hành động",
+    "accept": "Chấp nhận",
+    "reject": "Từ chối",
+    "revoke": "Thu hồi",
+    "remove": "Xóa khỏi danh sách"
+  },
+  "switcher": {
+    "selectLanguage": "Chọn ngôn ngữ"
+  },
+  "status": {
+    "active": "Hoạt động",
+    "pending": "Đang chờ",
+    "expired": "Đã hết hạn",
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "success": "Thành công",
+    "notFound": "Không tìm thấy"
+  },
+  "labels": {
+    "name": "Tên",
+    "description": "Mô tả",
+    "role": "Vai trò",
+    "created": "Thời gian tạo",
+    "updated": "Cập nhật lần cuối",
+    "actions": "Hành động"
+  },
+  "emptyState": {
+    "noData": "Chưa có dữ liệu",
+    "noResults": "Không tìm thấy kết quả"
+  }
+}

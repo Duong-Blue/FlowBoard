@@ -1,0 +1,51 @@
+{
+  "language": {
+    "en": "English",
+    "vi": "Tiếng Việt"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "edit": "Edit",
+    "close": "Close",
+    "create": "Create",
+    "creating": "Creating...",
+    "saving": "Saving...",
+    "updating": "Updating...",
+    "submitting": "Submitting...",
+    "back": "Back",
+    "search": "Search",
+    "filter": "Filter",
+    "actions": "Actions",
+    "accept": "Accept",
+    "reject": "Reject",
+    "revoke": "Revoke",
+    "remove": "Remove"
+  },
+  "switcher": {
+    "selectLanguage": "Select language"
+  },
+  "status": {
+    "active": "Active",
+    "pending": "Pending",
+    "expired": "Expired",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "notFound": "Not Found"
+  },
+  "labels": {
+    "name": "Name",
+    "description": "Description",
+    "role": "Role",
+    "created": "Created",
+    "updated": "Updated",
+    "actions": "Actions"
+  },
+  "emptyState": {
+    "noData": "No data available",
+    "noResults": "No results found"
+  }
+}

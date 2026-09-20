@@ -1,0 +1,70 @@
+{
+  "board": {
+    "title": "Board",
+    "newColumn": "Add Column",
+    "createIssue": "Create Issue",
+    "live": "Live",
+    "offline": "Offline",
+    "realtimeConnected": "Realtime Connected",
+    "disconnected": "Disconnected",
+    "listView": "List View",
+    "boardView": "Board View",
+    "searchPlaceholder": "Search issues by key or title...",
+    "filterByAssignee": "Filter by Assignee",
+    "filterByPriority": "Filter by Priority",
+    "all": "All"
+  },
+  "form": {
+    "createTitle": "Create Issue",
+    "editTitle": "Edit Issue",
+    "titleLabel": "Issue Title",
+    "titlePlaceholder": "e.g. Implement OAuth login",
+    "typeLabel": "Issue Type",
+    "statusLabel": "Status",
+    "priorityLabel": "Priority",
+    "assigneeLabel": "Assignee",
+    "unassigned": "Unassigned",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Add detailed information about this issue...",
+    "submitCreate": "Create Issue",
+    "submitUpdate": "Update Issue"
+  },
+  "columns": {
+    "todo": "To Do",
+    "inProgress": "In Progress",
+    "inPreview": "In Preview",
+    "done": "Done",
+    "dropHere": "Drop here"
+  },
+  "types": {
+    "task": "Task",
+    "bug": "Bug",
+    "story": "Story",
+    "epic": "Epic"
+  },
+  "priorities": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "detail": {
+    "assignee": "Assignee",
+    "reporter": "Reporter",
+    "status": "Status",
+    "priority": "Priority",
+    "description": "Description",
+    "comments": "Comments",
+    "activity": "Activity",
+    "loading": "Loading issue details...",
+    "deleteConfirm": "Are you sure you want to delete this issue?",
+    "noDescription": "No description provided.",
+    "addCommentPlaceholder": "Write a comment...",
+    "postComment": "Post Comment",
+    "noComments": "No comments yet.",
+    "activityCreated": "created the issue",
+    "activityStatusChanged": "changed status to",
+    "activityPriorityChanged": "changed priority to",
+    "activityAssigneeChanged": "assigned issue to"
+  }
+}
