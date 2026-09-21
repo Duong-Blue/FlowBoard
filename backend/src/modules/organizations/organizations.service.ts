@@ -1,14 +1,20 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateOrganizationDto) {
-    const slugBase = (dto.slug || dto.name).toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const slugBase = (dto.slug || dto.name)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-');
     const slug = dto.slug ? dto.slug : `${slugBase}-${Date.now().toString(36)}`;
 
     const existing = await this.prisma.organization.findUnique({
@@ -75,7 +81,8 @@ export class OrganizationsService {
       where: { id: targetOrg.id },
       include: { projects: true },
     });
-    if (org?.projects.length) throw new Error('Cannot delete org with projects');
+    if (org?.projects.length)
+      throw new Error('Cannot delete org with projects');
     return this.prisma.organization.delete({ where: { id: targetOrg.id } });
   }
 }

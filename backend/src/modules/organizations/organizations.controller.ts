@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Patch, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -8,7 +18,7 @@ import { OrgMemberGuard } from '../../common/guards/org-member.guard';
 @UseGuards(JwtAuthGuard)
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(private readonly service: OrganizationsService) { }
+  constructor(private readonly service: OrganizationsService) {}
 
   @Post()
   create(@Req() req, @Body() dto: CreateOrganizationDto) {
@@ -28,7 +38,11 @@ export class OrganizationsController {
 
   @UseGuards(OrgMemberGuard)
   @Patch(':orgId')
-  update(@Param('orgId') orgId: string, @Req() req, @Body() dto: UpdateOrganizationDto) {
+  update(
+    @Param('orgId') orgId: string,
+    @Req() req,
+    @Body() dto: UpdateOrganizationDto,
+  ) {
     return this.service.update(orgId, req.user.id, dto);
   }
 
