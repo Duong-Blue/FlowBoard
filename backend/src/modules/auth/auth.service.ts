@@ -2,10 +2,10 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
 export class AuthService {
@@ -44,25 +44,66 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
-    const token = await this.prisma.refreshToken.findFirst({
-      where: {
-        tokenHash,
-        revokedAt: null,
-        expiresAt: { gt: new Date() },
-      },
-      include: { user: true },
+
+    return this.prisma.$transaction(async (tx) => {
+      const token = await tx.refreshToken.findUnique({
+        where: { tokenHash },
+        include: { user: true },
+      });
+
+      if (!token) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      if (token.expiresAt < new Date()) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      if (token.revokedAt !== null || token.replacedByToken !== null) {
+        await tx.refreshToken.updateMany({
+          where: { familyId: token.familyId },
+          data: { revokedAt: new Date() },
+        });
+        throw new UnauthorizedException('Refresh token reuse detected');
+      }
+
+      const payload = { email: token.user.email, sub: token.user.id };
+      const accessToken = this.jwtService.sign(payload);
+      
+      const rawRefreshToken = randomBytes(32).toString('hex');
+      const newTokenHash = createHash('sha256').update(rawRefreshToken).digest('hex');
+
+      const newRefreshToken = await tx.refreshToken.create({
+        data: {
+          tokenHash: newTokenHash,
+          familyId: token.familyId,
+          userId: token.userId,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      await tx.refreshToken.update({
+        where: { id: token.id },
+        data: { 
+          revokedAt: new Date(),
+          replacedByToken: newRefreshToken.id 
+        },
+      });
+
+      const name = [token.user.firstName, token.user.lastName].filter(Boolean).join(' ') || token.user.email;
+
+      return {
+        user: {
+          id: token.user.id,
+          email: token.user.email,
+          name,
+          firstName: token.user.firstName,
+          lastName: token.user.lastName,
+        },
+        accessToken,
+        refreshToken: rawRefreshToken,
+      };
     });
-
-    if (!token) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-
-    await this.prisma.refreshToken.update({
-      where: { id: token.id },
-      data: { revokedAt: new Date() },
-    });
-
-    return this.generateTokens(token.user);
   }
 
   async logout(refreshToken: string) {
@@ -82,6 +123,7 @@ export class AuthService {
     await this.prisma.refreshToken.create({
       data: {
         tokenHash,
+        familyId: randomUUID(),
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         userId: user.id,
       },

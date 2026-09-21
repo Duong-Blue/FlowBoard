@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from '../../database/prisma.service';
 import * as bcrypt from 'bcrypt';
 
 vi.mock('bcrypt', () => ({
@@ -29,8 +29,12 @@ describe('AuthService', () => {
     } as any;
     jwtService = { sign: vi.fn().mockReturnValue('mock-token') } as any;
     prisma = {
+      $transaction: vi.fn().mockImplementation(async (cb) => {
+        return cb(prisma);
+      }),
       refreshToken: {
         create: vi.fn(),
+        findUnique: vi.fn(),
         findFirst: vi.fn(),
         update: vi.fn(),
         updateMany: vi.fn(),
@@ -60,4 +64,68 @@ describe('AuthService', () => {
     expect(result).toHaveProperty('accessToken');
     expect(result).toHaveProperty('refreshToken');
   });
+
+  it('should detect reuse and revoke family', async () => {
+    const mockUser = { id: 1, email: 'test@example.com', firstName: 'Test', lastName: 'User' };
+    const mockToken = {
+      id: 'token-id-123',
+      familyId: 'family-123',
+      userId: 1,
+      revokedAt: new Date(),
+      replacedByToken: 'another-token',
+      expiresAt: new Date(Date.now() + 100000),
+      user: mockUser,
+    };
+    
+    vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(mockToken as any);
+
+    await expect(authService.refresh('some-token'))
+      .rejects.toThrow('Refresh token reuse detected');
+    
+    expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
+      where: { familyId: 'family-123' },
+      data: { revokedAt: expect.any(Date) },
+    });
+  });
+
+  it('should successfully refresh and rotate token', async () => {
+    const mockUser = { id: 1, email: 'test@example.com', firstName: 'Test', lastName: 'User' };
+    const mockToken = {
+      id: 'token-id-123',
+      familyId: 'family-123',
+      userId: 1,
+      revokedAt: null,
+      replacedByToken: null,
+      expiresAt: new Date(Date.now() + 100000),
+      user: mockUser,
+    };
+    
+    vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(mockToken as any);
+    vi.mocked(prisma.refreshToken.create).mockResolvedValue({ id: 'new-token-id' } as any);
+
+    const result = await authService.refresh('some-token');
+    
+    expect(result).toHaveProperty('accessToken');
+    expect(result).toHaveProperty('refreshToken');
+    
+    expect(prisma.refreshToken.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          familyId: 'family-123',
+          userId: 1,
+        }),
+      })
+    );
+    
+    expect(prisma.refreshToken.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'token-id-123' },
+        data: expect.objectContaining({
+          revokedAt: expect.any(Date),
+          replacedByToken: 'new-token-id',
+        }),
+      })
+    );
+  });
 });
+

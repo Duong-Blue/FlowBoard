@@ -12,8 +12,8 @@ model IssueRelation {
   type          RelationType
   createdAt     DateTime     @default(now()) @map("created_at")
 
-  sourceIssue   Issue        @relation("RelationSource", fields: [sourceIssueId], references: [id], onDelete: Cascade)
-  targetIssue   Issue        @relation("RelationTarget", fields: [targetIssueId], references: [id], onDelete: Cascade)
+  sourceIssue Issue @relation("RelationSource", fields: [sourceIssueId], references: [id], onDelete: Cascade)
+  targetIssue Issue @relation("RelationTarget", fields: [targetIssueId], references: [id], onDelete: Cascade)
 
   @@unique([sourceIssueId, targetIssueId, type])
   @@index([sourceIssueId])

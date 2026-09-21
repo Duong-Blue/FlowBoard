@@ -1,28 +1,27 @@
 model User {
-  id              String               @id @default(uuid())
-  email           String               @unique
-  passwordHash    String
-  firstName       String
-  lastName        String
-  displayName     String?
-  avatarUrl       String?
-  isActive        Boolean              @default(true)
-  emailVerifiedAt DateTime?
-  lastLoginAt     DateTime?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-  refreshTokens   RefreshToken[]
-  orgMemberships  OrganizationMember[]
-  notifications Notification[] @relation("UserNotifications")
-  actedNotifications Notification[] @relation("NotificationActor")
-  reportedIssues  Issue[]              @relation("IssueReporter")
-  assignedIssues  Issue[]              @relation("IssueAssignee")
+  id                 String               @id @default(uuid())
+  email              String               @unique
+  passwordHash       String
+  firstName          String
+  lastName           String
+  displayName        String?
+  avatarUrl          String?
+  isActive           Boolean              @default(true)
+  emailVerifiedAt    DateTime?
+  lastLoginAt        DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  refreshTokens      RefreshToken[]
+  orgMemberships     OrganizationMember[]
+  notifications      Notification[]       @relation("UserNotifications")
+  actedNotifications Notification[]       @relation("NotificationActor")
+  reportedIssues     Issue[]              @relation("IssueReporter")
+  assignedIssues     Issue[]              @relation("IssueAssignee")
 
   projectMemberships ProjectMember[]
 
   invitations Invitation[]
-  comments Comment[]    @relation("CommentAuthor")
-  activities IssueActivity[] @relation("ActivityActor")
-  attachments Attachment[] @relation("AttachmentUploader")
+  comments    Comment[]       @relation("CommentAuthor")
+  activities  IssueActivity[] @relation("ActivityActor")
+  attachments Attachment[]    @relation("AttachmentUploader")
 }
-
