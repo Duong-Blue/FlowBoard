@@ -26,7 +26,7 @@ describe('RealtimeGateway', () => {
   beforeEach(async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(1000000000000)); // 2001-09-09T01:46:40.000Z
-    
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RealtimeGateway,
@@ -64,9 +64,9 @@ describe('RealtimeGateway', () => {
       const client = mockSocket();
       client.handshake.auth = undefined;
       client.handshake.headers = undefined;
-      
+
       await gateway.handleConnection(client);
-      
+
       expect(client.disconnect).toHaveBeenCalledWith(true);
       expect(jwtService.verify).not.toHaveBeenCalled();
     });
@@ -74,7 +74,7 @@ describe('RealtimeGateway', () => {
     it('should reject connection if token is already expired', async () => {
       const client = mockSocket();
       const currentEpoch = Math.floor(Date.now() / 1000);
-      
+
       vi.mocked(jwtService.verify).mockReturnValue({
         sub: 'user1',
         email: 'user1@example.com',
@@ -91,7 +91,7 @@ describe('RealtimeGateway', () => {
     it('should accept connection with valid token and set expiration', async () => {
       const client = mockSocket();
       const currentEpoch = Math.floor(Date.now() / 1000);
-      
+
       vi.mocked(jwtService.verify).mockReturnValue({
         sub: 'user2',
         email: 'user2@example.com',
@@ -112,7 +112,7 @@ describe('RealtimeGateway', () => {
       const client1 = mockSocket();
       const client2 = mockSocket();
       const currentEpoch = Math.floor(Date.now() / 1000);
-      
+
       vi.mocked(jwtService.verify).mockReturnValue({
         sub: 'user1',
         email: 'user1@example.com',
@@ -142,20 +142,20 @@ describe('RealtimeGateway', () => {
     it('should clean up expirationMap and userSocketMap on disconnect', async () => {
       const client = mockSocket();
       const currentEpoch = Math.floor(Date.now() / 1000);
-      
+
       vi.mocked(jwtService.verify).mockReturnValue({
         sub: 'user3',
         email: 'user3@example.com',
         exp: currentEpoch + 3600,
       });
-      
+
       await gateway.handleConnection(client);
-      
+
       expect(gateway['expirationMap'].has(client)).toBe(true);
       expect(gateway['userSocketMap'].has('user3')).toBe(true);
-      
+
       gateway.handleDisconnect(client);
-      
+
       expect(gateway['expirationMap'].has(client)).toBe(false);
       expect(gateway['userSocketMap'].has('user3')).toBe(false);
     });
@@ -164,20 +164,20 @@ describe('RealtimeGateway', () => {
       const client1 = mockSocket();
       const client2 = mockSocket();
       const currentEpoch = Math.floor(Date.now() / 1000);
-      
+
       vi.mocked(jwtService.verify).mockReturnValue({
         sub: 'user4',
         email: 'user4@example.com',
         exp: currentEpoch + 3600,
       });
-      
+
       await gateway.handleConnection(client1);
       await gateway.handleConnection(client2);
-      
+
       expect(gateway['userSocketMap'].get('user4')?.size).toBe(2);
-      
+
       gateway.handleDisconnect(client1);
-      
+
       expect(gateway['expirationMap'].has(client1)).toBe(false);
       expect(gateway['userSocketMap'].get('user4')?.size).toBe(1);
       expect(gateway['userSocketMap'].get('user4')?.has(client2)).toBe(true);

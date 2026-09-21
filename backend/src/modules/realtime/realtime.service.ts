@@ -56,26 +56,37 @@ export class RealtimeService {
 
   @OnEvent('issue.created')
   handleIssueCreated(payload: any) {
-    if (payload.projectId) this.broadcastToProject(payload.projectId, 'issue.created', payload);
+    if (payload.projectId)
+      this.broadcastToProject(payload.projectId, 'issue.created', payload);
   }
 
   @OnEvent('issue.updated')
   handleIssueUpdated(payload: any) {
-    if (payload.projectId) this.broadcastToProject(payload.projectId, 'issue.updated', payload);
+    if (payload.projectId)
+      this.broadcastToProject(payload.projectId, 'issue.updated', payload);
   }
 
   @OnEvent('issue.deleted')
   handleIssueDeleted(payload: any) {
-    if (payload.projectId) this.broadcastToProject(payload.projectId, 'issue.deleted', payload);
+    if (payload.projectId)
+      this.broadcastToProject(payload.projectId, 'issue.deleted', payload);
   }
 
   @OnEvent('comment.created')
   handleCommentCreated(payload: any) {
-    if (payload.projectId) this.broadcastToProject(payload.projectId, 'comment.created', payload);
+    if (payload.projectId)
+      this.broadcastToProject(payload.projectId, 'comment.created', payload);
   }
 
   @OnEvent('notification.new')
   handleNotificationNew(payload: any) {
-    if (payload.userId) this.broadcastToUser(payload.userId, 'notification.new', payload);
+    if (payload.userId)
+      this.broadcastToUser(payload.userId, 'notification.new', payload);
+    }
+
+  @OnEvent('issue.moved')
+  handleIssueMoved(payload: any) {
+    if (payload.projectId)
+      this.broadcastToProject(payload.projectId, 'issue.moved', payload);
   }
 }

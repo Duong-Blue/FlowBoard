@@ -12,7 +12,9 @@ import { PrismaService } from '../../database/prisma.service';
 import { OnModuleDestroy } from '@nestjs/common';
 
 @WebSocketGateway({ cors: { origin: '*' } })
-export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy {
+export class RealtimeGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
+{
   @WebSocketServer()
   server: Server;
 
