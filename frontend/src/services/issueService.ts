@@ -7,6 +7,10 @@ export const getIssues = (projectId: string, filters: IssueFilters) => {
   if (filters.status) params.append('status', filters.status);
   if (filters.priority) params.append('priority', filters.priority);
   if (filters.assigneeId) params.append('assigneeId', filters.assigneeId);
+  if (filters.startDateFrom) params.append('startDateFrom', filters.startDateFrom);
+  if (filters.startDateTo) params.append('startDateTo', filters.startDateTo);
+  if (filters.dueDateFrom) params.append('dueDateFrom', filters.dueDateFrom);
+  if (filters.dueDateTo) params.append('dueDateTo', filters.dueDateTo);
   if (filters.page) params.append('page', filters.page.toString());
   if (filters.limit) params.append('limit', filters.limit.toString());
   

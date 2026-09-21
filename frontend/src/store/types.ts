@@ -130,6 +130,8 @@ export interface IssueFilters {
   noDueDate?: boolean;
   dueDateFrom?: string;
   dueDateTo?: string;
+  startDateFrom?: string;
+  startDateTo?: string;
   page?: number;
   limit?: number;
 }
