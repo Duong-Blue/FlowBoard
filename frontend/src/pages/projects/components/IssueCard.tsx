@@ -4,6 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../../store';
 import type { Issue } from '../../../store/types';
 import { SemanticBadge } from '../../../components/shared/SemanticBadge';
+import { getDeadlineState, formatDate } from '@/lib/dateUtils';
+import { Calendar, CheckSquare } from 'lucide-react';
 
 interface IssueCardProps {
   issue: Issue;
@@ -57,6 +59,20 @@ export function IssueCard({ issue, disabled }: IssueCardProps) {
     }
   };
 
+  const deadlineState = issue.deadlineState || getDeadlineState(issue.status, issue.dueDate, issue.completedAt);
+
+  let deadlineBadgeStyle = 'bg-slate-100 text-slate-600 border-slate-200';
+  if (deadlineState === 'OVERDUE') {
+    deadlineBadgeStyle = 'bg-red-50 text-red-700 border-red-200';
+  } else if (deadlineState === 'DUE_SOON') {
+    deadlineBadgeStyle = 'bg-amber-50 text-amber-700 border-amber-200';
+  } else if (deadlineState === 'UPCOMING' || deadlineState === 'COMPLETED') {
+    deadlineBadgeStyle = 'bg-slate-100 text-slate-600 border-slate-200';
+  }
+
+  const totalSubtasks = issue.subtaskMetrics?.total ?? issue.subtasks?.length ?? 0;
+  const completedSubtasks = issue.subtaskMetrics?.completed ?? issue.subtasks?.filter((st) => st.status === 'DONE').length ?? 0;
+
   return (
     <div
       ref={setNodeRef}
@@ -67,7 +83,11 @@ export function IssueCard({ issue, disabled }: IssueCardProps) {
       className={`bg-white p-3 rounded-md shadow-sm border border-slate-200 cursor-grab active:cursor-grabbing hover:border-slate-300 transition-colors ${disabled ? 'cursor-default active:cursor-default' : ''}`}
     >
       <div className="flex justify-between items-start mb-2">
-        <span className="text-xs font-mono font-semibold text-slate-500">{issue.key}</span>
+        {issue.key ? (
+          <span className="text-xs font-mono font-semibold text-slate-500">{issue.key}</span>
+        ) : (
+          <span />
+        )}
         <SemanticBadge status={
           issue.priority === 'HIGH' ? 'admin' :
           issue.priority === 'MEDIUM' ? 'member' : 'guest'
@@ -76,6 +96,22 @@ export function IssueCard({ issue, disabled }: IssueCardProps) {
         </SemanticBadge>
       </div>
       <p className="text-sm font-medium text-slate-900 mb-3">{issue.title}</p>
+      {(issue.dueDate || totalSubtasks > 0) && (
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          {issue.dueDate && (
+            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium border ${deadlineBadgeStyle}`}>
+              <Calendar className="w-3 h-3" />
+              <span>{formatDate(issue.dueDate)}</span>
+            </span>
+          )}
+          {totalSubtasks > 0 && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+              <CheckSquare className="w-3 h-3 text-slate-500" />
+              <span>{completedSubtasks}/{totalSubtasks}</span>
+            </span>
+          )}
+        </div>
+      )}
       <div className="flex justify-between items-center text-xs text-slate-500">
         <div className="truncate flex-1">
           {issue.assignee ? (

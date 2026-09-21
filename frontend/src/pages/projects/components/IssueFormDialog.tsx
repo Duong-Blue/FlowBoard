@@ -24,6 +24,9 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
   const [status, setStatus] = useState('TODO');
   const [priority, setPriority] = useState('MEDIUM');
   const [assigneeId, setAssigneeId] = useState<string>('unassigned');
+  const [startDate, setStartDate] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [dateError, setDateError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -34,12 +37,22 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
       setStatus(issue?.status || 'TODO');
       setPriority(issue?.priority || 'MEDIUM');
       setAssigneeId(issue?.assigneeId || 'unassigned');
+      setStartDate(issue?.startDate ? issue.startDate.split('T')[0] : '');
+      setDueDate(issue?.dueDate ? issue.dueDate.split('T')[0] : '');
+      setDateError(null);
     }
   }, [open, issue]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) return;
+
+    if (startDate && dueDate) {
+      if (new Date(dueDate) < new Date(startDate)) {
+        setDateError(t('form.dateError', 'Due date must be after or equal to start date'));
+        return;
+      }
+    }
     
     setLoading(true);
     try {
@@ -50,6 +63,8 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
         status,
         priority,
         assigneeId: assigneeId === 'unassigned' ? undefined : assigneeId,
+        startDate: startDate ? new Date(startDate).toISOString() : undefined,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
       });
       onOpenChange(false);
     } finally {
@@ -143,6 +158,33 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
                 </SelectContent>
               </Select>
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="startDate">{t('form.startDateLabel', 'Start Date')}</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setDateError(null);
+                }}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="dueDate">{t('form.dueDateLabel', 'Due Date')}</Label>
+              <Input
+                id="dueDate"
+                type="date"
+                value={dueDate}
+                onChange={(e) => {
+                  setDueDate(e.target.value);
+                  setDateError(null);
+                }}
+              />
+            </div>
+            {dateError && (
+              <p className="text-xs font-medium text-destructive">{dateError}</p>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
