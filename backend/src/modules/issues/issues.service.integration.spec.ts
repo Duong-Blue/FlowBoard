@@ -4,7 +4,11 @@ import { IssuesService } from './issues.service';
 import { DatabaseModule } from '../../database/database.module';
 import { AppModule } from '../../app.module';
 import { ProjectRole, IssueStatus } from '@prisma/client';
-import { ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { generateKeyBetween } from 'fractional-indexing';
 
 describe('IssuesService (Integration)', () => {
@@ -32,6 +36,7 @@ describe('IssuesService (Integration)', () => {
 
   beforeEach(async () => {
     // Clean up
+    await prisma.savedView.deleteMany({});
     await prisma.issue.deleteMany({});
     await prisma.projectMember.deleteMany({});
     await prisma.project.deleteMany({});
@@ -42,22 +47,49 @@ describe('IssuesService (Integration)', () => {
     // Setup users
     const ts = Date.now();
     const [admin, member, viewer] = await Promise.all([
-      prisma.user.create({ data: { email: `admin-${ts}@test.com`, passwordHash: 'hash', firstName: 'A', lastName: 'A' } }),
-      prisma.user.create({ data: { email: `member-${ts}@test.com`, passwordHash: 'hash', firstName: 'M', lastName: 'M' } }),
-      prisma.user.create({ data: { email: `viewer-${ts}@test.com`, passwordHash: 'hash', firstName: 'V', lastName: 'V' } }),
+      prisma.user.create({
+        data: {
+          email: `admin-${ts}@test.com`,
+          passwordHash: 'hash',
+          firstName: 'A',
+          lastName: 'A',
+        },
+      }),
+      prisma.user.create({
+        data: {
+          email: `member-${ts}@test.com`,
+          passwordHash: 'hash',
+          firstName: 'M',
+          lastName: 'M',
+        },
+      }),
+      prisma.user.create({
+        data: {
+          email: `viewer-${ts}@test.com`,
+          passwordHash: 'hash',
+          firstName: 'V',
+          lastName: 'V',
+        },
+      }),
     ]);
     adminId = admin.id;
     memberId = member.id;
     viewerId = viewer.id;
 
     // Setup Org & Project
-    const org = await prisma.organization.create({ data: { name: 'Test Org', slug: `test-org-${ts}` } });
+    const org = await prisma.organization.create({
+      data: { name: 'Test Org', slug: `test-org-${ts}` },
+    });
     orgId = org.id;
 
-    const project = await prisma.project.create({ data: { name: 'Test Proj', organizationId: orgId, key: 'TEST' } });
+    const project = await prisma.project.create({
+      data: { name: 'Test Proj', organizationId: orgId, key: 'TEST' },
+    });
     projectId = project.id;
 
-    const otherProject = await prisma.project.create({ data: { name: 'Other Proj', organizationId: orgId, key: 'OTH' } });
+    const otherProject = await prisma.project.create({
+      data: { name: 'Other Proj', organizationId: orgId, key: 'OTH' },
+    });
     otherProjectId = otherProject.id;
 
     // Setup Members
@@ -66,16 +98,31 @@ describe('IssuesService (Integration)', () => {
         { projectId, userId: adminId, role: ProjectRole.ADMIN },
         { projectId, userId: memberId, role: ProjectRole.MEMBER },
         { projectId, userId: viewerId, role: ProjectRole.VIEWER },
-      ]
+      ],
     });
   });
 
   describe('Board API', () => {
     it('should return 4 columns with issues ordered', async () => {
       // Create some issues
-      await service.create(projectId, adminId, { title: 'Issue 1', status: IssueStatus.TODO }, ProjectRole.ADMIN);
-      await service.create(projectId, adminId, { title: 'Issue 2', status: IssueStatus.TODO }, ProjectRole.ADMIN);
-      await service.create(projectId, adminId, { title: 'Issue 3', status: IssueStatus.IN_PROGRESS }, ProjectRole.ADMIN);
+      await service.create(
+        projectId,
+        adminId,
+        { title: 'Issue 1', status: IssueStatus.TODO },
+        ProjectRole.ADMIN,
+      );
+      await service.create(
+        projectId,
+        adminId,
+        { title: 'Issue 2', status: IssueStatus.TODO },
+        ProjectRole.ADMIN,
+      );
+      await service.create(
+        projectId,
+        adminId,
+        { title: 'Issue 3', status: IssueStatus.IN_PROGRESS },
+        ProjectRole.ADMIN,
+      );
 
       const board = await service.getBoard(projectId);
 
@@ -101,11 +148,31 @@ describe('IssuesService (Integration)', () => {
 
     beforeEach(async () => {
       // Create 4 issues in TODO
-      const issue1 = await service.create(projectId, adminId, { title: 'I1' }, ProjectRole.ADMIN);
-      const issue2 = await service.create(projectId, adminId, { title: 'I2' }, ProjectRole.ADMIN);
-      const issue3 = await service.create(projectId, adminId, { title: 'I3' }, ProjectRole.ADMIN);
-      const issue4 = await service.create(projectId, adminId, { title: 'I4' }, ProjectRole.ADMIN);
-      
+      const issue1 = await service.create(
+        projectId,
+        adminId,
+        { title: 'I1' },
+        ProjectRole.ADMIN,
+      );
+      const issue2 = await service.create(
+        projectId,
+        adminId,
+        { title: 'I2' },
+        ProjectRole.ADMIN,
+      );
+      const issue3 = await service.create(
+        projectId,
+        adminId,
+        { title: 'I3' },
+        ProjectRole.ADMIN,
+      );
+      const issue4 = await service.create(
+        projectId,
+        adminId,
+        { title: 'I4' },
+        ProjectRole.ADMIN,
+      );
+
       i1 = issue1.id;
       i2 = issue2.id;
       i3 = issue3.id;
@@ -113,12 +180,25 @@ describe('IssuesService (Integration)', () => {
     });
 
     it('should prevent VIEWER from moving issues', async () => {
-      await expect(service.moveIssue(projectId, i1, viewerId, { status: IssueStatus.TODO }, ProjectRole.VIEWER))
-        .rejects.toThrow(ForbiddenException);
+      await expect(
+        service.moveIssue(
+          projectId,
+          i1,
+          viewerId,
+          { status: IssueStatus.TODO },
+          ProjectRole.VIEWER,
+        ),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should allow MEMBER and ADMIN to move issues', async () => {
-      await service.moveIssue(projectId, i1, memberId, { status: IssueStatus.IN_PROGRESS }, ProjectRole.MEMBER);
+      await service.moveIssue(
+        projectId,
+        i1,
+        memberId,
+        { status: IssueStatus.IN_PROGRESS },
+        ProjectRole.MEMBER,
+      );
       const updated1 = await prisma.issue.findUnique({ where: { id: i1 } });
       expect(updated1?.status).toBe(IssueStatus.IN_PROGRESS);
     });
@@ -126,15 +206,21 @@ describe('IssuesService (Integration)', () => {
     it('should reorder within the same column (between)', async () => {
       // Currently order is: I1, I2, I3, I4
       // Move I4 between I1 and I2
-      await service.moveIssue(projectId, i4, adminId, { 
-        status: IssueStatus.TODO, 
-        beforeIssueId: i2, 
-        afterIssueId: i1 
-      }, ProjectRole.ADMIN);
+      await service.moveIssue(
+        projectId,
+        i4,
+        adminId,
+        {
+          status: IssueStatus.TODO,
+          beforeIssueId: i2,
+          afterIssueId: i1,
+        },
+        ProjectRole.ADMIN,
+      );
 
       const board = await service.getBoard(projectId);
       const todo = board[IssueStatus.TODO];
-      
+
       // Expected: I1, I4, I2, I3
       expect(todo[0].id).toBe(i1);
       expect(todo[1].id).toBe(i4);
@@ -144,10 +230,16 @@ describe('IssuesService (Integration)', () => {
 
     it('should move to top of column (prepend)', async () => {
       // Move I3 to top (before I1)
-      await service.moveIssue(projectId, i3, adminId, { 
-        status: IssueStatus.TODO, 
-        beforeIssueId: i1 
-      }, ProjectRole.ADMIN);
+      await service.moveIssue(
+        projectId,
+        i3,
+        adminId,
+        {
+          status: IssueStatus.TODO,
+          beforeIssueId: i1,
+        },
+        ProjectRole.ADMIN,
+      );
 
       const board = await service.getBoard(projectId);
       expect(board[IssueStatus.TODO][0].id).toBe(i3);
@@ -156,10 +248,16 @@ describe('IssuesService (Integration)', () => {
 
     it('should move to bottom of column (append)', async () => {
       // Move I1 to bottom (after I4)
-      await service.moveIssue(projectId, i1, adminId, { 
-        status: IssueStatus.TODO, 
-        afterIssueId: i4 
-      }, ProjectRole.ADMIN);
+      await service.moveIssue(
+        projectId,
+        i1,
+        adminId,
+        {
+          status: IssueStatus.TODO,
+          afterIssueId: i4,
+        },
+        ProjectRole.ADMIN,
+      );
 
       const board = await service.getBoard(projectId);
       const todo = board[IssueStatus.TODO];
@@ -168,9 +266,15 @@ describe('IssuesService (Integration)', () => {
 
     it('should handle cross-column move to empty column', async () => {
       // Move I2 to IN_PROGRESS
-      await service.moveIssue(projectId, i2, adminId, { 
-        status: IssueStatus.IN_PROGRESS 
-      }, ProjectRole.ADMIN);
+      await service.moveIssue(
+        projectId,
+        i2,
+        adminId,
+        {
+          status: IssueStatus.IN_PROGRESS,
+        },
+        ProjectRole.ADMIN,
+      );
 
       const board = await service.getBoard(projectId);
       expect(board[IssueStatus.IN_PROGRESS].length).toBe(1);
@@ -179,57 +283,116 @@ describe('IssuesService (Integration)', () => {
 
     it('should prevent IDOR: move issue from different project', async () => {
       // Create issue in other project
-      const otherIssue = await service.create(otherProjectId, adminId, { title: 'Other' }, ProjectRole.ADMIN);
-      
-      await expect(service.moveIssue(projectId, otherIssue.id, adminId, { status: IssueStatus.TODO }, ProjectRole.ADMIN))
-        .rejects.toThrow(ForbiddenException);
+      const otherIssue = await service.create(
+        otherProjectId,
+        adminId,
+        { title: 'Other' },
+        ProjectRole.ADMIN,
+      );
+
+      await expect(
+        service.moveIssue(
+          projectId,
+          otherIssue.id,
+          adminId,
+          { status: IssueStatus.TODO },
+          ProjectRole.ADMIN,
+        ),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should prevent IDOR: neighbors from different project or column', async () => {
-      const otherIssue = await service.create(otherProjectId, adminId, { title: 'Other' }, ProjectRole.ADMIN);
-      
-      await expect(service.moveIssue(projectId, i1, adminId, { 
-        status: IssueStatus.TODO,
-        beforeIssueId: otherIssue.id
-      }, ProjectRole.ADMIN)).rejects.toThrow(BadRequestException);
+      const otherIssue = await service.create(
+        otherProjectId,
+        adminId,
+        { title: 'Other' },
+        ProjectRole.ADMIN,
+      );
+
+      await expect(
+        service.moveIssue(
+          projectId,
+          i1,
+          adminId,
+          {
+            status: IssueStatus.TODO,
+            beforeIssueId: otherIssue.id,
+          },
+          ProjectRole.ADMIN,
+        ),
+      ).rejects.toThrow(BadRequestException);
 
       // Neighbor in wrong column
-      const inProgress = await service.create(projectId, adminId, { title: 'IP', status: IssueStatus.IN_PROGRESS }, ProjectRole.ADMIN);
-      await expect(service.moveIssue(projectId, i1, adminId, { 
-        status: IssueStatus.TODO,
-        afterIssueId: inProgress.id
-      }, ProjectRole.ADMIN)).rejects.toThrow(BadRequestException);
+      const inProgress = await service.create(
+        projectId,
+        adminId,
+        { title: 'IP', status: IssueStatus.IN_PROGRESS },
+        ProjectRole.ADMIN,
+      );
+      await expect(
+        service.moveIssue(
+          projectId,
+          i1,
+          adminId,
+          {
+            status: IssueStatus.TODO,
+            afterIssueId: inProgress.id,
+          },
+          ProjectRole.ADMIN,
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should handle concurrent moves correctly', async () => {
       const p = [];
-      for(let i = 0; i < 5; i++) {
-        p.push(service.create(projectId, adminId, { title: `C${i}` }, ProjectRole.ADMIN));
+      for (let i = 0; i < 5; i++) {
+        p.push(
+          service.create(
+            projectId,
+            adminId,
+            { title: `C${i}` },
+            ProjectRole.ADMIN,
+          ),
+        );
       }
       const created = await Promise.all(p);
 
-      const movePromises = created.map(issue => 
-        service.moveIssue(projectId, issue.id, adminId, { status: IssueStatus.IN_PROGRESS }, ProjectRole.ADMIN)
+      const movePromises = created.map((issue) =>
+        service.moveIssue(
+          projectId,
+          issue.id,
+          adminId,
+          { status: IssueStatus.IN_PROGRESS },
+          ProjectRole.ADMIN,
+        ),
       );
-      
+
       await Promise.all(movePromises);
 
       const board = await service.getBoard(projectId);
       const inProgress = board[IssueStatus.IN_PROGRESS];
-      
+
       expect(inProgress.length).toBe(5);
-      
-      const orders = inProgress.map(i => i.order);
+
+      const orders = inProgress.map((i) => i.order);
       const uniqueOrders = new Set(orders);
       expect(uniqueOrders.size).toBe(5);
     }, 60000);
 
     it('should rollback transaction on failure (invalid fractional indexing combination)', async () => {
-      await expect(service.moveIssue(projectId, i3, adminId, {
-        status: IssueStatus.TODO,
-        afterIssueId: i2,
-        beforeIssueId: i1
-      }, ProjectRole.ADMIN)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.moveIssue(
+          projectId,
+          i3,
+          adminId,
+          {
+            status: IssueStatus.TODO,
+            afterIssueId: i2,
+            beforeIssueId: i1,
+          },
+          ProjectRole.ADMIN,
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });
