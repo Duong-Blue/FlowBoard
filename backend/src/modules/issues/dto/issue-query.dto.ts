@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEnum, IsNumber, Min, Max } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsNumber, Min, Max, IsDateString } from 'class-validator';
 import { IssueStatus, IssuePriority } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 
@@ -37,6 +37,29 @@ export class IssueQueryDto {
   @IsOptional()
   @IsString()
   sortBy?: string;
+
+  @IsOptional()
+  @IsEnum(['true', 'false'])
+  @Transform(({ value }) => value === 'true')
+  overdue?: boolean;
+
+  @IsOptional()
+  @IsEnum(['true', 'false'])
+  @Transform(({ value }) => value === 'true')
+  dueSoon?: boolean;
+
+  @IsOptional()
+  @IsEnum(['true', 'false'])
+  @Transform(({ value }) => value === 'true')
+  noDueDate?: boolean;
+
+  @IsOptional()
+  @IsDateString()
+  dueDateFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  dueDateTo?: string;
 
   @IsOptional()
   @IsString()

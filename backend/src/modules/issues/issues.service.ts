@@ -3,9 +3,10 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { IssueStatus, IssuePriority, ProjectRole, Prisma } from '@prisma/client';
+import { IssueStatus, IssuePriority, IssueType, ProjectRole, Prisma } from '@prisma/client';
 import { generateKeyBetween } from 'fractional-indexing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -30,6 +31,27 @@ export class IssuesService {
     private readonly eventEmitter: EventEmitter2,
     private readonly notificationsService: NotificationsService,
   ) {}
+
+  private computeDeadlineState(status: IssueStatus, dueDate: Date | null, completedAt: Date | null): 'NO_DUE_DATE' | 'COMPLETED' | 'OVERDUE' | 'DUE_SOON' | 'UPCOMING' {
+    if (!dueDate) return 'NO_DUE_DATE';
+    if (status === IssueStatus.DONE) return 'COMPLETED';
+    
+    const now = new Date();
+    if (now >= dueDate) return 'OVERDUE';
+    
+    const diffMs = dueDate.getTime() - now.getTime();
+    if (diffMs <= 48 * 3600 * 1000) return 'DUE_SOON';
+    
+    return 'UPCOMING';
+  }
+
+  private mapIssueWithDeadlineState<T extends { status: IssueStatus; dueDate?: Date | null; completedAt?: Date | null }>(issue: T) {
+    if (!issue) return issue;
+    return {
+      ...issue,
+      deadlineState: this.computeDeadlineState(issue.status, issue.dueDate || null, issue.completedAt || null),
+    };
+  }
 
   private async resolveProjectId(projectParam: string): Promise<string> {
     const project = await this.prisma.project.findFirst({
@@ -103,6 +125,37 @@ export class IssuesService {
     return blockers.length > 0;
   }
 
+  private async handleParentAutoComplete(tx: Prisma.TransactionClient, issueId: string, parentId: string, actorId: string) {
+    const siblings = await tx.issue.findMany({
+      where: { parentId, id: { not: issueId } },
+      select: { status: true }
+    });
+
+    const allDone = siblings.every(s => s.status === IssueStatus.DONE);
+    if (allDone) {
+      const parent = await tx.issue.findUnique({
+        where: { id: parentId },
+        select: { id: true, status: true }
+      });
+
+      if (parent && parent.status !== IssueStatus.DONE) {
+        await tx.issue.update({
+          where: { id: parent.id },
+          data: { status: IssueStatus.DONE, completedAt: new Date() }
+        });
+
+        await tx.issueActivity.create({
+          data: {
+            issueId: parent.id,
+            actorId,
+            type: 'STATUS_CHANGED',
+            metadata: { from: parent.status, to: IssueStatus.DONE, autoCompleted: true }
+          }
+        });
+      }
+    }
+  }
+
   async create(
     projectParam: string,
     reporterId: string,
@@ -145,6 +198,7 @@ export class IssuesService {
           title: dto.title,
           description: dto.description || null,
           status,
+          type: dto.type || IssueType.TASK,
           order,
           priority: dto.priority || IssuePriority.MEDIUM,
           reporterId,
@@ -188,7 +242,7 @@ export class IssuesService {
       console.error('Failed to emit events for issue creation', err);
     }
 
-    return createdIssue;
+    return this.mapIssueWithDeadlineState(createdIssue);
   }
 
   async findAll(projectParam: string, query: IssueQueryDto) {
@@ -214,11 +268,28 @@ export class IssuesService {
       ];
     }
 
+    if (query.noDueDate) {
+      where.dueDate = null;
+    } else if (query.overdue) {
+      where.dueDate = { lt: new Date() };
+      where.status = { not: IssueStatus.DONE };
+    } else if (query.dueSoon) {
+      where.dueDate = {
+        gte: new Date(),
+        lte: new Date(Date.now() + 48 * 3600 * 1000),
+      };
+      where.status = { not: IssueStatus.DONE };
+    } else if (query.dueDateFrom || query.dueDateTo) {
+      where.dueDate = {};
+      if (query.dueDateFrom) where.dueDate.gte = new Date(query.dueDateFrom);
+      if (query.dueDateTo) where.dueDate.lte = new Date(query.dueDateTo);
+    }
+
     const page = Number(query.page) || 1;
     const limit = Math.min(Number(query.limit) || 20, 100);
     const skip = (page - 1) * limit;
 
-    const allowedSortFields = ['createdAt', 'updatedAt', 'priority', 'status', 'key'];
+    const allowedSortFields = ['createdAt', 'updatedAt', 'priority', 'status', 'key', 'dueDate'];
     const sortBy = allowedSortFields.includes(query.sortBy || '') ? query.sortBy! : 'createdAt';
     const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
 
@@ -237,7 +308,7 @@ export class IssuesService {
     ]);
 
     return {
-      items,
+      items: items.map(issue => this.mapIssueWithDeadlineState(issue)),
       meta: {
         total,
         page,
@@ -262,7 +333,7 @@ export class IssuesService {
       throw new NotFoundException('Issue not found');
     }
 
-    return issue;
+    return this.mapIssueWithDeadlineState(issue);
   }
 
   async getBoard(projectParam: string) {
@@ -280,7 +351,7 @@ export class IssuesService {
 
     type BoardIssue = (typeof issues)[number];
 
-    const columns: Record<IssueStatus, BoardIssue[]> = {
+    const columns: Record<IssueStatus, any[]> = {
       [IssueStatus.TODO]: [],
       [IssueStatus.IN_PROGRESS]: [],
       [IssueStatus.IN_PREVIEW]: [],
@@ -289,7 +360,7 @@ export class IssuesService {
 
     for (const issue of issues) {
       if (columns[issue.status]) {
-        columns[issue.status].push(issue);
+        columns[issue.status].push(this.mapIssueWithDeadlineState(issue));
       }
     }
 
@@ -374,11 +445,21 @@ export class IssuesService {
         throw new BadRequestException('Invalid neighbor combination for fractional indexing');
       }
 
+      let completedAt: Date | null | undefined = undefined;
+      if (issue.status !== dto.status) {
+        if (dto.status === IssueStatus.DONE) {
+          completedAt = new Date();
+        } else if (issue.status === IssueStatus.DONE) {
+          completedAt = null;
+        }
+      }
+
       const updatedIssue = await tx.issue.update({
         where: { id: issueId },
         data: {
           status: dto.status,
           order: newOrder,
+          completedAt,
         },
         include: {
           reporter: { select: USER_SELECT },
@@ -394,10 +475,15 @@ export class IssuesService {
         await tx.issueActivity.create({
           data: {
             issueId,
+            actorId,
             type: 'STATUS_CHANGED',
             metadata: { from: issue.status, to: dto.status },
           }
         });
+
+        if (dto.status === IssueStatus.DONE && issue.parentId) {
+          await this.handleParentAutoComplete(tx, issueId, issue.parentId, actorId);
+        }
       }
 
       return updatedIssue;
@@ -409,7 +495,7 @@ export class IssuesService {
       console.error('Failed to emit events for issue movement', err);
     }
 
-    return movedIssue;
+    return this.mapIssueWithDeadlineState(movedIssue);
   }
 
   async update(
@@ -433,14 +519,28 @@ export class IssuesService {
     }
 
     const updatedIssue = await this.prisma.$transaction(async (tx) => {
+      let completedAt: Date | null | undefined = undefined;
+      if (dto.status !== undefined && dto.status !== oldIssue.status) {
+        if (dto.status === IssueStatus.DONE) {
+          completedAt = new Date();
+        } else if (oldIssue.status === IssueStatus.DONE) {
+          completedAt = null;
+        }
+      }
+
       const dbUpdatedIssue = await tx.issue.update({
         where: { id: issueId },
         data: {
           title: dto.title,
           description: dto.description,
           status: dto.status,
+          type: dto.type,
           priority: dto.priority,
           assigneeId: dto.assigneeId,
+          parentId: dto.parentId,
+          startDate: dto.startDate ? new Date(dto.startDate) : dto.startDate === null ? null : undefined,
+          dueDate: dto.dueDate ? new Date(dto.dueDate) : dto.dueDate === null ? null : undefined,
+          completedAt,
         },
         include: {
           reporter: { select: USER_SELECT },
@@ -452,6 +552,7 @@ export class IssuesService {
         await tx.issueActivity.create({
           data: {
             issueId,
+            actorId,
             type: 'TITLE_CHANGED',
             metadata: { from: oldIssue.title, to: dto.title },
           }
@@ -462,6 +563,7 @@ export class IssuesService {
         await tx.issueActivity.create({
           data: {
             issueId,
+            actorId,
             type: 'DESCRIPTION_CHANGED',
             metadata: { updated: true },
           }
@@ -476,8 +578,45 @@ export class IssuesService {
         await tx.issueActivity.create({
           data: {
             issueId,
+            actorId,
             type: 'STATUS_CHANGED',
             metadata: { from: oldIssue.status, to: dto.status },
+          }
+        });
+
+        if (dto.status === IssueStatus.DONE) {
+          await tx.issueActivity.create({
+            data: { issueId, actorId, type: 'ISSUE_COMPLETED', metadata: {} }
+          });
+        } else if (oldIssue.status === IssueStatus.DONE) {
+          await tx.issueActivity.create({
+            data: { issueId, actorId, type: 'ISSUE_REOPENED', metadata: {} }
+          });
+        }
+
+        if (dto.status === IssueStatus.DONE && oldIssue.parentId) {
+          await this.handleParentAutoComplete(tx, issueId, oldIssue.parentId, actorId);
+        }
+      }
+
+      if (dto.type !== undefined && dto.type !== oldIssue.type) {
+        await tx.issueActivity.create({
+          data: {
+            issueId,
+            actorId,
+            type: 'TYPE_CHANGED',
+            metadata: { from: oldIssue.type, to: dto.type },
+          }
+        });
+      }
+
+      if (dto.parentId !== undefined && dto.parentId !== oldIssue.parentId) {
+        await tx.issueActivity.create({
+          data: {
+            issueId,
+            actorId,
+            type: 'SUBTASK_PARENT_CHANGED',
+            metadata: { from: oldIssue.parentId, to: dto.parentId },
           }
         });
       }
@@ -486,10 +625,51 @@ export class IssuesService {
         await tx.issueActivity.create({
           data: {
             issueId,
+            actorId,
             type: 'PRIORITY_CHANGED',
             metadata: { from: oldIssue.priority, to: dto.priority },
           }
         });
+      }
+
+      if (dto.startDate !== undefined) {
+        const oldTime = oldIssue.startDate?.getTime();
+        const newTime = dto.startDate ? new Date(dto.startDate).getTime() : null;
+        if (oldTime !== newTime) {
+          if (!oldTime && newTime) {
+            await tx.issueActivity.create({
+              data: { issueId, actorId, type: 'START_DATE_SET', metadata: { to: dto.startDate } }
+            });
+          } else if (oldTime && !newTime) {
+            await tx.issueActivity.create({
+              data: { issueId, actorId, type: 'START_DATE_REMOVED', metadata: { from: oldIssue.startDate } }
+            });
+          } else {
+            await tx.issueActivity.create({
+              data: { issueId, actorId, type: 'START_DATE_CHANGED', metadata: { from: oldIssue.startDate, to: dto.startDate } }
+            });
+          }
+        }
+      }
+
+      if (dto.dueDate !== undefined) {
+        const oldTime = oldIssue.dueDate?.getTime();
+        const newTime = dto.dueDate ? new Date(dto.dueDate).getTime() : null;
+        if (oldTime !== newTime) {
+          if (!oldTime && newTime) {
+            await tx.issueActivity.create({
+              data: { issueId, actorId, type: 'DUE_DATE_SET', metadata: { to: dto.dueDate } }
+            });
+          } else if (oldTime && !newTime) {
+            await tx.issueActivity.create({
+              data: { issueId, actorId, type: 'DUE_DATE_REMOVED', metadata: { from: oldIssue.dueDate } }
+            });
+          } else {
+            await tx.issueActivity.create({
+              data: { issueId, actorId, type: 'DUE_DATE_CHANGED', metadata: { from: oldIssue.dueDate, to: dto.dueDate } }
+            });
+          }
+        }
       }
 
       if (dto.assigneeId !== undefined && dto.assigneeId !== oldIssue.assigneeId) {
@@ -509,6 +689,7 @@ export class IssuesService {
         await tx.issueActivity.create({
           data: {
             issueId,
+            actorId,
             type: 'ASSIGNEE_CHANGED',
             metadata: { 
               fromUserId, 
@@ -543,7 +724,7 @@ export class IssuesService {
       console.error('Failed to emit events for issue update', err);
     }
 
-    return updatedIssue;
+    return this.mapIssueWithDeadlineState(updatedIssue);
   }
 
   async delete(
@@ -551,6 +732,7 @@ export class IssuesService {
     issueParam: string,
     actorId: string,
     userRole: ProjectRole,
+    force: boolean = false,
     correlationId?: string,
   ) {
     if (userRole !== ProjectRole.ADMIN) {
@@ -559,6 +741,15 @@ export class IssuesService {
 
     const issue = await this.findOne(projectParam, issueParam);
     const projectId = issue.projectId;
+
+    const subtaskCount = await this.prisma.issue.count({ where: { parentId: issue.id } });
+    if (subtaskCount > 0 && !force) {
+      throw new ConflictException({
+        message: 'Issue has subtasks and requires confirmation to delete',
+        requiresConfirmation: true,
+        subtaskCount,
+      });
+    }
 
     await this.prisma.issue.delete({
       where: { id: issue.id },

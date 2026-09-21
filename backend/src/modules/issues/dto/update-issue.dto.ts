@@ -49,6 +49,10 @@ export class UpdateIssueDto {
   assigneeId?: string;
 
   @IsOptional()
+  @IsString()
+  parentId?: string;
+
+  @IsOptional()
   @IsDateString()
   startDate?: string;
 

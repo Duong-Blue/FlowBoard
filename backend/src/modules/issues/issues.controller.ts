@@ -122,8 +122,9 @@ export class IssuesController {
     @Param('issueId') issueId: string,
     @CurrentUser('id') userId: string,
     @CurrentProjectMember('role') role: ProjectRole,
+    @Query('force') force?: string,
     @Headers('x-correlation-id') correlationId?: string,
   ) {
-    return this.issuesService.delete(projectId, issueId, userId, role, correlationId);
+    return this.issuesService.delete(projectId, issueId, userId, role, force === 'true', correlationId);
   }
 }

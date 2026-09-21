@@ -49,6 +49,10 @@ export class CreateIssueDto {
   assigneeId?: string;
 
   @IsOptional()
+  @IsString()
+  parentId?: string;
+
+  @IsOptional()
   @IsDateString()
   startDate?: string;
 
