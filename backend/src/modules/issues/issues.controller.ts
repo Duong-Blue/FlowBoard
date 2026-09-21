@@ -52,7 +52,13 @@ export class IssuesController {
     @Body() dto: CreateIssueDto,
     @Headers('x-correlation-id') correlationId?: string,
   ) {
-    return this.issuesService.create(projectId, userId, dto, role, correlationId);
+    return this.issuesService.create(
+      projectId,
+      userId,
+      dto,
+      role,
+      correlationId,
+    );
   }
 
   @Post(':issueId/subtasks')
@@ -81,6 +87,15 @@ export class IssuesController {
     return this.issuesService.findAll(projectId, query);
   }
 
+  
+  @Get('workload')
+  getWorkload(
+    @Param('projectId') projectId: string,
+    @Query('includeSubtasks') includeSubtasks?: string,
+  ) {
+    return this.issuesService.getWorkload(projectId, includeSubtasks === 'true');
+  }
+
   @Get(':issueId')
   findOne(
     @Param('projectId') projectId: string,
@@ -99,7 +114,14 @@ export class IssuesController {
     @Body() dto: MoveIssueDto,
     @Headers('x-correlation-id') correlationId?: string,
   ) {
-    return this.issuesService.moveIssue(projectId, issueId, userId, dto, role, correlationId);
+    return this.issuesService.moveIssue(
+      projectId,
+      issueId,
+      userId,
+      dto,
+      role,
+      correlationId,
+    );
   }
 
   @Throttle({ default: { limit: 120, ttl: 60000 } })
@@ -112,7 +134,14 @@ export class IssuesController {
     @Body() dto: UpdateIssueDto,
     @Headers('x-correlation-id') correlationId?: string,
   ) {
-    return this.issuesService.update(projectId, issueId, userId, dto, role, correlationId);
+    return this.issuesService.update(
+      projectId,
+      issueId,
+      userId,
+      dto,
+      role,
+      correlationId,
+    );
   }
 
   @Throttle({ default: { limit: 30, ttl: 60000 } })
@@ -125,6 +154,28 @@ export class IssuesController {
     @Query('force') force?: string,
     @Headers('x-correlation-id') correlationId?: string,
   ) {
-    return this.issuesService.delete(projectId, issueId, userId, role, force === 'true', correlationId);
+    return this.issuesService.delete(
+      projectId,
+      issueId,
+      userId,
+      role,
+      force === 'true',
+      correlationId,
+    );
+  }
+}
+
+
+@UseGuards(JwtAuthGuard, ProjectMemberGuard)
+@Controller('projects/:projectId/workload')
+export class WorkloadController {
+  constructor(private readonly issuesService: IssuesService) {}
+
+  @Get()
+  getWorkload(
+    @Param('projectId') projectId: string,
+    @Query('includeSubtasks') includeSubtasks?: string,
+  ) {
+    return this.issuesService.getWorkload(projectId, includeSubtasks === 'true');
   }
 }

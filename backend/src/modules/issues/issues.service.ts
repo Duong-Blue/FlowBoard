@@ -6,7 +6,13 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { IssueStatus, IssuePriority, IssueType, ProjectRole, Prisma } from '@prisma/client';
+import {
+  IssueStatus,
+  IssuePriority,
+  IssueType,
+  ProjectRole,
+  Prisma,
+} from '@prisma/client';
 import { generateKeyBetween } from 'fractional-indexing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -32,39 +38,64 @@ export class IssuesService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  private computeDeadlineState(status: IssueStatus, dueDate: Date | null, completedAt: Date | null): 'NO_DUE_DATE' | 'COMPLETED' | 'OVERDUE' | 'DUE_SOON' | 'UPCOMING' {
+  private computeDeadlineState(
+    status: IssueStatus,
+    dueDate: Date | null,
+    completedAt: Date | null,
+  ): 'NO_DUE_DATE' | 'COMPLETED' | 'OVERDUE' | 'DUE_SOON' | 'UPCOMING' {
     if (!dueDate) return 'NO_DUE_DATE';
     if (status === IssueStatus.DONE) return 'COMPLETED';
-    
+
     const now = new Date();
     if (now >= dueDate) return 'OVERDUE';
-    
+
     const diffMs = dueDate.getTime() - now.getTime();
     if (diffMs <= 48 * 3600 * 1000) return 'DUE_SOON';
-    
+
     return 'UPCOMING';
   }
 
-  private mapIssueWithDeadlineState<T extends { status: IssueStatus; dueDate?: Date | null; completedAt?: Date | null }>(issue: T) {
+  private mapIssueWithDeadlineState<
+    T extends {
+      status: IssueStatus;
+      dueDate?: Date | null;
+      completedAt?: Date | null;
+    },
+  >(issue: T) {
     if (!issue) return issue;
     return {
       ...issue,
-      deadlineState: this.computeDeadlineState(issue.status, issue.dueDate || null, issue.completedAt || null),
+      deadlineState: this.computeDeadlineState(
+        issue.status,
+        issue.dueDate || null,
+        issue.completedAt || null,
+      ),
     };
   }
 
   private async resolveProjectId(projectParam: string): Promise<string> {
     const project = await this.prisma.project.findFirst({
-      where: { OR: [{ id: projectParam }, { key: { equals: projectParam, mode: 'insensitive' } }] },
+      where: {
+        OR: [
+          { id: projectParam },
+          { key: { equals: projectParam, mode: 'insensitive' } },
+        ],
+      },
       select: { id: true },
     });
     return project?.id || projectParam;
   }
 
-  private async resolveIssueId(projectId: string, issueParam: string): Promise<string> {
+  private async resolveIssueId(
+    projectId: string,
+    issueParam: string,
+  ): Promise<string> {
     const issue = await this.prisma.issue.findFirst({
       where: {
-        OR: [{ id: issueParam }, { key: { equals: issueParam, mode: 'insensitive' } }],
+        OR: [
+          { id: issueParam },
+          { key: { equals: issueParam, mode: 'insensitive' } },
+        ],
         projectId,
       },
       select: { id: true },
@@ -92,23 +123,41 @@ export class IssuesService {
     if (currentStatus === targetStatus) return;
 
     const allowed: Record<IssueStatus, IssueStatus[]> = {
-      [IssueStatus.TODO]: isSubtask ? [IssueStatus.IN_PROGRESS, IssueStatus.DONE] : [IssueStatus.IN_PROGRESS],
-      [IssueStatus.IN_PROGRESS]: [IssueStatus.TODO, IssueStatus.IN_PREVIEW, IssueStatus.DONE],
+      [IssueStatus.TODO]: isSubtask
+        ? [IssueStatus.IN_PROGRESS, IssueStatus.DONE]
+        : [IssueStatus.IN_PROGRESS],
+      [IssueStatus.IN_PROGRESS]: [
+        IssueStatus.TODO,
+        IssueStatus.IN_PREVIEW,
+        IssueStatus.DONE,
+      ],
       [IssueStatus.IN_PREVIEW]: [IssueStatus.IN_PROGRESS, IssueStatus.DONE],
-      [IssueStatus.DONE]: isSubtask ? [IssueStatus.TODO, IssueStatus.IN_PROGRESS] : [IssueStatus.IN_PROGRESS],
+      [IssueStatus.DONE]: isSubtask
+        ? [IssueStatus.TODO, IssueStatus.IN_PROGRESS]
+        : [IssueStatus.IN_PROGRESS],
     };
 
     if (!allowed[currentStatus].includes(targetStatus)) {
-      throw new BadRequestException(`Invalid status transition from ${currentStatus} to ${targetStatus}`);
+      throw new BadRequestException(
+        `Invalid status transition from ${currentStatus} to ${targetStatus}`,
+      );
     }
 
     if (targetStatus === IssueStatus.DONE) {
-      if (currentStatus === IssueStatus.IN_PROGRESS && userRole !== ProjectRole.ADMIN && !isSubtask) {
-        throw new BadRequestException('Direct transition from IN_PROGRESS to DONE requires ADMIN role');
+      if (
+        currentStatus === IssueStatus.IN_PROGRESS &&
+        userRole !== ProjectRole.ADMIN &&
+        !isSubtask
+      ) {
+        throw new BadRequestException(
+          'Direct transition from IN_PROGRESS to DONE requires ADMIN role',
+        );
       }
 
       if (hasActiveBlockers) {
-        throw new BadRequestException('Cannot move issue to DONE while it is blocked by unresolved issues');
+        throw new BadRequestException(
+          'Cannot move issue to DONE while it is blocked by unresolved issues',
+        );
       }
     }
   }
@@ -117,31 +166,44 @@ export class IssuesService {
     const blockers = await this.prisma.issueRelation.findMany({
       where: {
         OR: [
-          { targetIssueId: issueId, type: 'BLOCKS', sourceIssue: { status: { not: IssueStatus.DONE } } },
-          { sourceIssueId: issueId, type: 'IS_BLOCKED_BY', targetIssue: { status: { not: IssueStatus.DONE } } }
-        ]
-      }
+          {
+            targetIssueId: issueId,
+            type: 'BLOCKS',
+            sourceIssue: { status: { not: IssueStatus.DONE } },
+          },
+          {
+            sourceIssueId: issueId,
+            type: 'IS_BLOCKED_BY',
+            targetIssue: { status: { not: IssueStatus.DONE } },
+          },
+        ],
+      },
     });
     return blockers.length > 0;
   }
 
-  private async handleParentAutoComplete(tx: Prisma.TransactionClient, issueId: string, parentId: string, actorId: string) {
+  private async handleParentAutoComplete(
+    tx: Prisma.TransactionClient,
+    issueId: string,
+    parentId: string,
+    actorId: string,
+  ) {
     const siblings = await tx.issue.findMany({
       where: { parentId, id: { not: issueId } },
-      select: { status: true }
+      select: { status: true },
     });
 
-    const allDone = siblings.every(s => s.status === IssueStatus.DONE);
+    const allDone = siblings.every((s) => s.status === IssueStatus.DONE);
     if (allDone) {
       const parent = await tx.issue.findUnique({
         where: { id: parentId },
-        select: { id: true, status: true }
+        select: { id: true, status: true },
       });
 
       if (parent && parent.status !== IssueStatus.DONE) {
         await tx.issue.update({
           where: { id: parent.id },
-          data: { status: IssueStatus.DONE, completedAt: new Date() }
+          data: { status: IssueStatus.DONE, completedAt: new Date() },
         });
 
         await tx.issueActivity.create({
@@ -149,8 +211,12 @@ export class IssuesService {
             issueId: parent.id,
             actorId,
             type: 'STATUS_CHANGED',
-            metadata: { from: parent.status, to: IssueStatus.DONE, autoCompleted: true }
-          }
+            metadata: {
+              from: parent.status,
+              to: IssueStatus.DONE,
+              autoCompleted: true,
+            },
+          },
         });
       }
     }
@@ -223,7 +289,11 @@ export class IssuesService {
     });
 
     try {
-      this.eventEmitter.emit('issue.created', { projectId, issue: createdIssue, correlationId });
+      this.eventEmitter.emit('issue.created', {
+        projectId,
+        issue: createdIssue,
+        correlationId,
+      });
 
       if (createdIssue.assigneeId && createdIssue.assigneeId !== reporterId) {
         const notif = await this.notificationsService.createNotification({
@@ -231,12 +301,19 @@ export class IssuesService {
           type: 'ISSUE_ASSIGNED',
           title: 'You have been assigned to an issue',
           message: `${createdIssue.reporter.displayName || createdIssue.reporter.firstName} assigned you to ${createdIssue.key}`,
-          metadata: { projectId, issueId: createdIssue.id, key: createdIssue.key },
+          metadata: {
+            projectId,
+            issueId: createdIssue.id,
+            key: createdIssue.key,
+          },
           projectId,
           issueId: createdIssue.id,
           actorId: reporterId,
         });
-        this.eventEmitter.emit('notification.new', { userId: createdIssue.assigneeId, notification: notif });
+        this.eventEmitter.emit('notification.new', {
+          userId: createdIssue.assigneeId,
+          notification: notif,
+        });
       }
     } catch (err) {
       console.error('Failed to emit events for issue creation', err);
@@ -279,7 +356,47 @@ export class IssuesService {
         lte: new Date(Date.now() + 48 * 3600 * 1000),
       };
       where.status = { not: IssueStatus.DONE };
+    } else if (query.startDateFrom || query.startDateTo) {
+      const qStart = query.startDateFrom || query.dueDateFrom;
+      const qEnd = query.startDateTo || query.dueDateTo;
+
+      if (qStart && qEnd) {
+        const diffDays =
+          (new Date(qEnd).getTime() - new Date(qStart).getTime()) /
+          (1000 * 3600 * 24);
+        if (diffDays > 180) {
+          throw new BadRequestException('Date range cannot exceed 180 days');
+        }
+      }
+
+      const andConditions: Prisma.IssueWhereInput[] = [];
+      if (qStart) {
+        andConditions.push({
+          OR: [
+            { dueDate: { gte: new Date(qStart) } },
+            { dueDate: null, startDate: { gte: new Date(qStart) } },
+          ],
+        });
+      }
+      if (qEnd) {
+        andConditions.push({
+          OR: [
+            { startDate: { lte: new Date(qEnd) } },
+            { startDate: null, dueDate: { lte: new Date(qEnd) } },
+          ],
+        });
+      }
+      where.AND = andConditions;
     } else if (query.dueDateFrom || query.dueDateTo) {
+      if (query.dueDateFrom && query.dueDateTo) {
+        const diffDays =
+          (new Date(query.dueDateTo).getTime() -
+            new Date(query.dueDateFrom).getTime()) /
+          (1000 * 3600 * 24);
+        if (diffDays > 180) {
+          throw new BadRequestException('Date range cannot exceed 180 days');
+        }
+      }
       where.dueDate = {};
       if (query.dueDateFrom) where.dueDate.gte = new Date(query.dueDateFrom);
       if (query.dueDateTo) where.dueDate.lte = new Date(query.dueDateTo);
@@ -289,8 +406,17 @@ export class IssuesService {
     const limit = Math.min(Number(query.limit) || 20, 100);
     const skip = (page - 1) * limit;
 
-    const allowedSortFields = ['createdAt', 'updatedAt', 'priority', 'status', 'key', 'dueDate'];
-    const sortBy = allowedSortFields.includes(query.sortBy || '') ? query.sortBy! : 'createdAt';
+    const allowedSortFields = [
+      'createdAt',
+      'updatedAt',
+      'priority',
+      'status',
+      'key',
+      'dueDate',
+    ];
+    const sortBy = allowedSortFields.includes(query.sortBy || '')
+      ? query.sortBy!
+      : 'createdAt';
     const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
 
     const [items, total] = await Promise.all([
@@ -308,7 +434,7 @@ export class IssuesService {
     ]);
 
     return {
-      items: items.map(issue => this.mapIssueWithDeadlineState(issue)),
+      items: items.map((issue) => this.mapIssueWithDeadlineState(issue)),
       meta: {
         total,
         page,
@@ -334,6 +460,63 @@ export class IssuesService {
     }
 
     return this.mapIssueWithDeadlineState(issue);
+  }
+
+  
+  async getWorkload(projectParam: string, includeSubtasks = false) {
+    const projectId = await this.resolveProjectId(projectParam);
+    const where: any = {
+      projectId,
+      assigneeId: { not: null },
+    };
+
+    if (!includeSubtasks) {
+      where.parentId = null;
+    }
+
+    const issues = await this.prisma.issue.findMany({
+      where,
+      select: {
+        assigneeId: true,
+        status: true,
+        dueDate: true,
+      },
+    });
+
+    const workload: Record<string, {
+      totalIssues: number;
+      statusBreakdown: { TODO: number; IN_PROGRESS: number; IN_PREVIEW: number; DONE: number };
+      overdueCount: number;
+    }> = {};
+
+    const now = new Date();
+
+    for (const issue of issues) {
+      if (!issue.assigneeId) continue;
+      
+      if (!workload[issue.assigneeId]) {
+        workload[issue.assigneeId] = {
+          totalIssues: 0,
+          statusBreakdown: {
+            TODO: 0,
+            IN_PROGRESS: 0,
+            IN_PREVIEW: 0,
+            DONE: 0,
+          },
+          overdueCount: 0,
+        };
+      }
+
+      const stats = workload[issue.assigneeId];
+      stats.totalIssues++;
+      stats.statusBreakdown[issue.status]++;
+
+      if (issue.dueDate && issue.dueDate < now && issue.status !== 'DONE') {
+        stats.overdueCount++;
+      }
+    }
+
+    return workload;
   }
 
   async getBoard(projectParam: string) {
@@ -400,12 +583,19 @@ export class IssuesService {
         if (dto.afterIssueId === issueId) {
           throw new BadRequestException('Cannot move issue relative to itself');
         }
-        const afterIssue = await tx.issue.findUnique({ where: { id: dto.afterIssueId } });
+        const afterIssue = await tx.issue.findUnique({
+          where: { id: dto.afterIssueId },
+        });
         if (!afterIssue) {
           throw new BadRequestException('afterIssueId not found');
         }
-        if (afterIssue.projectId !== projectId || afterIssue.status !== dto.status) {
-          throw new BadRequestException('afterIssueId invalid (wrong project or target status)');
+        if (
+          afterIssue.projectId !== projectId ||
+          afterIssue.status !== dto.status
+        ) {
+          throw new BadRequestException(
+            'afterIssueId invalid (wrong project or target status)',
+          );
         }
         a = afterIssue.order;
       }
@@ -414,12 +604,19 @@ export class IssuesService {
         if (dto.beforeIssueId === issueId) {
           throw new BadRequestException('Cannot move issue relative to itself');
         }
-        const beforeIssue = await tx.issue.findUnique({ where: { id: dto.beforeIssueId } });
+        const beforeIssue = await tx.issue.findUnique({
+          where: { id: dto.beforeIssueId },
+        });
         if (!beforeIssue) {
           throw new BadRequestException('beforeIssueId not found');
         }
-        if (beforeIssue.projectId !== projectId || beforeIssue.status !== dto.status) {
-          throw new BadRequestException('beforeIssueId invalid (wrong project or target status)');
+        if (
+          beforeIssue.projectId !== projectId ||
+          beforeIssue.status !== dto.status
+        ) {
+          throw new BadRequestException(
+            'beforeIssueId invalid (wrong project or target status)',
+          );
         }
         b = beforeIssue.order;
       }
@@ -442,7 +639,9 @@ export class IssuesService {
         }
         newOrder = generateKeyBetween(a, b);
       } catch (_err) {
-        throw new BadRequestException('Invalid neighbor combination for fractional indexing');
+        throw new BadRequestException(
+          'Invalid neighbor combination for fractional indexing',
+        );
       }
 
       let completedAt: Date | null | undefined = undefined;
@@ -470,7 +669,13 @@ export class IssuesService {
       if (issue.status !== dto.status) {
         const hasBlockers = await this.checkHasActiveBlockers(issueId);
         const isSubtask = issue.parentId !== null;
-        await this.validateStatusTransition(issue.status, dto.status, userRole, hasBlockers, isSubtask);
+        await this.validateStatusTransition(
+          issue.status,
+          dto.status,
+          userRole,
+          hasBlockers,
+          isSubtask,
+        );
 
         await tx.issueActivity.create({
           data: {
@@ -478,11 +683,16 @@ export class IssuesService {
             actorId,
             type: 'STATUS_CHANGED',
             metadata: { from: issue.status, to: dto.status },
-          }
+          },
         });
 
         if (dto.status === IssueStatus.DONE && issue.parentId) {
-          await this.handleParentAutoComplete(tx, issueId, issue.parentId, actorId);
+          await this.handleParentAutoComplete(
+            tx,
+            issueId,
+            issue.parentId,
+            actorId,
+          );
         }
       }
 
@@ -490,7 +700,11 @@ export class IssuesService {
     });
 
     try {
-      this.eventEmitter.emit('issue.moved', { projectId, issue: movedIssue, correlationId });
+      this.eventEmitter.emit('issue.moved', {
+        projectId,
+        issue: movedIssue,
+        correlationId,
+      });
     } catch (err) {
       console.error('Failed to emit events for issue movement', err);
     }
@@ -538,8 +752,16 @@ export class IssuesService {
           priority: dto.priority,
           assigneeId: dto.assigneeId,
           parentId: dto.parentId,
-          startDate: dto.startDate ? new Date(dto.startDate) : dto.startDate === null ? null : undefined,
-          dueDate: dto.dueDate ? new Date(dto.dueDate) : dto.dueDate === null ? null : undefined,
+          startDate: dto.startDate
+            ? new Date(dto.startDate)
+            : dto.startDate === null
+              ? null
+              : undefined,
+          dueDate: dto.dueDate
+            ? new Date(dto.dueDate)
+            : dto.dueDate === null
+              ? null
+              : undefined,
           completedAt,
         },
         include: {
@@ -555,25 +777,34 @@ export class IssuesService {
             actorId,
             type: 'TITLE_CHANGED',
             metadata: { from: oldIssue.title, to: dto.title },
-          }
+          },
         });
       }
 
-      if (dto.description !== undefined && dto.description !== oldIssue.description) {
+      if (
+        dto.description !== undefined &&
+        dto.description !== oldIssue.description
+      ) {
         await tx.issueActivity.create({
           data: {
             issueId,
             actorId,
             type: 'DESCRIPTION_CHANGED',
             metadata: { updated: true },
-          }
+          },
         });
       }
 
       if (dto.status !== undefined && dto.status !== oldIssue.status) {
         const hasBlockers = await this.checkHasActiveBlockers(issueId);
         const isSubtask = oldIssue.parentId !== null;
-        await this.validateStatusTransition(oldIssue.status, dto.status, userRole, hasBlockers, isSubtask);
+        await this.validateStatusTransition(
+          oldIssue.status,
+          dto.status,
+          userRole,
+          hasBlockers,
+          isSubtask,
+        );
 
         await tx.issueActivity.create({
           data: {
@@ -581,21 +812,26 @@ export class IssuesService {
             actorId,
             type: 'STATUS_CHANGED',
             metadata: { from: oldIssue.status, to: dto.status },
-          }
+          },
         });
 
         if (dto.status === IssueStatus.DONE) {
           await tx.issueActivity.create({
-            data: { issueId, actorId, type: 'ISSUE_COMPLETED', metadata: {} }
+            data: { issueId, actorId, type: 'ISSUE_COMPLETED', metadata: {} },
           });
         } else if (oldIssue.status === IssueStatus.DONE) {
           await tx.issueActivity.create({
-            data: { issueId, actorId, type: 'ISSUE_REOPENED', metadata: {} }
+            data: { issueId, actorId, type: 'ISSUE_REOPENED', metadata: {} },
           });
         }
 
         if (dto.status === IssueStatus.DONE && oldIssue.parentId) {
-          await this.handleParentAutoComplete(tx, issueId, oldIssue.parentId, actorId);
+          await this.handleParentAutoComplete(
+            tx,
+            issueId,
+            oldIssue.parentId,
+            actorId,
+          );
         }
       }
 
@@ -606,7 +842,7 @@ export class IssuesService {
             actorId,
             type: 'TYPE_CHANGED',
             metadata: { from: oldIssue.type, to: dto.type },
-          }
+          },
         });
       }
 
@@ -617,7 +853,7 @@ export class IssuesService {
             actorId,
             type: 'SUBTASK_PARENT_CHANGED',
             metadata: { from: oldIssue.parentId, to: dto.parentId },
-          }
+          },
         });
       }
 
@@ -628,25 +864,42 @@ export class IssuesService {
             actorId,
             type: 'PRIORITY_CHANGED',
             metadata: { from: oldIssue.priority, to: dto.priority },
-          }
+          },
         });
       }
 
       if (dto.startDate !== undefined) {
         const oldTime = oldIssue.startDate?.getTime();
-        const newTime = dto.startDate ? new Date(dto.startDate).getTime() : null;
+        const newTime = dto.startDate
+          ? new Date(dto.startDate).getTime()
+          : null;
         if (oldTime !== newTime) {
           if (!oldTime && newTime) {
             await tx.issueActivity.create({
-              data: { issueId, actorId, type: 'START_DATE_SET', metadata: { to: dto.startDate } }
+              data: {
+                issueId,
+                actorId,
+                type: 'START_DATE_SET',
+                metadata: { to: dto.startDate },
+              },
             });
           } else if (oldTime && !newTime) {
             await tx.issueActivity.create({
-              data: { issueId, actorId, type: 'START_DATE_REMOVED', metadata: { from: oldIssue.startDate } }
+              data: {
+                issueId,
+                actorId,
+                type: 'START_DATE_REMOVED',
+                metadata: { from: oldIssue.startDate },
+              },
             });
           } else {
             await tx.issueActivity.create({
-              data: { issueId, actorId, type: 'START_DATE_CHANGED', metadata: { from: oldIssue.startDate, to: dto.startDate } }
+              data: {
+                issueId,
+                actorId,
+                type: 'START_DATE_CHANGED',
+                metadata: { from: oldIssue.startDate, to: dto.startDate },
+              },
             });
           }
         }
@@ -658,31 +911,57 @@ export class IssuesService {
         if (oldTime !== newTime) {
           if (!oldTime && newTime) {
             await tx.issueActivity.create({
-              data: { issueId, actorId, type: 'DUE_DATE_SET', metadata: { to: dto.dueDate } }
+              data: {
+                issueId,
+                actorId,
+                type: 'DUE_DATE_SET',
+                metadata: { to: dto.dueDate },
+              },
             });
           } else if (oldTime && !newTime) {
             await tx.issueActivity.create({
-              data: { issueId, actorId, type: 'DUE_DATE_REMOVED', metadata: { from: oldIssue.dueDate } }
+              data: {
+                issueId,
+                actorId,
+                type: 'DUE_DATE_REMOVED',
+                metadata: { from: oldIssue.dueDate },
+              },
             });
           } else {
             await tx.issueActivity.create({
-              data: { issueId, actorId, type: 'DUE_DATE_CHANGED', metadata: { from: oldIssue.dueDate, to: dto.dueDate } }
+              data: {
+                issueId,
+                actorId,
+                type: 'DUE_DATE_CHANGED',
+                metadata: { from: oldIssue.dueDate, to: dto.dueDate },
+              },
             });
           }
         }
       }
 
-      if (dto.assigneeId !== undefined && dto.assigneeId !== oldIssue.assigneeId) {
+      if (
+        dto.assigneeId !== undefined &&
+        dto.assigneeId !== oldIssue.assigneeId
+      ) {
         const fromUserId = oldIssue.assigneeId;
-        const fromName = oldIssue.assignee 
-          ? (oldIssue.assignee.displayName || [oldIssue.assignee.firstName, oldIssue.assignee.lastName].filter(Boolean).join(' ') || oldIssue.assignee.email) 
+        const fromName = oldIssue.assignee
+          ? oldIssue.assignee.displayName ||
+            [oldIssue.assignee.firstName, oldIssue.assignee.lastName]
+              .filter(Boolean)
+              .join(' ') ||
+            oldIssue.assignee.email
           : null;
-        
+
         let toName = null;
         if (dto.assigneeId) {
-          const toUser = await tx.user.findUnique({ where: { id: dto.assigneeId } });
-          toName = toUser 
-            ? (toUser.displayName || [toUser.firstName, toUser.lastName].filter(Boolean).join(' ') || toUser.email) 
+          const toUser = await tx.user.findUnique({
+            where: { id: dto.assigneeId },
+          });
+          toName = toUser
+            ? toUser.displayName ||
+              [toUser.firstName, toUser.lastName].filter(Boolean).join(' ') ||
+              toUser.email
             : null;
         }
 
@@ -691,13 +970,13 @@ export class IssuesService {
             issueId,
             actorId,
             type: 'ASSIGNEE_CHANGED',
-            metadata: { 
-              fromUserId, 
-              fromName, 
-              toUserId: dto.assigneeId, 
-              toName 
+            metadata: {
+              fromUserId,
+              fromName,
+              toUserId: dto.assigneeId,
+              toName,
             },
-          }
+          },
         });
       }
 
@@ -705,20 +984,35 @@ export class IssuesService {
     });
 
     try {
-      this.eventEmitter.emit('issue.updated', { projectId, issue: updatedIssue, correlationId });
+      this.eventEmitter.emit('issue.updated', {
+        projectId,
+        issue: updatedIssue,
+        correlationId,
+      });
 
-      if (dto.assigneeId && dto.assigneeId !== oldIssue.assigneeId && dto.assigneeId !== actorId) {
+      if (
+        dto.assigneeId &&
+        dto.assigneeId !== oldIssue.assigneeId &&
+        dto.assigneeId !== actorId
+      ) {
         const notif = await this.notificationsService.createNotification({
           userId: dto.assigneeId,
           type: 'ISSUE_ASSIGNED',
           title: 'You have been assigned to an issue',
           message: `${updatedIssue.reporter?.displayName || updatedIssue.reporter?.firstName || 'Someone'} assigned you to ${updatedIssue.key}`,
-          metadata: { projectId, issueId: updatedIssue.id, key: updatedIssue.key },
+          metadata: {
+            projectId,
+            issueId: updatedIssue.id,
+            key: updatedIssue.key,
+          },
           projectId,
           issueId: updatedIssue.id,
           actorId,
         });
-        this.eventEmitter.emit('notification.new', { userId: dto.assigneeId, notification: notif });
+        this.eventEmitter.emit('notification.new', {
+          userId: dto.assigneeId,
+          notification: notif,
+        });
       }
     } catch (err) {
       console.error('Failed to emit events for issue update', err);
@@ -742,7 +1036,9 @@ export class IssuesService {
     const issue = await this.findOne(projectParam, issueParam);
     const projectId = issue.projectId;
 
-    const subtaskCount = await this.prisma.issue.count({ where: { parentId: issue.id } });
+    const subtaskCount = await this.prisma.issue.count({
+      where: { parentId: issue.id },
+    });
     if (subtaskCount > 0 && !force) {
       throw new ConflictException({
         message: 'Issue has subtasks and requires confirmation to delete',
@@ -756,7 +1052,11 @@ export class IssuesService {
     });
 
     try {
-      this.eventEmitter.emit('issue.deleted', { projectId, issueId: issue.id, correlationId });
+      this.eventEmitter.emit('issue.deleted', {
+        projectId,
+        issueId: issue.id,
+        correlationId,
+      });
     } catch (err) {
       console.error('Failed to emit events for issue deletion', err);
     }
