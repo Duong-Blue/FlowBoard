@@ -22,6 +22,8 @@ enum ActivityType {
   DUE_DATE_REMOVED
   ISSUE_COMPLETED
   ISSUE_REOPENED
+  TYPE_CHANGED
+  SUBTASK_PARENT_CHANGED
 }
 
 model IssueActivity {
