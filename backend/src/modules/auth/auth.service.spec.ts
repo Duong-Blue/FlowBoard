@@ -65,6 +65,28 @@ describe('AuthService', () => {
     expect(result).toHaveProperty('refreshToken');
   });
 
+  it('should throw UnauthorizedException if token does not exist', async () => {
+    vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(null);
+    await expect(authService.refresh('invalid-token'))
+      .rejects.toThrow('Invalid refresh token');
+  });
+
+  it('should throw UnauthorizedException if token is expired', async () => {
+    const mockToken = {
+      id: 'token-id-123',
+      familyId: 'family-123',
+      userId: 1,
+      revokedAt: null,
+      replacedByToken: null,
+      expiresAt: new Date(Date.now() - 10000), // expired
+      user: { id: 1 },
+    };
+    vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(mockToken as any);
+
+    await expect(authService.refresh('expired-token'))
+      .rejects.toThrow('Invalid refresh token');
+  });
+
   it('should detect reuse and revoke family', async () => {
     const mockUser = { id: 1, email: 'test@example.com', firstName: 'Test', lastName: 'User' };
     const mockToken = {
