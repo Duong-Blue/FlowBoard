@@ -29,6 +29,7 @@ export class AttachmentsController {
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async upload(
+    @Param('projectId') projectId: string,
     @Param('issueId') issueId: string,
     @CurrentUser('id') userId: string,
     @UploadedFile(
@@ -43,21 +44,25 @@ export class AttachmentsController {
     )
     file: Multer.File,
   ) {
-    return this.attachmentsService.upload(issueId, userId, file);
+    return this.attachmentsService.upload(projectId, issueId, userId, file);
   }
 
   @Get()
-  async findAll(@Param('issueId') issueId: string) {
-    return this.attachmentsService.findAll(issueId);
+  async findAll(
+    @Param('projectId') projectId: string,
+    @Param('issueId') issueId: string,
+  ) {
+    return this.attachmentsService.findAll(projectId, issueId);
   }
 
   @Get(':attachmentId/download')
   async download(
+    @Param('projectId') projectId: string,
     @Param('issueId') issueId: string,
     @Param('attachmentId') attachmentId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { attachment, stream } = await this.attachmentsService.getDownloadInfo(issueId, attachmentId);
+    const { attachment, stream } = await this.attachmentsService.getDownloadInfo(projectId, issueId, attachmentId);
     res.set({
       'Content-Type': attachment.mimeType,
       'Content-Disposition': `attachment; filename="${attachment.originalName}"`,
@@ -67,10 +72,11 @@ export class AttachmentsController {
 
   @Delete(':attachmentId')
   async delete(
+    @Param('projectId') projectId: string,
     @Param('issueId') issueId: string,
     @Param('attachmentId') attachmentId: string,
     @CurrentUser('id') userId: string,
   ) {
-    return this.attachmentsService.delete(issueId, attachmentId, userId);
+    return this.attachmentsService.delete(projectId, issueId, attachmentId, userId);
   }
 }

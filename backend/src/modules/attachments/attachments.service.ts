@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { LocalStorageService } from '../storage/local-storage.service';
 import { ActivityService } from '../activity/activity.service';
@@ -15,7 +15,22 @@ export class AttachmentsService {
     private readonly activity: ActivityService,
   ) {}
 
-  async upload(issueId: string, actorId: string, file: Multer.File) {
+  private async verifyIssueInProject(projectId: string, issueId: string) {
+    const issue = await this.prisma.issue.findUnique({
+      where: { id: issueId },
+      select: { projectId: true },
+    });
+    if (!issue) {
+      throw new NotFoundException('Issue not found');
+    }
+    if (issue.projectId !== projectId) {
+      throw new ForbiddenException('Issue does not belong to this project');
+    }
+  }
+
+  async upload(projectId: string, issueId: string, actorId: string, file: Multer.File) {
+    await this.verifyIssueInProject(projectId, issueId);
+
     const ext = path.extname(file.originalname);
     const storedName = `${randomUUID()}${ext}`;
     const storagePath = `issues/${issueId}/${storedName}`;
@@ -39,14 +54,18 @@ export class AttachmentsService {
     return attachment;
   }
 
-  async findAll(issueId: string) {
+  async findAll(projectId: string, issueId: string) {
+    await this.verifyIssueInProject(projectId, issueId);
+
     return this.prisma.attachment.findMany({
       where: { issueId },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async getDownloadInfo(issueId: string, attachmentId: string) {
+  async getDownloadInfo(projectId: string, issueId: string, attachmentId: string) {
+    await this.verifyIssueInProject(projectId, issueId);
+
     const attachment = await this.prisma.attachment.findFirst({
       where: { id: attachmentId, issueId },
     });
@@ -56,7 +75,9 @@ export class AttachmentsService {
     return { attachment, stream };
   }
 
-  async delete(issueId: string, attachmentId: string, actorId: string) {
+  async delete(projectId: string, issueId: string, attachmentId: string, actorId: string) {
+    await this.verifyIssueInProject(projectId, issueId);
+
     const attachment = await this.prisma.attachment.findFirst({
       where: { id: attachmentId, issueId },
     });
