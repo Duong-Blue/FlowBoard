@@ -47,7 +47,13 @@ export class CommentsController {
     if (role === ProjectRole.VIEWER) {
       throw new ForbiddenException('Viewers cannot create comments');
     }
-    return this.commentsService.create(projectId, issueId, userId, dto, correlationId);
+    return this.commentsService.create(
+      projectId,
+      issueId,
+      userId,
+      dto,
+      correlationId,
+    );
   }
 
   @Patch(':commentId')

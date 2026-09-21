@@ -72,7 +72,10 @@ describe('CommentsService', () => {
       mockPrisma.comment.findMany.mockResolvedValueOnce([{ id: 'c1' }]);
       mockPrisma.comment.count.mockResolvedValueOnce(1);
 
-      const result = await service.findAll('proj1', 'issue1', { page: 1, limit: 10 });
+      const result = await service.findAll('proj1', 'issue1', {
+        page: 1,
+        limit: 10,
+      });
       expect(result).toEqual({
         items: [{ id: 'c1' }],
         meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
@@ -90,11 +93,18 @@ describe('CommentsService', () => {
   describe('create', () => {
     it('creates comment and activity', async () => {
       mockPrisma.issue.findUnique.mockResolvedValueOnce({ projectId: 'proj1' });
-      mockPrisma.comment.create.mockResolvedValueOnce({ id: 'c1', content: 'test' });
+      mockPrisma.comment.create.mockResolvedValueOnce({
+        id: 'c1',
+        content: 'test',
+      });
 
-      const result = await service.create('proj1', 'issue1', 'user1', { content: 'test' });
+      const result = await service.create('proj1', 'issue1', 'user1', {
+        content: 'test',
+      });
       expect(result).toEqual({ id: 'c1', content: 'test' });
-      expect(mockPrisma.comment.create).toHaveBeenCalledWith(expect.any(Object));
+      expect(mockPrisma.comment.create).toHaveBeenCalledWith(
+        expect.any(Object),
+      );
       expect(mockPrisma.issueActivity.create).toHaveBeenCalledWith({
         data: {
           issueId: 'issue1',
@@ -109,23 +119,43 @@ describe('CommentsService', () => {
   describe('update', () => {
     it('throws ForbiddenException if not author and not ADMIN', async () => {
       mockPrisma.issue.findUnique.mockResolvedValueOnce({ projectId: 'proj1' });
-      mockPrisma.comment.findUnique.mockResolvedValueOnce({ issueId: 'issue1', authorId: 'user1' });
+      mockPrisma.comment.findUnique.mockResolvedValueOnce({
+        issueId: 'issue1',
+        authorId: 'user1',
+      });
 
       await expect(
-        service.update('proj1', 'issue1', 'c1', 'user2', ProjectRole.MEMBER, { content: 'new' }),
+        service.update('proj1', 'issue1', 'c1', 'user2', ProjectRole.MEMBER, {
+          content: 'new',
+        }),
       ).rejects.toThrow(ForbiddenException);
     });
 
     it('allows ADMIN to update other user comment', async () => {
       mockPrisma.issue.findUnique.mockResolvedValueOnce({ projectId: 'proj1' });
-      mockPrisma.comment.findUnique.mockResolvedValueOnce({ issueId: 'issue1', authorId: 'user1' });
-      mockPrisma.comment.update.mockResolvedValueOnce({ id: 'c1', content: 'new' });
+      mockPrisma.comment.findUnique.mockResolvedValueOnce({
+        issueId: 'issue1',
+        authorId: 'user1',
+      });
+      mockPrisma.comment.update.mockResolvedValueOnce({
+        id: 'c1',
+        content: 'new',
+      });
 
-      const result = await service.update('proj1', 'issue1', 'c1', 'admin1', ProjectRole.ADMIN, { content: 'new' });
+      const result = await service.update(
+        'proj1',
+        'issue1',
+        'c1',
+        'admin1',
+        ProjectRole.ADMIN,
+        { content: 'new' },
+      );
       expect(result).toEqual({ id: 'c1', content: 'new' });
       expect(mockPrisma.comment.update).toHaveBeenCalled();
       expect(mockPrisma.issueActivity.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ type: 'COMMENT_UPDATED' }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ type: 'COMMENT_UPDATED' }),
+        }),
       );
     });
   });
@@ -142,13 +172,26 @@ describe('CommentsService', () => {
 
     it('deletes comment if author', async () => {
       mockPrisma.issue.findUnique.mockResolvedValueOnce({ projectId: 'proj1' });
-      mockPrisma.comment.findUnique.mockResolvedValueOnce({ issueId: 'issue1', authorId: 'user1' });
+      mockPrisma.comment.findUnique.mockResolvedValueOnce({
+        issueId: 'issue1',
+        authorId: 'user1',
+      });
 
-      const result = await service.remove('proj1', 'issue1', 'c1', 'user1', ProjectRole.MEMBER);
+      const result = await service.remove(
+        'proj1',
+        'issue1',
+        'c1',
+        'user1',
+        ProjectRole.MEMBER,
+      );
       expect(result).toEqual({ success: true });
-      expect(mockPrisma.comment.delete).toHaveBeenCalledWith({ where: { id: 'c1' } });
+      expect(mockPrisma.comment.delete).toHaveBeenCalledWith({
+        where: { id: 'c1' },
+      });
       expect(mockPrisma.issueActivity.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ type: 'COMMENT_DELETED' }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ type: 'COMMENT_DELETED' }),
+        }),
       );
     });
   });

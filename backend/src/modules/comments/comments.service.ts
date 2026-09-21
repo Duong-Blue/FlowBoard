@@ -30,16 +30,27 @@ export class CommentsService {
 
   private async resolveProjectId(projectParam: string): Promise<string> {
     const project = await this.prisma.project?.findFirst({
-      where: { OR: [{ id: projectParam }, { key: { equals: projectParam, mode: 'insensitive' } }] },
+      where: {
+        OR: [
+          { id: projectParam },
+          { key: { equals: projectParam, mode: 'insensitive' } },
+        ],
+      },
       select: { id: true },
     });
     return project?.id || projectParam;
   }
 
-  private async resolveIssueId(projectId: string, issueParam: string): Promise<string> {
+  private async resolveIssueId(
+    projectId: string,
+    issueParam: string,
+  ): Promise<string> {
     const issue = await this.prisma.issue?.findFirst({
       where: {
-        OR: [{ id: issueParam }, { key: { equals: issueParam, mode: 'insensitive' } }],
+        OR: [
+          { id: issueParam },
+          { key: { equals: issueParam, mode: 'insensitive' } },
+        ],
         projectId,
       },
       select: { id: true },
@@ -51,7 +62,9 @@ export class CommentsService {
     const projectId = await this.resolveProjectId(projectParam);
     const issueId = await this.resolveIssueId(projectId, issueParam);
 
-    let issue = await this.prisma.issue?.findFirst({ where: { id: issueId, projectId } });
+    let issue = await this.prisma.issue?.findFirst({
+      where: { id: issueId, projectId },
+    });
     if (!issue) {
       issue = await this.prisma.issue?.findUnique({ where: { id: issueId } });
     }
@@ -63,8 +76,15 @@ export class CommentsService {
     return { projectId, issueId, issue };
   }
 
-  async findAll(projectParam: string, issueParam: string, queryDto: QueryCommentDto) {
-    const { issueId } = await this.verifyIssueInProject(projectParam, issueParam);
+  async findAll(
+    projectParam: string,
+    issueParam: string,
+    queryDto: QueryCommentDto,
+  ) {
+    const { issueId } = await this.verifyIssueInProject(
+      projectParam,
+      issueParam,
+    );
 
     const page = queryDto.page || 1;
     const limit = queryDto.limit || 20;
@@ -99,7 +119,10 @@ export class CommentsService {
     dto: CreateCommentDto,
     correlationId?: string,
   ) {
-    const { projectId, issueId, issue } = await this.verifyIssueInProject(projectParam, issueParam);
+    const { projectId, issueId, issue } = await this.verifyIssueInProject(
+      projectParam,
+      issueParam,
+    );
 
     const createdComment = await this.prisma.$transaction(async (tx) => {
       const comment = await tx.comment.create({
@@ -127,23 +150,28 @@ export class CommentsService {
     });
 
     try {
-      this.eventEmitter.emit('comment.created', { projectId, issueId, comment: createdComment, correlationId });
+      this.eventEmitter.emit('comment.created', {
+        projectId,
+        issueId,
+        comment: createdComment,
+        correlationId,
+      });
 
       const mentionMatches = dto.content.match(/@([\w.-]+)/g);
       if (mentionMatches && mentionMatches.length > 0) {
-        const potentialNames = mentionMatches.map(m => m.substring(1));
-        
+        const potentialNames = mentionMatches.map((m) => m.substring(1));
+
         const members = await this.prisma.projectMember.findMany({
           where: {
             projectId,
             user: {
-              OR: potentialNames.flatMap(name => [
+              OR: potentialNames.flatMap((name) => [
                 { displayName: { equals: name, mode: 'insensitive' } },
                 { firstName: { equals: name, mode: 'insensitive' } },
-              ])
-            }
+              ]),
+            },
           },
-          include: { user: true }
+          include: { user: true },
         });
 
         for (const member of members) {
@@ -153,12 +181,20 @@ export class CommentsService {
               type: 'COMMENT_MENTION',
               title: 'You were mentioned in a comment',
               message: `${createdComment.author?.displayName || createdComment.author?.firstName || 'Someone'} mentioned you in ${issue.key}`,
-              metadata: { projectId, issueId, commentId: createdComment.id, key: issue.key },
+              metadata: {
+                projectId,
+                issueId,
+                commentId: createdComment.id,
+                key: issue.key,
+              },
               projectId,
               issueId,
               actorId: authorId,
             });
-            this.eventEmitter.emit('notification.new', { userId: member.userId, notification: notif });
+            this.eventEmitter.emit('notification.new', {
+              userId: member.userId,
+              notification: notif,
+            });
           }
         }
       }
@@ -177,7 +213,10 @@ export class CommentsService {
     userRole: ProjectRole,
     dto: UpdateCommentDto,
   ) {
-    const { issueId } = await this.verifyIssueInProject(projectParam, issueParam);
+    const { issueId } = await this.verifyIssueInProject(
+      projectParam,
+      issueParam,
+    );
 
     const comment = await this.prisma.comment.findUnique({
       where: { id: commentId },
@@ -218,7 +257,10 @@ export class CommentsService {
     userId: string,
     userRole: ProjectRole,
   ) {
-    const { issueId } = await this.verifyIssueInProject(projectParam, issueParam);
+    const { issueId } = await this.verifyIssueInProject(
+      projectParam,
+      issueParam,
+    );
 
     const comment = await this.prisma.comment.findUnique({
       where: { id: commentId },
