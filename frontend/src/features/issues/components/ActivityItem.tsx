@@ -63,7 +63,7 @@ export function ActivityItem({ activity }: ActivityItemProps) {
   };
 
   const date = new Date(activity.createdAt);
-  const formattedDate = new Intl.DateTimeFormat('en-US', {
+  const formattedDate = new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',

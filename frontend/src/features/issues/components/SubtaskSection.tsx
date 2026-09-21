@@ -1,12 +1,21 @@
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { CheckSquare, Plus, Check, Square, User } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { CheckSquare, Plus, Check, Square, User, Trash2 } from 'lucide-react';
 import type { AppDispatch, RootState } from '@/store/types';
 import type { Issue } from '@/store/types';
-import { createSubtask, updateIssueStatus } from '@/store/slices/issueSlice';
+import { createSubtask, updateIssueStatus, deleteSubtask } from '@/store/slices/issueSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 export interface SubtaskSectionProps {
   projectId: string;
@@ -16,8 +25,11 @@ export interface SubtaskSectionProps {
 
 export function SubtaskSection({ projectId, issueId, subtasks: propSubtasks }: SubtaskSectionProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const { orgId, projectKey } = useParams<{ orgId?: string; projectKey?: string }>();
   const [newTitle, setNewTitle] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [subtaskToDelete, setSubtaskToDelete] = React.useState<Issue | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const issueFromStore = useSelector((state: RootState) =>
     state.issue.list.find((i) => i.id === issueId)
@@ -69,6 +81,30 @@ export function SubtaskSection({ projectId, issueId, subtasks: propSubtasks }: S
     }
   };
 
+  const handleDeleteSubtask = async (targetSubtask: Issue, force = false) => {
+    try {
+      setIsDeleting(true);
+      await dispatch(
+        deleteSubtask({
+          projectId,
+          issueId,
+          subtaskId: targetSubtask.id,
+          force,
+        })
+      ).unwrap();
+      setSubtaskToDelete(null);
+    } catch (err: unknown) {
+      const error = err as any;
+      if (error?.status === 409 || error?.data?.requiresConfirmation) {
+        setSubtaskToDelete(targetSubtask);
+      } else {
+        console.error('Failed to delete subtask:', error);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Header & Progress Bar */}
@@ -110,6 +146,10 @@ export function SubtaskSection({ projectId, issueId, subtasks: propSubtasks }: S
               ? assigneeName.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()
               : '?';
 
+            const issueLink = orgId && (projectKey || projectId)
+              ? `/workspace/orgs/${orgId}/projects/${projectKey || projectId}/issues/${subtask.id}`
+              : '#';
+
             return (
               <li
                 key={subtask.id}
@@ -129,30 +169,56 @@ export function SubtaskSection({ projectId, issueId, subtasks: propSubtasks }: S
                     )}
                   </button>
 
-                  <span
-                    className={`text-sm truncate ${
-                      isDone
-                        ? 'line-through text-muted-foreground'
-                        : 'text-foreground font-medium'
-                    }`}
-                  >
-                    {subtask.title}
-                  </span>
+                  {issueLink !== '#' ? (
+                    <Link
+                      to={issueLink}
+                      className={`text-sm truncate hover:underline ${
+                        isDone
+                          ? 'line-through text-muted-foreground'
+                          : 'text-foreground font-medium'
+                      }`}
+                    >
+                      {subtask.title}
+                    </Link>
+                  ) : (
+                    <span
+                      className={`text-sm truncate ${
+                        isDone
+                          ? 'line-through text-muted-foreground'
+                          : 'text-foreground font-medium'
+                      }`}
+                    >
+                      {subtask.title}
+                    </span>
+                  )}
                 </div>
 
-                {/* Assignee indicator / avatar */}
-                {subtask.assignee && (
-                  <div className="flex items-center shrink-0" title={assigneeName}>
-                    <Avatar className="h-6 w-6">
-                      {subtask.assignee.avatarUrl ? (
-                        <AvatarImage src={subtask.assignee.avatarUrl} alt={assigneeName} />
-                      ) : null}
-                      <AvatarFallback className="text-[10px] bg-slate-200 dark:bg-slate-700">
-                        {initials !== '?' ? initials : <User className="h-3 w-3" />}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Assignee indicator / avatar */}
+                  {subtask.assignee && (
+                    <div className="flex items-center shrink-0" title={assigneeName}>
+                      <Avatar className="h-6 w-6">
+                        {subtask.assignee.avatarUrl ? (
+                          <AvatarImage src={subtask.assignee.avatarUrl} alt={assigneeName} />
+                        ) : null}
+                        <AvatarFallback className="text-[10px] bg-slate-200 dark:bg-slate-700">
+                          {initials !== '?' ? initials : <User className="h-3 w-3" />}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  )}
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteSubtask(subtask, false)}
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive cursor-pointer"
+                    aria-label={`Delete "${subtask.title}"`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </li>
             );
           })}
@@ -180,6 +246,36 @@ export function SubtaskSection({ projectId, issueId, subtasks: propSubtasks }: S
           <span>Add</span>
         </Button>
       </form>
+
+      <Dialog open={!!subtaskToDelete} onOpenChange={(open) => !open && setSubtaskToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Issue with Subtasks</DialogTitle>
+            <DialogDescription>
+              This issue has subtasks. Deleting it will permanently remove all of its subtasks as well.
+              Are you sure you want to proceed?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSubtaskToDelete(null)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => subtaskToDelete && handleDeleteSubtask(subtaskToDelete, true)}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
