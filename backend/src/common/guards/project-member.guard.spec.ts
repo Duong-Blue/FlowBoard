@@ -64,7 +64,9 @@ describe('ProjectMemberGuard', () => {
     mockRequest.user = { id: 'user-1' };
     mockRequest.params = { projectId: 'project-1' };
 
-    vi.mocked(prismaService.project.findFirst).mockResolvedValue({ id: 'project-id' } as any);
+    vi.mocked(prismaService.project.findFirst).mockResolvedValue({
+      id: 'project-id',
+    } as any);
     vi.mocked(prismaService.projectMember.findUnique).mockResolvedValue(null);
 
     await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(
@@ -76,12 +78,20 @@ describe('ProjectMemberGuard', () => {
     mockRequest.user = { id: 'user-1' };
     mockRequest.params = { projectId: 'project-1' };
 
-    const mockMember = { projectId: 'project-id', userId: 'user-1', role: 'MEMBER' };
-    vi.mocked(prismaService.project.findFirst).mockResolvedValue({ id: 'project-id' } as any);
-    vi.mocked(prismaService.projectMember.findUnique).mockResolvedValue(mockMember as any);
+    const mockMember = {
+      projectId: 'project-id',
+      userId: 'user-1',
+      role: 'MEMBER',
+    };
+    vi.mocked(prismaService.project.findFirst).mockResolvedValue({
+      id: 'project-id',
+    } as any);
+    vi.mocked(prismaService.projectMember.findUnique).mockResolvedValue(
+      mockMember as any,
+    );
 
     const result = await guard.canActivate(mockExecutionContext);
-    
+
     expect(result).toBe(true);
     expect(mockRequest.projectMember).toEqual(mockMember);
   });
@@ -90,15 +100,28 @@ describe('ProjectMemberGuard', () => {
     mockRequest.user = { id: 'user-1' };
     mockRequest.params = { id: 'project-key' }; // e.g. for /projects/:id
 
-    const mockMember = { projectId: 'project-id', userId: 'user-1', role: 'ADMIN' };
-    vi.mocked(prismaService.project.findFirst).mockResolvedValue({ id: 'project-id' } as any);
-    vi.mocked(prismaService.projectMember.findUnique).mockResolvedValue(mockMember as any);
+    const mockMember = {
+      projectId: 'project-id',
+      userId: 'user-1',
+      role: 'ADMIN',
+    };
+    vi.mocked(prismaService.project.findFirst).mockResolvedValue({
+      id: 'project-id',
+    } as any);
+    vi.mocked(prismaService.projectMember.findUnique).mockResolvedValue(
+      mockMember as any,
+    );
 
     const result = await guard.canActivate(mockExecutionContext);
-    
+
     expect(result).toBe(true);
     expect(prismaService.project.findFirst).toHaveBeenCalledWith({
-      where: { OR: [{ id: 'project-key' }, { key: { equals: 'project-key', mode: 'insensitive' } }] },
+      where: {
+        OR: [
+          { id: 'project-key' },
+          { key: { equals: 'project-key', mode: 'insensitive' } },
+        ],
+      },
       select: { id: true },
     });
   });
@@ -107,7 +130,9 @@ describe('ProjectMemberGuard', () => {
     mockRequest.user = { id: 'user-1' };
     mockRequest.params = { projectId: 'other-org-project' };
 
-    vi.mocked(prismaService.project.findFirst).mockResolvedValue({ id: 'other-org-project-id' } as any);
+    vi.mocked(prismaService.project.findFirst).mockResolvedValue({
+      id: 'other-org-project-id',
+    } as any);
     vi.mocked(prismaService.projectMember.findUnique).mockResolvedValue(null);
 
     await expect(guard.canActivate(mockExecutionContext)).rejects.toThrow(
@@ -120,11 +145,15 @@ describe('ProjectMemberGuard', () => {
     mockRequest.params = { projectId: 'project-1' };
 
     const roles = ['ADMIN', 'MEMBER', 'VIEWER'];
-    
+
     for (const role of roles) {
       const mockMember = { projectId: 'project-id', userId: 'user-1', role };
-      vi.mocked(prismaService.project.findFirst).mockResolvedValue({ id: 'project-id' } as any);
-      vi.mocked(prismaService.projectMember.findUnique).mockResolvedValue(mockMember as any);
+      vi.mocked(prismaService.project.findFirst).mockResolvedValue({
+        id: 'project-id',
+      } as any);
+      vi.mocked(prismaService.projectMember.findUnique).mockResolvedValue(
+        mockMember as any,
+      );
 
       const result = await guard.canActivate(mockExecutionContext);
       expect(result).toBe(true);

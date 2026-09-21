@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -8,7 +13,8 @@ export class ProjectMemberGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const projectParam = request.params.projectId || request.params.id;
-    const userId = request.user?.id || request.user?.sub || request.user?.userId;
+    const userId =
+      request.user?.id || request.user?.sub || request.user?.userId;
 
     if (!userId) {
       throw new ForbiddenException('User not authenticated');
@@ -19,7 +25,12 @@ export class ProjectMemberGuard implements CanActivate {
     }
 
     const project = await this.prisma.project.findFirst({
-      where: { OR: [{ id: projectParam }, { key: { equals: projectParam, mode: 'insensitive' } }] },
+      where: {
+        OR: [
+          { id: projectParam },
+          { key: { equals: projectParam, mode: 'insensitive' } },
+        ],
+      },
       select: { id: true },
     });
 

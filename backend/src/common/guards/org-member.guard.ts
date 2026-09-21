@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -8,7 +13,8 @@ export class OrgMemberGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const orgParam = request.params.orgId;
-    const userId = request.user?.id || request.user?.sub || request.user?.userId;
+    const userId =
+      request.user?.id || request.user?.sub || request.user?.userId;
 
     if (!userId) {
       throw new ForbiddenException('User not authenticated');

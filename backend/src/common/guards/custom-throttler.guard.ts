@@ -10,7 +10,9 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
     return super.canActivate(context);
   }
 
-  protected override async getTracker(req: Record<string, any>): Promise<string> {
+  protected override async getTracker(
+    req: Record<string, any>,
+  ): Promise<string> {
     const userId = req.user?.id;
     const ip = req.ip || req.headers?.['x-forwarded-for'] || '127.0.0.1';
     return userId ? `user:${userId}` : `ip:${ip}`;

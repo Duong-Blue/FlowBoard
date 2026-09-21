@@ -11,7 +11,10 @@ describe('GlobalExceptionFilter', () => {
   });
 
   it('should handle HttpException correctly', () => {
-    const mockHttpException = new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
+    const mockHttpException = new HttpException(
+      'Bad Request',
+      HttpStatus.BAD_REQUEST,
+    );
     const response = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
@@ -21,7 +24,7 @@ describe('GlobalExceptionFilter', () => {
         getResponse: () => response,
       }),
     } as unknown as ArgumentsHost;
-    
+
     filter.catch(mockHttpException, mockArgumentsHost);
 
     expect(response.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
@@ -39,10 +42,12 @@ describe('GlobalExceptionFilter', () => {
         getResponse: () => response,
       }),
     } as unknown as ArgumentsHost;
-    
+
     filter.catch(mockError, mockArgumentsHost);
 
-    expect(response.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(response.status).toHaveBeenCalledWith(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
     expect(response.json).toHaveBeenCalledWith({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: 'Internal server error',
