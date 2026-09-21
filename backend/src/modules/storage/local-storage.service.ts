@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { StorageService } from './storage.interface';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -44,6 +45,35 @@ export class LocalStorageService implements StorageService {
     } catch {
       return false;
     }
+  }
+
+  async deleteDirectory(storagePath: string): Promise<boolean> {
+    const dirPath = this.resolvePath(storagePath);
+    
+    if (dirPath === this.basePath) {
+      throw new BadRequestException('Cannot delete root storage directory');
+    }
+
+    try {
+      await fs.rm(dirPath, { recursive: true, force: true });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  @OnEvent('issue.deleted')
+  async handleIssueDeleted(payload: { projectId: string; issueId: string; correlationId?: string }) {
+    if (!payload || !payload.issueId || typeof payload.issueId !== 'string') return;
+    
+    const issueId = payload.issueId.replace(/[^a-zA-Z0-9-]/g, '');
+    if (!issueId || issueId !== payload.issueId) return;
+
+    const storagePath = `issues/${issueId}`;
+    
+    if (storagePath === 'issues/' || storagePath === 'issues') return;
+
+    await this.deleteDirectory(storagePath);
   }
 
   async exists(storagePath: string): Promise<boolean> {
