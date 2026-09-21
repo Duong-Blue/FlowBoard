@@ -22,7 +22,7 @@ import { BoardColumn } from './components/BoardColumn';
 import { DragOverlayCard } from './components/DragOverlayCard';
 import type { Issue, IssueStatus, Member } from '../../store/types';
 import { toast } from 'sonner';
-import { LayoutList, LayoutDashboard } from 'lucide-react';
+import { LayoutList, LayoutDashboard, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { useBoardRealtime } from '@/hooks/useBoardRealtime';
@@ -201,15 +201,21 @@ export default function BoardPage() {
               />
               <span>{isConnected ? t('board.live') : t('board.offline')}</span>
             </div>
+            <Button variant="default" className="pointer-events-none opacity-50">
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              {t('board.boardView')}
+            </Button>
             <Button variant="outline" asChild>
               <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/issues?view=list`}>
                 <LayoutList className="mr-2 h-4 w-4" />
                 {t('board.listView')}
               </Link>
             </Button>
-            <Button variant="default" className="pointer-events-none opacity-50">
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              {t('board.boardView')}
+            <Button variant="outline" asChild>
+              <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/calendar`}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {t('board.calendarView', { defaultValue: 'Calendar' })}
+              </Link>
             </Button>
           </div>
         </div>

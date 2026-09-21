@@ -12,8 +12,9 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { IssueFormDialog } from './components/IssueFormDialog';
+import { SavedViewsDropdown } from '../../features/views/SavedViewsDropdown';
 import { toast } from 'sonner';
-import { Plus, Search, Edit2, Trash2, LayoutList, LayoutDashboard, ListTree, List, CornerDownRight } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, LayoutList, LayoutDashboard, ListTree, List, CornerDownRight, Calendar as CalendarIcon } from 'lucide-react';
 import type { Issue, IssueUser, Member } from '../../store/types';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
 import NotFound from '../NotFound';
@@ -170,6 +171,12 @@ export default function IssueListPage() {
             <LayoutList className="mr-2 h-4 w-4" />
             {t('board.listView')}
           </Button>
+          <Button variant="outline" asChild>
+            <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/calendar`}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {t('board.calendarView', { defaultValue: 'Calendar' })}
+            </Link>
+          </Button>
           {canCreateOrEdit && (
             <Button onClick={() => { setEditingIssue(undefined); setDialogOpen(true); }}>
               <Plus className="mr-2 h-4 w-4" />
@@ -189,6 +196,30 @@ export default function IssueListPage() {
             onChange={(e) => handleFilterChange('search', e.target.value)}
           />
         </div>
+        {projectId && (
+          <SavedViewsDropdown
+            projectId={projectId}
+            currentFilters={filters}
+            onApplyView={(savedFilters) => {
+              dispatch(
+                setFilters({
+                  search: savedFilters.search || '',
+                  status: savedFilters.status || undefined,
+                  priority: savedFilters.priority || undefined,
+                  assigneeId: savedFilters.assigneeId || undefined,
+                  overdue: savedFilters.overdue || undefined,
+                  dueSoon: savedFilters.dueSoon || undefined,
+                  noDueDate: savedFilters.noDueDate || undefined,
+                  dueDateFrom: savedFilters.dueDateFrom || undefined,
+                  dueDateTo: savedFilters.dueDateTo || undefined,
+                  page: 1,
+                })
+              );
+            }}
+            userRole={userRole}
+            currentUserId={currentUser?.id}
+          />
+        )}
         <div className="inline-flex rounded-md border p-1 bg-slate-100 gap-1 text-xs font-medium shrink-0">
           <button
             type="button"
