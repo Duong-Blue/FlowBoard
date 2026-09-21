@@ -19,6 +19,7 @@ import {
   X,
   Briefcase,
   Info,
+  Calendar as CalendarIcon,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -324,7 +325,20 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
                     isActive={
                       (location.pathname.includes(`/projects/${currentProjectKey}/issues`) ||
                         location.pathname.includes(`/projects/${currentProjectKey}/board`)) &&
-                      !location.search.includes('view=list')
+                      !location.search.includes('view=list') &&
+                      !location.search.includes('view=calendar') &&
+                      !location.pathname.includes(`/projects/${currentProjectKey}/calendar`)
+                    }
+                    onClick={closeMobileMenu}
+                    isCollapsed={isCollapsed}
+                  />
+                  <SidebarNavItem
+                    to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/calendar`}
+                    icon={CalendarIcon}
+                    label={t('sidebar.calendar', { defaultValue: 'Calendar' })}
+                    isActive={
+                      location.pathname.includes(`/projects/${currentProjectKey}/calendar`) ||
+                      location.search.includes('view=calendar')
                     }
                     onClick={closeMobileMenu}
                     isCollapsed={isCollapsed}

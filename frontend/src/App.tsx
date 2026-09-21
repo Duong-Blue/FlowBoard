@@ -15,6 +15,7 @@ import ProjectSettingsPage from './pages/projects/ProjectSettingsPage';
 import ProjectMembersPage from './pages/projects/ProjectMembersPage';
 import IssueListPage from './pages/projects/IssueListPage';
 import BoardPage from './pages/projects/BoardPage';
+import ProjectCalendarPage from './pages/projects/ProjectCalendarPage';
 import { IssueDetailPage } from './features/issues/pages/IssueDetailPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -26,10 +27,20 @@ import OrgSettingsPage from './pages/orgs/OrgSettingsPage';
 import { Toaster } from './components/ui/sonner';
 import { SocketProvider } from './providers/SocketProvider';
 
-function ProjectIssuesLayout() {
+function ProjectIssuesLayout({ defaultView }: { defaultView?: 'board' | 'list' | 'calendar' }) {
   const [searchParams] = useSearchParams();
-  const view = searchParams.get('view');
-  const baseView = view === 'list' ? <IssueListPage /> : <BoardPage />;
+  const viewParam = searchParams.get('view');
+  const activeView = viewParam || defaultView;
+
+  const baseView =
+    activeView === 'list' ? (
+      <IssueListPage />
+    ) : activeView === 'calendar' ? (
+      <ProjectCalendarPage />
+    ) : (
+      <BoardPage />
+    );
+
   return (
     <>
       {baseView}
@@ -93,7 +104,15 @@ const router = createBrowserRouter([
               },
               {
                 path: 'orgs/:orgId/projects/:projectKey/board',
-                element: <ProjectIssuesLayout />,
+                element: <ProjectIssuesLayout defaultView="board" />,
+                children: [
+                  { index: true, element: null },
+                  { path: 'issues/:issueId', element: <IssueDetailPage /> },
+                ],
+              },
+              {
+                path: 'orgs/:orgId/projects/:projectKey/calendar',
+                element: <ProjectIssuesLayout defaultView="calendar" />,
                 children: [
                   { index: true, element: null },
                   { path: 'issues/:issueId', element: <IssueDetailPage /> },
