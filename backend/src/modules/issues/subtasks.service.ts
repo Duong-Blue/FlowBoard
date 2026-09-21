@@ -32,13 +32,6 @@ export class SubtasksService {
         throw new BadRequestException('Subtasks cannot have nested subtasks (max depth 1)');
       }
 
-      const project = await tx.project.update({
-        where: { id: projectId },
-        data: { issueSequence: { increment: 1 } },
-        select: { key: true, issueSequence: true },
-      });
-
-      const issueKey = `${project.key}-${project.issueSequence}`;
       const status = dto.status || IssueStatus.TODO;
 
       const lastIssue = await tx.issue.findFirst({
@@ -53,7 +46,7 @@ export class SubtasksService {
         data: {
           projectId,
           parentId: issueId,
-          key: issueKey,
+          key: null,
           title: dto.title,
           description: dto.description || null,
           status,

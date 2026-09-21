@@ -8,7 +8,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 describe('SubtasksService', () => {
   let service: SubtasksService;
   const mockPrisma = {
-    issue: { findUnique: vi.fn(), create: vi.fn() },
+    issue: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn() },
     project: { update: vi.fn() },
     issueActivity: { create: vi.fn() },
     $transaction: vi.fn((cb) => cb(mockPrisma)),
@@ -31,5 +31,26 @@ describe('SubtasksService', () => {
     mockPrisma.issue.findUnique.mockResolvedValue({ id: 's1', parentId: 'p1', projectId: 'proj1' });
     await expect(service.create('proj1', 's1', 'u1', { title: 'T' }))
       .rejects.toThrow(BadRequestException);
+  });
+
+  it('should create a subtask with key: null and not update project issueSequence', async () => {
+    mockPrisma.issue.findUnique.mockResolvedValue({ id: 'issue1', parentId: null, projectId: 'proj1', key: 'PROJ-1' });
+    mockPrisma.issue.findFirst.mockResolvedValue({ order: 'a0' });
+    mockPrisma.issue.create.mockResolvedValue({ id: 'sub1', key: null, title: 'T' });
+    mockPrisma.issueActivity.create.mockResolvedValue({});
+
+    const result = await service.create('proj1', 'issue1', 'u1', { title: 'T' });
+
+    expect(result).toEqual({ id: 'sub1', key: null, title: 'T' });
+    expect(mockPrisma.project.update).not.toHaveBeenCalled();
+    expect(mockPrisma.issue.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          key: null,
+          title: 'T',
+          parentId: 'issue1',
+        }),
+      })
+    );
   });
 });
