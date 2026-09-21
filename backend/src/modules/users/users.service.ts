@@ -7,14 +7,21 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async findByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    return this.prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
   }
 
   async findById(id: string) {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async create(data: { email: string; password: string; firstName?: string; lastName?: string }) {
+  async create(data: {
+    email: string;
+    password: string;
+    firstName?: string;
+    lastName?: string;
+  }) {
     const passwordHash = await bcrypt.hash(data.password, 12);
     return this.prisma.user.create({
       data: {

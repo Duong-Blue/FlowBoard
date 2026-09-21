@@ -16,7 +16,12 @@ const USER_SELECT = {
 export class ActivityService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createActivity(issueId: string, actorId: string | null, type: ActivityType, metadata: Record<string, any> = {}) {
+  async createActivity(
+    issueId: string,
+    actorId: string | null,
+    type: ActivityType,
+    metadata: Record<string, any> = {},
+  ) {
     return this.prisma.issueActivity.create({
       data: {
         issueId,
@@ -29,16 +34,27 @@ export class ActivityService {
 
   private async resolveProjectId(projectParam: string): Promise<string> {
     const project = await this.prisma.project.findFirst({
-      where: { OR: [{ id: projectParam }, { key: { equals: projectParam, mode: 'insensitive' } }] },
+      where: {
+        OR: [
+          { id: projectParam },
+          { key: { equals: projectParam, mode: 'insensitive' } },
+        ],
+      },
       select: { id: true },
     });
     return project?.id || projectParam;
   }
 
-  private async resolveIssueId(projectId: string, issueParam: string): Promise<string> {
+  private async resolveIssueId(
+    projectId: string,
+    issueParam: string,
+  ): Promise<string> {
     const issue = await this.prisma.issue.findFirst({
       where: {
-        OR: [{ id: issueParam }, { key: { equals: issueParam, mode: 'insensitive' } }],
+        OR: [
+          { id: issueParam },
+          { key: { equals: issueParam, mode: 'insensitive' } },
+        ],
         projectId,
       },
       select: { id: true },
@@ -46,7 +62,11 @@ export class ActivityService {
     return issue?.id || issueParam;
   }
 
-  async findAll(projectParam: string, issueParam: string, queryDto: QueryActivityDto) {
+  async findAll(
+    projectParam: string,
+    issueParam: string,
+    queryDto: QueryActivityDto,
+  ) {
     const projectId = await this.resolveProjectId(projectParam);
     const issueId = await this.resolveIssueId(projectId, issueParam);
 
@@ -55,7 +75,9 @@ export class ActivityService {
     });
 
     if (!issue) {
-      throw new NotFoundException('Issue not found or does not belong to this project');
+      throw new NotFoundException(
+        'Issue not found or does not belong to this project',
+      );
     }
 
     const page = queryDto.page || 1;

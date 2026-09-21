@@ -24,7 +24,13 @@ export class NotificationsService {
         take: limit,
         include: {
           actor: {
-            select: { id: true, firstName: true, lastName: true, displayName: true, avatarUrl: true },
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              displayName: true,
+              avatarUrl: true,
+            },
           },
           project: {
             select: { id: true, name: true, key: true },
