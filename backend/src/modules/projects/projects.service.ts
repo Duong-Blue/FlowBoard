@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -14,7 +19,9 @@ export class ProjectsService {
     if (!org) throw new NotFoundException('Organization not found');
     const orgId = org.id;
 
-    const existing = await this.prisma.project.findFirst({ where: { organizationId: orgId, key: dto.key } });
+    const existing = await this.prisma.project.findFirst({
+      where: { organizationId: orgId, key: dto.key },
+    });
     if (existing) throw new ConflictException('Project key must be unique');
 
     return this.prisma.$transaction(async (tx) => {
@@ -47,9 +54,13 @@ export class ProjectsService {
   async findOne(projectId: string, userId: string) {
     const project = await this.prisma.project.findFirst({
       where: {
-        OR: [{ id: projectId }, { key: { equals: projectId, mode: 'insensitive' } }],
+        OR: [
+          { id: projectId },
+          { key: { equals: projectId, mode: 'insensitive' } },
+        ],
         members: { some: { userId } },
       },
+      include: { members: true },
     });
     if (!project) throw new NotFoundException();
     return project;
@@ -57,11 +68,20 @@ export class ProjectsService {
 
   async update(projectId: string, userId: string, dto: UpdateProjectDto) {
     const targetProject = await this.findOne(projectId, userId);
-    return this.prisma.project.update({ where: { id: targetProject.id }, data: dto });
+    if (targetProject.members.find(member => member.userId === userId)?.role !== 'ADMIN') {
+      throw new ForbiddenException('Only ADMIN users can update projects');
+    }
+    return this.prisma.project.update({
+      where: { id: targetProject.id },
+      data: dto,
+    });
   }
 
   async delete(projectId: string, userId: string) {
     const targetProject = await this.findOne(projectId, userId);
+    if (targetProject.members.find(member => member.userId === userId)?.role !== 'ADMIN') {
+      throw new ForbiddenException('Only ADMIN users can delete projects');
+    }
     return this.prisma.project.delete({ where: { id: targetProject.id } });
   }
 }

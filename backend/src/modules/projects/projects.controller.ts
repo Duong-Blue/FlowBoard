@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Get, Param, UseGuards, Patch, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  UseGuards,
+  Patch,
+  Delete,
+} from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -12,7 +21,11 @@ export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @Post()
-  create(@Param('orgId') orgId: string, @CurrentUser('id') userId: string, @Body() dto: CreateProjectDto) {
+  create(
+    @Param('orgId') orgId: string,
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateProjectDto,
+  ) {
     return this.projectsService.create(orgId, userId, dto);
   }
 
@@ -29,7 +42,11 @@ export class ProjectsController {
 
   @UseGuards(ProjectMemberGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @CurrentUser('id') userId: string, @Body() dto: UpdateProjectDto) {
+  update(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpdateProjectDto,
+  ) {
     return this.projectsService.update(id, userId, dto);
   }
 

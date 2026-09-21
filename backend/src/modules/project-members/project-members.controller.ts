@@ -1,4 +1,14 @@
-import { Controller, Post, Body, Get, Param, Patch, Delete, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Patch,
+  Delete,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { ProjectMembersService } from './project-members.service';
 import { AddProjectMemberDto } from './dto/add-project-member.dto';
 import { UpdateProjectMemberRoleDto } from './dto/update-project-member-role.dto';
@@ -8,10 +18,14 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 @UseGuards(JwtAuthGuard, ProjectMemberGuard)
 @Controller('projects/:projectId/members')
 export class ProjectMembersController {
-  constructor(private readonly service: ProjectMembersService) { }
+  constructor(private readonly service: ProjectMembersService) {}
 
   @Post()
-  add(@Param('projectId') projectId: string, @Req() req, @Body() dto: AddProjectMemberDto) {
+  add(
+    @Param('projectId') projectId: string,
+    @Req() req,
+    @Body() dto: AddProjectMemberDto,
+  ) {
     return this.service.add(projectId, dto, req.user.id);
   }
 
@@ -27,11 +41,20 @@ export class ProjectMembersController {
     @Req() req,
     @Body() dto: UpdateProjectMemberRoleDto,
   ) {
-    return this.service.updateRole(projectId, targetUserId, req.user.id, dto.role);
+    return this.service.updateRole(
+      projectId,
+      targetUserId,
+      req.user.id,
+      dto.role,
+    );
   }
 
   @Delete(':userId')
-  remove(@Param('projectId') projectId: string, @Param('userId') targetUserId: string, @Req() req) {
+  remove(
+    @Param('projectId') projectId: string,
+    @Param('userId') targetUserId: string,
+    @Req() req,
+  ) {
     return this.service.remove(projectId, targetUserId, req.user.id);
   }
 }

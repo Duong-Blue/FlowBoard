@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { ProjectRole } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -23,23 +28,34 @@ export class ProjectMembersService {
 
   private async resolveProjectId(projectParam: string): Promise<string> {
     const project = await this.prisma.project.findFirst({
-      where: { OR: [{ id: projectParam }, { key: { equals: projectParam, mode: 'insensitive' } }] },
+      where: {
+        OR: [
+          { id: projectParam },
+          { key: { equals: projectParam, mode: 'insensitive' } },
+        ],
+      },
       select: { id: true },
     });
     return project?.id || projectParam;
   }
 
-  async add(projectParam: string, dto: { userId: string; role: ProjectRole }, requesterId: string) {
+  async add(
+    projectParam: string,
+    dto: { userId: string; role: ProjectRole },
+    requesterId: string,
+  ) {
     const projectId = await this.resolveProjectId(projectParam);
-    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
     if (!project) throw new NotFoundException('Project not found');
 
     await this.checkOrgAdminPermission(project.organizationId, requesterId);
 
     const orgMember = await this.prisma.organizationMember.findFirst({
-        where: { organizationId: project.organizationId, userId: dto.userId }
+      where: { organizationId: project.organizationId, userId: dto.userId },
     });
-    
+
     if (!orgMember) {
       throw new BadRequestException('User must be an organization member');
     }
@@ -62,7 +78,10 @@ export class ProjectMembersService {
         projectId,
         actorId: requesterId,
       });
-      this.eventEmitter.emit('notification.new', { userId: dto.userId, notification: notif });
+      this.eventEmitter.emit('notification.new', {
+        userId: dto.userId,
+        notification: notif,
+      });
     } catch (err) {
       console.error('Failed to emit events for project member add', err);
     }
@@ -78,9 +97,16 @@ export class ProjectMembersService {
     });
   }
 
-  async updateRole(projectParam: string, targetUserId: string, requesterId: string, role: ProjectRole) {
+  async updateRole(
+    projectParam: string,
+    targetUserId: string,
+    requesterId: string,
+    role: ProjectRole,
+  ) {
     const projectId = await this.resolveProjectId(projectParam);
-    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
     if (!project) throw new NotFoundException('Project not found');
 
     await this.checkOrgAdminPermission(project.organizationId, requesterId);
@@ -91,9 +117,15 @@ export class ProjectMembersService {
     });
   }
 
-  async remove(projectParam: string, targetUserId: string, requesterId: string) {
+  async remove(
+    projectParam: string,
+    targetUserId: string,
+    requesterId: string,
+  ) {
     const projectId = await this.resolveProjectId(projectParam);
-    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
     if (!project) throw new NotFoundException('Project not found');
 
     await this.checkOrgAdminPermission(project.organizationId, requesterId);
@@ -103,7 +135,10 @@ export class ProjectMembersService {
     });
 
     try {
-      this.eventEmitter.emit('project.member.removed', { projectId, userId: targetUserId });
+      this.eventEmitter.emit('project.member.removed', {
+        projectId,
+        userId: targetUserId,
+      });
     } catch (err) {
       console.error('Failed to emit events for project member remove', err);
     }
