@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Get, Param, UseGuards, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  UseGuards,
+  Delete,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { InvitationsService } from './invitations.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -14,7 +22,11 @@ export class InvitationsController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseGuards(JwtAuthGuard, OrgMemberGuard)
   @Post()
-  create(@Param('orgId') orgId: string, @CurrentUser('id') userId: string, @Body() dto: CreateInvitationDto) {
+  create(
+    @Param('orgId') orgId: string,
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateInvitationDto,
+  ) {
     return this.invitationsService.create(orgId, userId, dto);
   }
 
@@ -26,7 +38,11 @@ export class InvitationsController {
 
   @UseGuards(JwtAuthGuard, OrgMemberGuard)
   @Delete(':id')
-  revoke(@Param('orgId') orgId: string, @Param('id') id: string, @CurrentUser('id') userId: string) {
+  revoke(
+    @Param('orgId') orgId: string,
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ) {
     return this.invitationsService.revoke(orgId, id, userId);
   }
 

@@ -1,4 +1,13 @@
-import { Controller, Get, Patch, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { OrgMembersService } from './org-members.service';
 import { UpdateMemberRoleDto } from './update-member-role.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -17,13 +26,22 @@ export class OrgMembersController {
 
   @UseGuards(OrgMemberGuard)
   @Patch(':userId')
-  updateRole(@Param('orgId') orgId: string, @Param('userId') targetUserId: string, @Req() req, @Body() dto: UpdateMemberRoleDto) {
+  updateRole(
+    @Param('orgId') orgId: string,
+    @Param('userId') targetUserId: string,
+    @Req() req,
+    @Body() dto: UpdateMemberRoleDto,
+  ) {
     return this.service.updateRole(orgId, targetUserId, req.user.id, dto.role);
   }
 
   @UseGuards(OrgMemberGuard)
   @Delete(':userId')
-  remove(@Param('orgId') orgId: string, @Param('userId') targetUserId: string, @Req() req) {
+  remove(
+    @Param('orgId') orgId: string,
+    @Param('userId') targetUserId: string,
+    @Req() req,
+  ) {
     return this.service.remove(orgId, targetUserId, req.user.id);
   }
 }
