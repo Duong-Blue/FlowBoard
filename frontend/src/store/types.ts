@@ -59,6 +59,7 @@ export interface IssueUser {
 
 export type IssueType = 'TASK' | 'BUG' | 'FEATURE' | 'IMPROVEMENT';
 export type IssueStatus = 'TODO' | 'IN_PROGRESS' | 'IN_PREVIEW' | 'DONE';
+export type DeadlineState = 'NO_DUE_DATE' | 'COMPLETED' | 'OVERDUE' | 'DUE_SOON' | 'UPCOMING';
 export type RelationType = 'BLOCKS' | 'IS_BLOCKED_BY' | 'BLOCKED_BY' | 'RELATES_TO' | 'DUPLICATES';
 
 export interface Attachment {
@@ -96,6 +97,11 @@ export interface Issue {
   priority: string;
   assigneeId?: string;
   reporterId: string;
+  startDate?: string;
+  dueDate?: string;
+  completedAt?: string | null;
+  deadlineState?: DeadlineState;
+  parentId?: string | null;
   createdAt: string;
   updatedAt: string;
   assignee?: IssueUser;
@@ -119,6 +125,11 @@ export interface IssueFilters {
   status?: string;
   priority?: string;
   assigneeId?: string;
+  overdue?: boolean;
+  dueSoon?: boolean;
+  noDueDate?: boolean;
+  dueDateFrom?: string;
+  dueDateTo?: string;
   page?: number;
   limit?: number;
 }

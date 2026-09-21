@@ -18,9 +18,10 @@ export const getBoardIssues = (projectId: string) => apiGet<Issue[] | Record<str
 
 export const getIssue = (projectId: string, id: string) => apiGet<Issue>(`/projects/${projectId}/issues/${id}`);
 export const createIssue = (projectId: string, data: Partial<Issue>) => apiPost<Issue>(`/projects/${projectId}/issues`, data);
+export const createSubtask = (projectId: string, parentId: string, data: Partial<Issue>) => apiPost<Issue>(`/projects/${projectId}/issues/${parentId}/subtasks`, data);
 export const updateIssue = (projectId: string, id: string, data: Partial<Issue>) => apiPatch<Issue>(`/projects/${projectId}/issues/${id}`, data);
 export const moveIssue = (projectId: string, id: string, data: { status: string; beforeIssueId?: string | null; afterIssueId?: string | null }) => apiPatch<Issue>(`/projects/${projectId}/issues/${id}/move`, data);
-export const deleteIssue = (projectId: string, id: string) => apiDelete(`/projects/${projectId}/issues/${id}`);
+export const deleteIssue = (projectId: string, id: string, force?: boolean) => apiDelete(`/projects/${projectId}/issues/${id}${force ? '?force=true' : ''}`);
 
 export type CommentAuthor = {
   id: string;

@@ -8,6 +8,8 @@ import {
   updateComment as apiUpdateComment,
   deleteComment as apiDeleteComment,
   getActivities,
+  createSubtask as apiCreateSubtask,
+  deleteIssue as apiDeleteIssue,
   type Comment,
   type IssueActivity,
   type PaginationMeta,
@@ -142,8 +144,27 @@ export const fetchSubtasks = createAsyncThunk(
 export const createSubtask = createAsyncThunk(
   'issue/createSubtask',
   async ({ projectId, issueId, data }: { projectId: string; issueId: string; data: any }) => {
-    const response = await api.post(`/projects/${projectId}/issues/${issueId}/subtasks`, data);
-    return response.data;
+    return await apiCreateSubtask(projectId, issueId, data);
+  }
+);
+
+export const deleteSubtask = createAsyncThunk(
+  'issue/deleteSubtask',
+  async (
+    { projectId, issueId, subtaskId, force }: { projectId: string; issueId: string; subtaskId: string; force?: boolean },
+    { rejectWithValue }
+  ) => {
+    try {
+      await apiDeleteIssue(projectId, subtaskId, force);
+      return { issueId, subtaskId };
+    } catch (err: unknown) {
+      const error = err as any;
+      return rejectWithValue({
+        status: error.status || error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+    }
   }
 );
 
@@ -403,6 +424,14 @@ const issueSlice = createSlice({
           if (!issue.subtasks) issue.subtasks = [];
           issue.subtasks.push(action.payload);
         }
+      })
+      .addCase(deleteSubtask.fulfilled, (state, action) => {
+        const { issueId, subtaskId } = action.payload;
+        const issue = state.list.find((i) => i.id === issueId);
+        if (issue && issue.subtasks) {
+          issue.subtasks = issue.subtasks.filter((s) => s.id !== subtaskId);
+        }
+        state.list = state.list.filter((i) => i.id !== subtaskId);
       })
       .addCase(updateIssueStatus.fulfilled, (state, action) => {
         const updated = action.payload;
