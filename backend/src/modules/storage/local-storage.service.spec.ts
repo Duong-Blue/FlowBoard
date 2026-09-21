@@ -45,4 +45,15 @@ describe('LocalStorageService', () => {
     await service.handleIssueDeleted({ projectId: 'p1', issueId: '../iss-1' });
     expect(fs.rm).not.toHaveBeenCalled();
   });
+
+  it('should return false when deleting a missing directory', async () => {
+    vi.mocked(fs.rm).mockRejectedValueOnce(new Error('ENOENT'));
+    const result = await service.deleteDirectory('issues/missing');
+    expect(result).toBe(false);
+  });
+
+  it('should not delete directory if issueId is invalid or empty in handleIssueDeleted', async () => {
+    await service.handleIssueDeleted({ projectId: 'p1', issueId: '' });
+    expect(fs.rm).not.toHaveBeenCalled();
+  });
 });
