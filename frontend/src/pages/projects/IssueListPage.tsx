@@ -13,10 +13,48 @@ import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { IssueFormDialog } from './components/IssueFormDialog';
 import { toast } from 'sonner';
-import { Plus, Search, Edit2, Trash2, LayoutList, LayoutDashboard } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, LayoutList, LayoutDashboard, ListTree, List, CornerDownRight } from 'lucide-react';
 import type { Issue, IssueUser, Member } from '../../store/types';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
 import NotFound from '../NotFound';
+
+export interface TreeIssueItem {
+  issue: Issue;
+  depth: number;
+}
+
+export function buildIssueTree(issues: Issue[]): TreeIssueItem[] {
+  const issueMap = new Map<string, Issue>();
+  const childrenMap = new Map<string, Issue[]>();
+
+  issues.forEach((issue) => {
+    issueMap.set(issue.id, issue);
+  });
+
+  const rootIssues: Issue[] = [];
+
+  issues.forEach((issue) => {
+    if (issue.parentId && issueMap.has(issue.parentId)) {
+      const parentChildren = childrenMap.get(issue.parentId) || [];
+      parentChildren.push(issue);
+      childrenMap.set(issue.parentId, parentChildren);
+    } else {
+      rootIssues.push(issue);
+    }
+  });
+
+  const result: TreeIssueItem[] = [];
+
+  function traverse(node: Issue, depth: number) {
+    result.push({ issue: node, depth });
+    const children = childrenMap.get(node.id) || [];
+    children.forEach((child) => traverse(child, depth + 1));
+  }
+
+  rootIssues.forEach((root) => traverse(root, 0));
+
+  return result;
+}
 
 export default function IssueListPage() {
   const { t } = useTranslation(['issues', 'common']);
@@ -30,6 +68,7 @@ export default function IssueListPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingIssue, setEditingIssue] = useState<Issue | undefined>();
+  const [viewMode, setViewMode] = useState<'hierarchical' | 'flat'>('hierarchical');
 
   const currentMember = members.find((m) => m.userId === currentUser?.id);
   const userRole = currentMember?.role;
@@ -110,6 +149,10 @@ export default function IssueListPage() {
 
   const currentOrgId = orgId || activeOrgId || project.organizationId || project.orgId;
 
+  const displayItems: TreeIssueItem[] = viewMode === 'hierarchical'
+    ? buildIssueTree(issues)
+    : issues.map((issue) => ({ issue, depth: 0 }));
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -145,6 +188,32 @@ export default function IssueListPage() {
             value={filters.search || ''}
             onChange={(e) => handleFilterChange('search', e.target.value)}
           />
+        </div>
+        <div className="inline-flex rounded-md border p-1 bg-slate-100 gap-1 text-xs font-medium shrink-0">
+          <button
+            type="button"
+            onClick={() => setViewMode('hierarchical')}
+            className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
+              viewMode === 'hierarchical'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <ListTree className="h-3.5 w-3.5" />
+            Hierarchical
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('flat')}
+            className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
+              viewMode === 'flat'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <List className="h-3.5 w-3.5" />
+            Flat
+          </button>
         </div>
         <Select value={filters.status || 'ALL'} onValueChange={(v) => handleFilterChange('status', v === 'ALL' ? undefined : v)}>
           <SelectTrigger className="w-[150px]">
@@ -213,7 +282,7 @@ export default function IssueListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {issues.map(issue => (
+                {displayItems.map(({ issue, depth }) => (
                   <tr 
                     key={issue.id} 
                     className="hover:bg-slate-50/50 cursor-pointer"
@@ -227,7 +296,15 @@ export default function IssueListPage() {
                     }}
                   >
                     <td className="px-4 py-3 font-mono text-xs font-semibold text-slate-600">{issue.key}</td>
-                    <td className="px-4 py-3 font-medium text-slate-900">{issue.title}</td>
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      <div
+                        className="flex items-center gap-2"
+                        style={{ paddingLeft: depth > 0 ? `${depth * 1.5}rem` : undefined }}
+                      >
+                        {depth > 0 && <CornerDownRight className="h-4 w-4 text-slate-400 shrink-0" />}
+                        <span>{issue.title}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3">
                       <SemanticBadge status={
                         issue.status === 'TODO' ? 'archived' : 
