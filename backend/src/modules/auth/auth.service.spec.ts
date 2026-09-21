@@ -45,30 +45,46 @@ describe('AuthService', () => {
 
   it('should register a new user', async () => {
     vi.mocked(usersService.findByEmail).mockResolvedValue(null);
-    vi.mocked(usersService.create).mockResolvedValue({ id: 1, email: 'test@example.com' } as any);
+    vi.mocked(usersService.create).mockResolvedValue({
+      id: 1,
+      email: 'test@example.com',
+    } as any);
     vi.mocked(prisma.refreshToken.create).mockResolvedValue({} as any);
 
-    const result = await authService.register({ email: 'test@example.com', password: 'password', name: 'Test' });
+    const result = await authService.register({
+      email: 'test@example.com',
+      password: 'password',
+      name: 'Test',
+    });
     expect(result).toBeDefined();
     expect(usersService.create).toHaveBeenCalled();
   });
 
   it('should login valid user', async () => {
     const passwordHash = bcrypt.hashSync('password123', 10);
-    const user = { id: 1, email: 'test@example.com', passwordHash, isActive: true };
+    const user = {
+      id: 1,
+      email: 'test@example.com',
+      passwordHash,
+      isActive: true,
+    };
     vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
     vi.mocked(bcrypt.compare).mockResolvedValue(true);
     vi.mocked(prisma.refreshToken.create).mockResolvedValue({} as any);
-    
-    const result = await authService.login({ email: 'test@example.com', password: 'password123' });
+
+    const result = await authService.login({
+      email: 'test@example.com',
+      password: 'password123',
+    });
     expect(result).toHaveProperty('accessToken');
     expect(result).toHaveProperty('refreshToken');
   });
 
   it('should throw UnauthorizedException if token does not exist', async () => {
     vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(null);
-    await expect(authService.refresh('invalid-token'))
-      .rejects.toThrow('Invalid refresh token');
+    await expect(authService.refresh('invalid-token')).rejects.toThrow(
+      'Invalid refresh token',
+    );
   });
 
   it('should throw UnauthorizedException if token is expired', async () => {
@@ -81,14 +97,22 @@ describe('AuthService', () => {
       expiresAt: new Date(Date.now() - 10000), // expired
       user: { id: 1 },
     };
-    vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(mockToken as any);
+    vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(
+      mockToken as any,
+    );
 
-    await expect(authService.refresh('expired-token'))
-      .rejects.toThrow('Invalid refresh token');
+    await expect(authService.refresh('expired-token')).rejects.toThrow(
+      'Invalid refresh token',
+    );
   });
 
   it('should detect reuse and revoke family', async () => {
-    const mockUser = { id: 1, email: 'test@example.com', firstName: 'Test', lastName: 'User' };
+    const mockUser = {
+      id: 1,
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+    };
     const mockToken = {
       id: 'token-id-123',
       familyId: 'family-123',
@@ -98,12 +122,15 @@ describe('AuthService', () => {
       expiresAt: new Date(Date.now() + 100000),
       user: mockUser,
     };
-    
-    vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(mockToken as any);
 
-    await expect(authService.refresh('some-token'))
-      .rejects.toThrow('Refresh token reuse detected');
-    
+    vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(
+      mockToken as any,
+    );
+
+    await expect(authService.refresh('some-token')).rejects.toThrow(
+      'Refresh token reuse detected',
+    );
+
     expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
       where: { familyId: 'family-123' },
       data: { revokedAt: expect.any(Date) },
@@ -111,7 +138,12 @@ describe('AuthService', () => {
   });
 
   it('should successfully refresh and rotate token', async () => {
-    const mockUser = { id: 1, email: 'test@example.com', firstName: 'Test', lastName: 'User' };
+    const mockUser = {
+      id: 1,
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+    };
     const mockToken = {
       id: 'token-id-123',
       familyId: 'family-123',
@@ -121,24 +153,28 @@ describe('AuthService', () => {
       expiresAt: new Date(Date.now() + 100000),
       user: mockUser,
     };
-    
-    vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(mockToken as any);
-    vi.mocked(prisma.refreshToken.create).mockResolvedValue({ id: 'new-token-id' } as any);
+
+    vi.mocked(prisma.refreshToken.findUnique).mockResolvedValue(
+      mockToken as any,
+    );
+    vi.mocked(prisma.refreshToken.create).mockResolvedValue({
+      id: 'new-token-id',
+    } as any);
 
     const result = await authService.refresh('some-token');
-    
+
     expect(result).toHaveProperty('accessToken');
     expect(result).toHaveProperty('refreshToken');
-    
+
     expect(prisma.refreshToken.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           familyId: 'family-123',
           userId: 1,
         }),
-      })
+      }),
     );
-    
+
     expect(prisma.refreshToken.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'token-id-123' },
@@ -146,8 +182,7 @@ describe('AuthService', () => {
           revokedAt: expect.any(Date),
           replacedByToken: 'new-token-id',
         }),
-      })
+      }),
     );
   });
 });
-

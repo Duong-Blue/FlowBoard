@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
@@ -34,7 +38,10 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -69,9 +76,11 @@ export class AuthService {
 
       const payload = { email: token.user.email, sub: token.user.id };
       const accessToken = this.jwtService.sign(payload);
-      
+
       const rawRefreshToken = randomBytes(32).toString('hex');
-      const newTokenHash = createHash('sha256').update(rawRefreshToken).digest('hex');
+      const newTokenHash = createHash('sha256')
+        .update(rawRefreshToken)
+        .digest('hex');
 
       const newRefreshToken = await tx.refreshToken.create({
         data: {
@@ -84,13 +93,15 @@ export class AuthService {
 
       await tx.refreshToken.update({
         where: { id: token.id },
-        data: { 
+        data: {
           revokedAt: new Date(),
-          replacedByToken: newRefreshToken.id 
+          replacedByToken: newRefreshToken.id,
         },
       });
 
-      const name = [token.user.firstName, token.user.lastName].filter(Boolean).join(' ') || token.user.email;
+      const name =
+        [token.user.firstName, token.user.lastName].filter(Boolean).join(' ') ||
+        token.user.email;
 
       return {
         user: {
@@ -118,7 +129,9 @@ export class AuthService {
     const payload = { email: user.email, sub: user.id };
     const accessToken = this.jwtService.sign(payload);
     const rawRefreshToken = randomBytes(32).toString('hex');
-    const tokenHash = createHash('sha256').update(rawRefreshToken).digest('hex');
+    const tokenHash = createHash('sha256')
+      .update(rawRefreshToken)
+      .digest('hex');
 
     await this.prisma.refreshToken.create({
       data: {
@@ -129,7 +142,8 @@ export class AuthService {
       },
     });
 
-    const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+    const name =
+      [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
 
     return {
       user: {
