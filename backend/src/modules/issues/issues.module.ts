@@ -1,7 +1,6 @@
-
 import { Module } from '@nestjs/common';
 import { IssuesService } from './issues.service';
-import { IssuesController, BoardController } from './issues.controller';
+import { IssuesController, BoardController, WorkloadController } from './issues.controller';
 import { DatabaseModule } from '../../database/database.module';
 import { AuthModule } from '../auth/auth.module';
 import { CommentsModule } from '../comments/comments.module';
@@ -11,8 +10,14 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { SubtasksService } from './subtasks.service';
 
 @Module({
-  imports: [DatabaseModule, AuthModule, CommentsModule, ActivityModule, NotificationsModule],
-  controllers: [IssuesController, BoardController],
+  imports: [
+    DatabaseModule,
+    AuthModule,
+    CommentsModule,
+    ActivityModule,
+    NotificationsModule,
+  ],
+  controllers: [IssuesController, BoardController, WorkloadController],
   providers: [IssuesService, SubtasksService],
   exports: [IssuesService, SubtasksService],
 })

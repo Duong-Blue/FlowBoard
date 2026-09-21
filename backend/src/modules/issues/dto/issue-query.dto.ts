@@ -1,4 +1,12 @@
-import { IsOptional, IsString, IsEnum, IsNumber, Min, Max, IsDateString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsNumber,
+  Min,
+  Max,
+  IsDateString,
+} from 'class-validator';
 import { IssueStatus, IssuePriority } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 
@@ -60,6 +68,14 @@ export class IssueQueryDto {
   @IsOptional()
   @IsDateString()
   dueDateTo?: string;
+
+  @IsOptional()
+  @IsDateString()
+  startDateFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  startDateTo?: string;
 
   @IsOptional()
   @IsString()
