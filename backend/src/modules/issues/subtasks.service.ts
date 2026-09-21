@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { IssueStatus, IssuePriority } from '@prisma/client';
 import { generateKeyBetween } from 'fractional-indexing';
@@ -29,7 +33,9 @@ export class SubtasksService {
       }
 
       if (parent.parentId !== null) {
-        throw new BadRequestException('Subtasks cannot have nested subtasks (max depth 1)');
+        throw new BadRequestException(
+          'Subtasks cannot have nested subtasks (max depth 1)',
+        );
       }
 
       const status = dto.status || IssueStatus.TODO;
@@ -86,7 +92,9 @@ export class SubtasksService {
     });
 
     const total = subtasks.length;
-    const completed = subtasks.filter((s) => s.status === IssueStatus.DONE).length;
+    const completed = subtasks.filter(
+      (s) => s.status === IssueStatus.DONE,
+    ).length;
 
     return {
       items: subtasks,

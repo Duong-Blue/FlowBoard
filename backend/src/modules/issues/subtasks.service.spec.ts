@@ -28,18 +28,34 @@ describe('SubtasksService', () => {
   });
 
   it('should reject creation if parent is already a subtask (depth 2)', async () => {
-    mockPrisma.issue.findUnique.mockResolvedValue({ id: 's1', parentId: 'p1', projectId: 'proj1' });
-    await expect(service.create('proj1', 's1', 'u1', { title: 'T' }))
-      .rejects.toThrow(BadRequestException);
+    mockPrisma.issue.findUnique.mockResolvedValue({
+      id: 's1',
+      parentId: 'p1',
+      projectId: 'proj1',
+    });
+    await expect(
+      service.create('proj1', 's1', 'u1', { title: 'T' }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('should create a subtask with key: null and not update project issueSequence', async () => {
-    mockPrisma.issue.findUnique.mockResolvedValue({ id: 'issue1', parentId: null, projectId: 'proj1', key: 'PROJ-1' });
+    mockPrisma.issue.findUnique.mockResolvedValue({
+      id: 'issue1',
+      parentId: null,
+      projectId: 'proj1',
+      key: 'PROJ-1',
+    });
     mockPrisma.issue.findFirst.mockResolvedValue({ order: 'a0' });
-    mockPrisma.issue.create.mockResolvedValue({ id: 'sub1', key: null, title: 'T' });
+    mockPrisma.issue.create.mockResolvedValue({
+      id: 'sub1',
+      key: null,
+      title: 'T',
+    });
     mockPrisma.issueActivity.create.mockResolvedValue({});
 
-    const result = await service.create('proj1', 'issue1', 'u1', { title: 'T' });
+    const result = await service.create('proj1', 'issue1', 'u1', {
+      title: 'T',
+    });
 
     expect(result).toEqual({ id: 'sub1', key: null, title: 'T' });
     expect(mockPrisma.project.update).not.toHaveBeenCalled();
@@ -50,7 +66,7 @@ describe('SubtasksService', () => {
           title: 'T',
           parentId: 'issue1',
         }),
-      })
+      }),
     );
   });
 });
