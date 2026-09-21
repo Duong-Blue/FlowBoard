@@ -65,11 +65,12 @@ export function IssueDetailView({ issue, members, canDelete, onUpdate, onDelete 
       ).unwrap();
       toast.success(t('detail.statusUpdated', 'Status updated successfully'));
       await onUpdate({ status: newStatus });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as any;
       const errorMsg =
-        err?.response?.data?.message ||
-        err?.message ||
-        (typeof err === 'string' ? err : 'Invalid or blocked status transition');
+        error?.response?.data?.message ||
+        error?.message ||
+        (typeof error === 'string' ? error : 'Invalid or blocked status transition');
       toast.error(errorMsg);
     }
   };

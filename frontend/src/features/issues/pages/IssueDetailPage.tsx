@@ -56,8 +56,8 @@ export function IssueDetailPage() {
         } else {
            dispatch(updateIssue(issueData));
         }
-      } catch (err: any) {
-        if (mounted) setError(err.message || 'Failed to load issue details');
+      } catch (err: unknown) {
+        if (mounted) setError((err as any).message || 'Failed to load issue details');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -78,18 +78,24 @@ export function IssueDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (force: boolean = false) => {
     if (!effectiveProjectId || !issueId) return;
-    if (window.confirm(t('detail.deleteConfirm'))) {
+    if (force || window.confirm(t('detail.deleteConfirm'))) {
       try {
         const targetIssueId = issue?.id || issueId;
-        await deleteIssueApi(effectiveProjectId, targetIssueId);
+        await deleteIssueApi(effectiveProjectId, targetIssueId, force);
         dispatch(removeIssue(targetIssueId));
         if (effectiveOrgId && effectiveProjectKey) {
           navigate(`/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/issues`);
         }
-      } catch (err) {
-        console.error('Failed to delete issue:', err);
+      } catch (err: unknown) {
+        if ((err as any)?.response?.status === 409) {
+          if (window.confirm(t('detail.forceDeleteConfirm', 'This issue contains subtasks. Are you sure you want to delete it and all its subtasks?'))) {
+            handleDelete(true);
+          }
+        } else {
+          console.error('Failed to delete issue:', err);
+        }
       }
     }
   };

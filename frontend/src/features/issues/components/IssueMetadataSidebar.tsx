@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { type Issue, type IssueUser, type IssueType } from '@/store/types';
+import { type Issue, type IssueUser, type IssueType, type DeadlineState } from '@/store/types';
 import { SemanticBadge } from '@/components/shared/SemanticBadge';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { formatDate, getDeadlineState } from '@/lib/dateUtils';
 
 interface IssueMetadataSidebarProps {
   issue: Issue;
@@ -15,10 +16,28 @@ const TYPE_OPTIONS: IssueType[] = ['TASK', 'BUG', 'FEATURE', 'IMPROVEMENT'];
 const STATUS_OPTIONS = ['TODO', 'IN_PROGRESS', 'IN_PREVIEW', 'DONE'];
 const PRIORITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
+const toInputDate = (isoString?: string | null) => {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().split('T')[0];
+};
+
+const getDeadlineBadgeStatus = (state: DeadlineState) => {
+  switch (state) {
+    case 'OVERDUE': return 'destructive';
+    case 'DUE_SOON': return 'pending';
+    case 'COMPLETED': return 'active';
+    case 'UPCOMING': return 'member';
+    default: return 'guest';
+  }
+};
+
 export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange }: IssueMetadataSidebarProps) {
   const { t } = useTranslation(['issues', 'common']);
   const reporter = members.find(m => m.id === issue.reporterId) || issue.reporter;
   const assignee = members.find(m => m.id === issue.assigneeId) || issue.assignee;
+  const deadlineState = issue.deadlineState || getDeadlineState(issue.status, issue.dueDate, issue.completedAt);
 
   return (
     <div className="space-y-6">
@@ -153,6 +172,68 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
             <span className="text-sm text-muted-foreground">{t('form.unassigned')}</span>
           )}
         </div>
+      </div>
+
+      {/* Dates Section */}
+      <div className="space-y-4 pt-4 border-t border-slate-200">
+        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('detail.dates', 'Dates')}</h4>
+        
+        {/* Start Date */}
+        <div>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">{t('detail.startDate', 'Start Date')}</label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="date"
+              value={toInputDate(issue.startDate)}
+              onChange={(e) => {
+                const val = e.target.value;
+                onUpdate({ startDate: val ? new Date(val).toISOString() : (null as any) });
+              }}
+              className="text-xs border border-input rounded px-2 py-1 bg-background hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+            {issue.startDate && (
+              <span className="text-xs text-muted-foreground">
+                {formatDate(issue.startDate)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Due Date */}
+        <div>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">{t('detail.dueDate', 'Due Date')}</label>
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+            <input
+              type="date"
+              value={toInputDate(issue.dueDate)}
+              onChange={(e) => {
+                const val = e.target.value;
+                onUpdate({ dueDate: val ? new Date(val).toISOString() : (null as any) });
+              }}
+              className="text-xs border border-input rounded px-2 py-1 bg-background hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+            {issue.dueDate && (
+              <div className="flex items-center space-x-1.5">
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(issue.dueDate)}
+                </span>
+                <SemanticBadge status={getDeadlineBadgeStatus(deadlineState)}>
+                  {deadlineState}
+                </SemanticBadge>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Completed At (Read-only) */}
+        {issue.completedAt && (
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">{t('detail.completedAt', 'Completed At')}</label>
+            <div className="text-xs text-foreground px-2 py-1 bg-slate-50 rounded border border-slate-100">
+              {formatDate(issue.completedAt)}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Created At */}
