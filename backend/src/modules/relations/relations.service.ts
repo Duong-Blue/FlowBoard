@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateRelationDto } from './dto/create-relation.dto';
 import { ActivityService } from '../activity/activity.service';
@@ -16,8 +20,14 @@ export class RelationsService {
     }
 
     const [source, target] = await Promise.all([
-      this.prisma.issue.findUnique({ where: { id: sourceIssueId }, select: { id: true, projectId: true } }),
-      this.prisma.issue.findUnique({ where: { id: dto.targetIssueId }, select: { id: true, projectId: true } }),
+      this.prisma.issue.findUnique({
+        where: { id: sourceIssueId },
+        select: { id: true, projectId: true },
+      }),
+      this.prisma.issue.findUnique({
+        where: { id: dto.targetIssueId },
+        select: { id: true, projectId: true },
+      }),
     ]);
 
     if (!source || !target) {
@@ -25,7 +35,11 @@ export class RelationsService {
     }
 
     const existing = await this.prisma.issueRelation.findFirst({
-      where: { sourceIssueId, targetIssueId: dto.targetIssueId, type: dto.type },
+      where: {
+        sourceIssueId,
+        targetIssueId: dto.targetIssueId,
+        type: dto.type,
+      },
     });
 
     if (existing) {
@@ -36,10 +50,15 @@ export class RelationsService {
       data: { sourceIssueId, targetIssueId: dto.targetIssueId, type: dto.type },
     });
 
-    await this.activityService.createActivity(sourceIssueId, actorId, 'RELATION_CREATED', {
-      targetIssueId: dto.targetIssueId,
-      type: dto.type,
-    });
+    await this.activityService.createActivity(
+      sourceIssueId,
+      actorId,
+      'RELATION_CREATED',
+      {
+        targetIssueId: dto.targetIssueId,
+        type: dto.type,
+      },
+    );
 
     return relation;
   }
@@ -51,17 +70,27 @@ export class RelationsService {
   }
 
   async remove(issueId: string, relationId: string, actorId: string) {
-    const relation = await this.prisma.issueRelation.findUnique({ where: { id: relationId } });
-    if (!relation || (relation.sourceIssueId !== issueId && relation.targetIssueId !== issueId)) {
+    const relation = await this.prisma.issueRelation.findUnique({
+      where: { id: relationId },
+    });
+    if (
+      !relation ||
+      (relation.sourceIssueId !== issueId && relation.targetIssueId !== issueId)
+    ) {
       throw new NotFoundException('Relation not found');
     }
 
     await this.prisma.issueRelation.delete({ where: { id: relationId } });
 
-    await this.activityService.createActivity(issueId, actorId, 'RELATION_DELETED', {
-      targetIssueId: relation.targetIssueId,
-      type: relation.type,
-    });
+    await this.activityService.createActivity(
+      issueId,
+      actorId,
+      'RELATION_DELETED',
+      {
+        targetIssueId: relation.targetIssueId,
+        type: relation.type,
+      },
+    );
 
     return { success: true };
   }

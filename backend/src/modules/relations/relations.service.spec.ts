@@ -26,14 +26,16 @@ describe('RelationsService', () => {
   });
 
   it('should reject self-linking', async () => {
-    await expect(service.create('i1', 'u1', { targetIssueId: 'i1', type: 'BLOCKS' }))
-      .rejects.toThrow(BadRequestException);
+    await expect(
+      service.create('i1', 'u1', { targetIssueId: 'i1', type: 'BLOCKS' }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('should reject duplicates', async () => {
     mockPrisma.issue.findUnique.mockResolvedValue({ id: 'any' });
     mockPrisma.issueRelation.findFirst.mockResolvedValue({ id: 'rel1' });
-    await expect(service.create('i1', 'u1', { targetIssueId: 'i2', type: 'BLOCKS' }))
-      .rejects.toThrow('Relation already exists');
+    await expect(
+      service.create('i1', 'u1', { targetIssueId: 'i2', type: 'BLOCKS' }),
+    ).rejects.toThrow('Relation already exists');
   });
 });

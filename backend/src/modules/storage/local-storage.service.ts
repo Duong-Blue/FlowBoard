@@ -49,7 +49,7 @@ export class LocalStorageService implements StorageService {
 
   async deleteDirectory(storagePath: string): Promise<boolean> {
     const dirPath = this.resolvePath(storagePath);
-    
+
     if (dirPath === this.basePath) {
       throw new BadRequestException('Cannot delete root storage directory');
     }
@@ -63,14 +63,19 @@ export class LocalStorageService implements StorageService {
   }
 
   @OnEvent('issue.deleted')
-  async handleIssueDeleted(payload: { projectId: string; issueId: string; correlationId?: string }) {
-    if (!payload || !payload.issueId || typeof payload.issueId !== 'string') return;
-    
+  async handleIssueDeleted(payload: {
+    projectId: string;
+    issueId: string;
+    correlationId?: string;
+  }) {
+    if (!payload || !payload.issueId || typeof payload.issueId !== 'string')
+      return;
+
     const issueId = payload.issueId.replace(/[^a-zA-Z0-9-]/g, '');
     if (!issueId || issueId !== payload.issueId) return;
 
     const storagePath = `issues/${issueId}`;
-    
+
     if (storagePath === 'issues/' || storagePath === 'issues') return;
 
     await this.deleteDirectory(storagePath);
