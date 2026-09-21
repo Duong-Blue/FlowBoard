@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { LocalStorageService } from '../storage/local-storage.service';
 import { ActivityService } from '../activity/activity.service';
@@ -28,7 +32,12 @@ export class AttachmentsService {
     }
   }
 
-  async upload(projectId: string, issueId: string, actorId: string, file: Multer.File) {
+  async upload(
+    projectId: string,
+    issueId: string,
+    actorId: string,
+    file: Multer.File,
+  ) {
     await this.verifyIssueInProject(projectId, issueId);
 
     const ext = path.extname(file.originalname);
@@ -49,7 +58,12 @@ export class AttachmentsService {
       },
     });
 
-    await this.activity.createActivity(issueId, actorId, ActivityType.ATTACHMENT_UPLOADED, { attachmentId: attachment.id });
+    await this.activity.createActivity(
+      issueId,
+      actorId,
+      ActivityType.ATTACHMENT_UPLOADED,
+      { attachmentId: attachment.id },
+    );
 
     return attachment;
   }
@@ -63,7 +77,11 @@ export class AttachmentsService {
     });
   }
 
-  async getDownloadInfo(projectId: string, issueId: string, attachmentId: string) {
+  async getDownloadInfo(
+    projectId: string,
+    issueId: string,
+    attachmentId: string,
+  ) {
     await this.verifyIssueInProject(projectId, issueId);
 
     const attachment = await this.prisma.attachment.findFirst({
@@ -75,7 +93,12 @@ export class AttachmentsService {
     return { attachment, stream };
   }
 
-  async delete(projectId: string, issueId: string, attachmentId: string, actorId: string) {
+  async delete(
+    projectId: string,
+    issueId: string,
+    attachmentId: string,
+    actorId: string,
+  ) {
     await this.verifyIssueInProject(projectId, issueId);
 
     const attachment = await this.prisma.attachment.findFirst({
@@ -86,7 +109,12 @@ export class AttachmentsService {
     await this.storage.deleteFile(attachment.storagePath);
     await this.prisma.attachment.delete({ where: { id: attachmentId } });
 
-    await this.activity.createActivity(issueId, actorId, ActivityType.ATTACHMENT_DELETED, { attachmentId });
+    await this.activity.createActivity(
+      issueId,
+      actorId,
+      ActivityType.ATTACHMENT_DELETED,
+      { attachmentId },
+    );
     return true;
   }
 }

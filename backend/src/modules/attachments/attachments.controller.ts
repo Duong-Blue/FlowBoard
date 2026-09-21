@@ -37,7 +37,8 @@ export class AttachmentsController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
           new FileTypeValidator({
-            fileType: /image\/*|application\/pdf|text\/plain|application\/vnd.openxmlformats-officedocument.*/,
+            fileType:
+              /image\/*|application\/pdf|text\/plain|application\/vnd.openxmlformats-officedocument.*/,
           }),
         ],
       }),
@@ -62,7 +63,12 @@ export class AttachmentsController {
     @Param('attachmentId') attachmentId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { attachment, stream } = await this.attachmentsService.getDownloadInfo(projectId, issueId, attachmentId);
+    const { attachment, stream } =
+      await this.attachmentsService.getDownloadInfo(
+        projectId,
+        issueId,
+        attachmentId,
+      );
     res.set({
       'Content-Type': attachment.mimeType,
       'Content-Disposition': `attachment; filename="${attachment.originalName}"`,
@@ -77,6 +83,11 @@ export class AttachmentsController {
     @Param('attachmentId') attachmentId: string,
     @CurrentUser('id') userId: string,
   ) {
-    return this.attachmentsService.delete(projectId, issueId, attachmentId, userId);
+    return this.attachmentsService.delete(
+      projectId,
+      issueId,
+      attachmentId,
+      userId,
+    );
   }
 }
