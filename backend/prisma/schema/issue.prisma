@@ -26,6 +26,9 @@ model Issue {
   title       String
   description String?
   order       String
+  workflowStatusId String?
+  workflowStatus   WorkflowStatus? @relation(fields: [workflowStatusId], references: [id], onDelete: SetNull)
+
   status      IssueStatus   @default(TODO)
   type        IssueType     @default(TASK)
   priority    IssuePriority @default(MEDIUM)

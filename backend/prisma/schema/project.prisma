@@ -22,4 +22,5 @@ model Project {
   notifications Notification[]
 
   @@unique([organizationId, key])
+  workflow Workflow?
 }

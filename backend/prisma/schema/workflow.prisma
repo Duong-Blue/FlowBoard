@@ -1,0 +1,45 @@
+
+model Workflow {
+  id         String             @id @default(uuid())
+  projectId  String             @unique
+  project    Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  statuses   WorkflowStatus[]
+  transitions WorkflowTransition[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkflowStatus {
+  id         String             @id @default(uuid())
+  workflowId String
+  workflow   Workflow           @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  name       String
+  category   IssueStatus // Enum from issue.prisma
+  order      Int                @default(0)
+  color      String?
+
+  issues         Issue[]
+  fromTransitions WorkflowTransition[] @relation("FromStatus")
+  toTransitions   WorkflowTransition[] @relation("ToStatus")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkflowTransition {
+  id         String             @id @default(uuid())
+  workflowId String
+  workflow   Workflow           @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  fromStatusId String?
+  fromStatus   WorkflowStatus?    @relation("FromStatus", fields: [fromStatusId], references: [id], onDelete: Cascade)
+
+  toStatusId String
+  toStatus   WorkflowStatus     @relation("ToStatus", fields: [toStatusId], references: [id], onDelete: Cascade)
+
+  name       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
