@@ -596,22 +596,7 @@ export class IssuesService {
       },
     });
 
-    type BoardIssue = (typeof issues)[number];
-
-    const columns: Record<IssueStatus, any[]> = {
-      [IssueStatus.TODO]: [],
-      [IssueStatus.IN_PROGRESS]: [],
-      [IssueStatus.IN_PREVIEW]: [],
-      [IssueStatus.DONE]: [],
-    };
-
-    for (const issue of issues) {
-      if (columns[issue.status]) {
-        columns[issue.status].push(this.mapIssueWithDeadlineState(issue));
-      }
-    }
-
-    return columns;
+    return issues.map((issue) => this.mapIssueWithDeadlineState(issue));
   }
 
   async moveIssue(

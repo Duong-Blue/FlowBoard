@@ -227,6 +227,22 @@ describe('IssuesService', () => {
     });
   });
 
+  describe('getBoard', () => {
+    it('should return array of issues with workflowStatus', async () => {
+      mockPrisma.project.findFirst.mockResolvedValue({ id: 'p1' });
+      mockPrisma.issue.findMany.mockResolvedValue([
+        { id: 'i1', status: IssueStatus.TODO, workflowStatusId: 'ws1', workflowStatus: { id: 'ws1', category: IssueStatus.TODO } },
+      ]);
+
+      const result = await service.getBoard('p1');
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(1);
+      expect(result[0].id).toBe('i1');
+      expect(result[0].workflowStatus).toBeDefined();
+    });
+  });
+
   describe('update', () => {
     beforeEach(() => {
       vi.useFakeTimers();

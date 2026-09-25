@@ -141,19 +141,19 @@ describe('IssuesService (Integration)', () => {
 
       const board = await service.getBoard(projectId);
 
-      expect(board).toHaveProperty(IssueStatus.TODO);
-      expect(board).toHaveProperty(IssueStatus.IN_PROGRESS);
-      expect(board).toHaveProperty(IssueStatus.IN_PREVIEW);
-      expect(board).toHaveProperty(IssueStatus.DONE);
+      const todo = board.filter(i => i.status === IssueStatus.TODO);
+      const inProgress = board.filter(i => i.status === IssueStatus.IN_PROGRESS);
+      const inPreview = board.filter(i => i.status === IssueStatus.IN_PREVIEW);
+      const done = board.filter(i => i.status === IssueStatus.DONE);
 
-      expect(board[IssueStatus.TODO].length).toBe(2);
-      expect(board[IssueStatus.IN_PROGRESS].length).toBe(1);
-      expect(board[IssueStatus.IN_PREVIEW].length).toBe(0);
-      expect(board[IssueStatus.DONE].length).toBe(0);
+      expect(todo.length).toBe(2);
+      expect(inProgress.length).toBe(1);
+      expect(inPreview.length).toBe(0);
+      expect(done.length).toBe(0);
 
       // Verify sorting by fractional index
-      const t1 = board[IssueStatus.TODO][0];
-      const t2 = board[IssueStatus.TODO][1];
+      const t1 = todo[0];
+      const t2 = todo[1];
       expect(t1.order < t2.order).toBe(true);
     });
   });
@@ -241,7 +241,7 @@ describe('IssuesService (Integration)', () => {
       );
 
       const board = await service.getBoard(projectId);
-      const todo = board[IssueStatus.TODO];
+      const todo = board.filter(i => i.status === IssueStatus.TODO);
 
       // Expected: I1, I4, I2, I3
       expect(todo[0].id).toBe(i1);
@@ -264,8 +264,9 @@ describe('IssuesService (Integration)', () => {
       );
 
       const board = await service.getBoard(projectId);
-      expect(board[IssueStatus.TODO][0].id).toBe(i3);
-      expect(board[IssueStatus.TODO][1].id).toBe(i1);
+      const todo = board.filter(i => i.status === IssueStatus.TODO);
+      expect(todo[0].id).toBe(i3);
+      expect(todo[1].id).toBe(i1);
     });
 
     it('should move to bottom of column (append)', async () => {
@@ -282,7 +283,7 @@ describe('IssuesService (Integration)', () => {
       );
 
       const board = await service.getBoard(projectId);
-      const todo = board[IssueStatus.TODO];
+      const todo = board.filter(i => i.status === IssueStatus.TODO);
       expect(todo[todo.length - 1].id).toBe(i1);
     });
 
@@ -299,8 +300,9 @@ describe('IssuesService (Integration)', () => {
       );
 
       const board = await service.getBoard(projectId);
-      expect(board[IssueStatus.IN_PROGRESS].length).toBe(1);
-      expect(board[IssueStatus.IN_PROGRESS][0].id).toBe(i2);
+      const inProgress = board.filter(i => i.status === IssueStatus.IN_PROGRESS);
+      expect(inProgress.length).toBe(1);
+      expect(inProgress[0].id).toBe(i2);
     });
 
     it('should prevent IDOR: move issue from different project', async () => {
@@ -392,7 +394,7 @@ describe('IssuesService (Integration)', () => {
       await Promise.all(movePromises);
 
       const board = await service.getBoard(projectId);
-      const inProgress = board[IssueStatus.IN_PROGRESS];
+      const inProgress = board.filter(i => i.status === IssueStatus.IN_PROGRESS);
 
       expect(inProgress.length).toBe(5);
 

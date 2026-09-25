@@ -61,7 +61,7 @@ export class WorkflowsService {
 
     if (!workflow) {
       // Create default workflow
-      workflow = await this.createDefaultWorkflow(projectId);
+      workflow = (await this.createDefaultWorkflow(projectId)) as any;
     }
 
     return workflow;
