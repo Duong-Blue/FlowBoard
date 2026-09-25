@@ -24,7 +24,16 @@ export const getIssue = (projectId: string, id: string) => apiGet<Issue>(`/proje
 export const createIssue = (projectId: string, data: Partial<Issue>) => apiPost<Issue>(`/projects/${projectId}/issues`, data);
 export const createSubtask = (projectId: string, parentId: string, data: Partial<Issue>) => apiPost<Issue>(`/projects/${projectId}/issues/${parentId}/subtasks`, data);
 export const updateIssue = (projectId: string, id: string, data: Partial<Issue>) => apiPatch<Issue>(`/projects/${projectId}/issues/${id}`, data);
-export const moveIssue = (projectId: string, id: string, data: { status: string; beforeIssueId?: string | null; afterIssueId?: string | null }) => apiPatch<Issue>(`/projects/${projectId}/issues/${id}/move`, data);
+export const moveIssue = (
+  projectId: string,
+  id: string,
+  data: {
+    status?: string;
+    targetWorkflowStatusId?: string;
+    beforeIssueId?: string | null;
+    afterIssueId?: string | null;
+  }
+) => apiPatch<Issue>(`/projects/${projectId}/issues/${id}/move`, data);
 export const deleteIssue = (projectId: string, id: string, force?: boolean) => apiDelete(`/projects/${projectId}/issues/${id}${force ? '?force=true' : ''}`);
 
 export type CommentAuthor = {

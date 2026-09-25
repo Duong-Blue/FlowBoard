@@ -6,6 +6,7 @@ import orgReducer from './slices/orgSlice';
 import projectReducer from './slices/projectSlice';
 import issueReducer from './slices/issueSlice';
 import notificationReducer from './slices/notificationSlice';
+import { workflowsApi } from './api/workflowsApi';
 import type { RootState, AppDispatch } from './types';
 
 export const store = configureStore({
@@ -15,7 +16,10 @@ export const store = configureStore({
     project: projectReducer,
     issue: issueReducer,
     notification: notificationReducer,
+    [workflowsApi.reducerPath]: workflowsApi.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(workflowsApi.middleware),
 });
 
 export const useAppDispatch: () => AppDispatch = useDispatch;

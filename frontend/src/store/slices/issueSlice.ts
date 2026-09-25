@@ -20,6 +20,7 @@ interface BoardColumns {
   IN_PROGRESS: Issue[];
   IN_PREVIEW: Issue[];
   DONE: Issue[];
+  [key: string]: Issue[];
 }
 
 interface IssueState {

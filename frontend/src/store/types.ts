@@ -62,6 +62,37 @@ export type IssueStatus = 'TODO' | 'IN_PROGRESS' | 'IN_PREVIEW' | 'DONE';
 export type DeadlineState = 'NO_DUE_DATE' | 'COMPLETED' | 'OVERDUE' | 'DUE_SOON' | 'UPCOMING';
 export type RelationType = 'BLOCKS' | 'IS_BLOCKED_BY' | 'BLOCKED_BY' | 'RELATES_TO' | 'DUPLICATES';
 
+export interface WorkflowStatus {
+  id: string;
+  workflowId: string;
+  name: string;
+  category: IssueStatus;
+  order: number;
+  color?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface WorkflowTransition {
+  id: string;
+  workflowId: string;
+  fromStatusId: string;
+  toStatusId: string;
+  name?: string | null;
+  createdAt?: string;
+}
+
+export interface Workflow {
+  id: string;
+  projectId: string;
+  name?: string | null;
+  isDefault?: boolean;
+  statuses: WorkflowStatus[];
+  transitions?: WorkflowTransition[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Attachment {
   id: string;
   filename: string;
@@ -93,6 +124,8 @@ export interface Issue {
   title: string;
   description?: string;
   status: IssueStatus | string;
+  workflowStatusId?: string | null;
+  workflowStatus?: WorkflowStatus;
   type?: IssueType | string;
   priority: string;
   assigneeId?: string;
@@ -114,8 +147,9 @@ export interface Issue {
 
 export interface MoveIssuePayload {
   issueId: string;
-  sourceStatus: IssueStatus;
-  targetStatus: IssueStatus;
+  sourceStatus: IssueStatus | string;
+  targetStatus: IssueStatus | string;
+  targetWorkflowStatusId?: string;
   beforeIssueId: string | null;
   afterIssueId: string | null;
 }
