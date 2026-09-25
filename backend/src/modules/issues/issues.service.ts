@@ -219,43 +219,51 @@ export class IssuesService {
   ) {
     const siblings = await tx.issue.findMany({
       where: { parentId, id: { not: issueId } },
-      select: { status: true },
+      select: { status: true, workflowStatus: { select: { category: true } } },
     });
 
-    const allDone = siblings.every((s) => s.status === IssueStatus.DONE);
+    const allDone = siblings.every((s) => s.workflowStatus?.category === IssueStatus.DONE || s.status === IssueStatus.DONE);
     if (allDone) {
       const parent = await tx.issue.findUnique({
         where: { id: parentId },
-        select: { id: true, status: true, projectId: true },
+        select: { id: true, status: true, projectId: true, workflowStatusId: true },
       });
 
-      if (parent && parent.status !== IssueStatus.DONE) {
-        const workflow = await tx.workflow.findUnique({
-          where: { projectId: parent.projectId },
-          include: { statuses: true },
-        });
+      if (parent) {
+        const parentCurrentWs = parent.workflowStatusId
+          ? await tx.workflowStatus.findUnique({ where: { id: parent.workflowStatusId } })
+          : null;
+        
+        const isParentDone = parentCurrentWs?.category === IssueStatus.DONE || parent.status === IssueStatus.DONE;
 
-        const doneStatus = workflow?.statuses.find(s => s.category === IssueStatus.DONE);
-        const targetWorkflowStatusId = doneStatus ? doneStatus.id : null;
+        if (!isParentDone) {
+          const doneStatuses = await tx.workflowStatus.findMany({
+            where: { projectId: parent.projectId, category: IssueStatus.DONE },
+            orderBy: { order: 'asc' },
+          });
 
-        await tx.issue.update({
-          where: { id: parent.id },
-          data: { status: IssueStatus.DONE, workflowStatusId: targetWorkflowStatusId, completedAt: new Date() },
-        });
+          const doneStatus = doneStatuses.length > 0 ? doneStatuses[0] : null;
+          const targetWorkflowStatusId = doneStatus ? doneStatus.id : null;
 
-        await tx.issueActivity.create({
-          data: {
-            issueId: parent.id,
-            actorId,
-            type: 'STATUS_CHANGED',
-            metadata: {
-              from: parent.status,
-              to: IssueStatus.DONE,
-              toWorkflowStatusId: targetWorkflowStatusId,
-              autoCompleted: true,
+          await tx.issue.update({
+            where: { id: parent.id },
+            data: { status: IssueStatus.DONE, workflowStatusId: targetWorkflowStatusId, completedAt: new Date() },
+          });
+
+          await tx.issueActivity.create({
+            data: {
+              issueId: parent.id,
+              actorId,
+              type: 'STATUS_CHANGED',
+              metadata: {
+                from: parent.status,
+                to: IssueStatus.DONE,
+                toWorkflowStatusId: targetWorkflowStatusId,
+                autoCompleted: true,
+              },
             },
-          },
-        });
+          });
+        }
       }
     }
   }

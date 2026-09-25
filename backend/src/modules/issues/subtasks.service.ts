@@ -38,10 +38,27 @@ export class SubtasksService {
         );
       }
 
-      const status = dto.status || IssueStatus.TODO;
+      let workflowStatusId = dto.workflowStatusId || null;
+      let targetCategory = dto.status || IssueStatus.TODO;
+      
+      if (workflowStatusId) {
+        const ws = await tx.workflowStatus.findUnique({
+          where: { id: workflowStatusId, projectId },
+        });
+        if (!ws) throw new NotFoundException('Workflow status not found');
+        targetCategory = ws.category;
+      } else {
+        const ws = await tx.workflowStatus.findFirst({
+          where: { projectId, category: targetCategory },
+          orderBy: { order: 'asc' },
+        });
+        if (ws) {
+          workflowStatusId = ws.id;
+        }
+      }
 
       const lastIssue = await tx.issue.findFirst({
-        where: { projectId, parentId: issueId, status },
+        where: { projectId, parentId: issueId, status: targetCategory },
         orderBy: { order: 'desc' },
         select: { order: true },
       });
@@ -55,7 +72,8 @@ export class SubtasksService {
           key: null,
           title: dto.title,
           description: dto.description || null,
-          status,
+          status: targetCategory,
+          workflowStatusId,
           order,
           priority: dto.priority || IssuePriority.MEDIUM,
           reporterId: actorId,
@@ -88,12 +106,13 @@ export class SubtasksService {
 
     const subtasks = await this.prisma.issue.findMany({
       where: { parentId: issueId },
+      include: { workflowStatus: { select: { category: true } } },
       orderBy: { order: 'asc' },
     });
 
     const total = subtasks.length;
     const completed = subtasks.filter(
-      (s) => s.status === IssueStatus.DONE,
+      (s) => s.workflowStatus?.category === IssueStatus.DONE || s.status === IssueStatus.DONE,
     ).length;
 
     return {

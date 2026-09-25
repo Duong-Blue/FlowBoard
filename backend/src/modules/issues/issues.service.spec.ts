@@ -31,7 +31,7 @@ describe('IssuesService', () => {
     issueActivity: { create: vi.fn() },
     issueRelation: { findMany: vi.fn() },
     workflow: { findUnique: vi.fn(), create: vi.fn(), findUniqueOrThrow: vi.fn() },
-    workflowStatus: { create: vi.fn() },
+    workflowStatus: { create: vi.fn(), findMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn() },
     workflowTransition: { createMany: vi.fn(), findFirst: vi.fn() },
   };
 
@@ -346,7 +346,16 @@ describe('IssuesService', () => {
       mockPrisma.issue.findUnique.mockResolvedValue({
         id: 'parent1',
         status: IssueStatus.IN_PROGRESS,
+        projectId: 'p1',
+        workflowStatusId: 'ws_in_progress',
       });
+      mockPrisma.workflowStatus.findUnique.mockResolvedValue({
+        id: 'ws_in_progress',
+        category: IssueStatus.IN_PROGRESS,
+      });
+      mockPrisma.workflowStatus.findMany.mockResolvedValue([
+        { id: 'ws_done', category: IssueStatus.DONE },
+      ]);
 
       await service.update(
         'p1',
