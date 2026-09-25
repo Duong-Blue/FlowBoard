@@ -1,12 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectsService } from './projects.service';
 import { PrismaService } from '../../database/prisma.service';
+import { WorkflowsService } from '../workflows/workflows.service';
 import { ForbiddenException } from '@nestjs/common';
 import { vi } from 'vitest';
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
   let prisma: PrismaService;
+  let workflowsService: WorkflowsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -21,6 +23,13 @@ describe('ProjectsService', () => {
               delete: vi.fn(),
             },
             organization: { findFirst: vi.fn() },
+            $transaction: vi.fn(async (cb) => cb(prisma)),
+          },
+        },
+        {
+          provide: WorkflowsService,
+          useValue: {
+            createDefaultWorkflow: vi.fn(),
           },
         },
       ],
@@ -28,6 +37,7 @@ describe('ProjectsService', () => {
 
     service = module.get<ProjectsService>(ProjectsService);
     prisma = module.get<PrismaService>(PrismaService);
+    workflowsService = module.get<WorkflowsService>(WorkflowsService);
   });
 
   it('should throw ForbiddenException if user is not ADMIN when updating', async () => {

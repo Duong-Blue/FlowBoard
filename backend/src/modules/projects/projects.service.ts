@@ -7,10 +7,14 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { WorkflowsService } from '../workflows/workflows.service';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private workflowsService: WorkflowsService,
+  ) {}
 
   async create(orgParam: string, userId: string, dto: CreateProjectDto) {
     const org = await this.prisma.organization.findFirst({
@@ -37,6 +41,9 @@ export class ProjectsService {
       await tx.projectMember.create({
         data: { projectId: project.id, userId, role: 'ADMIN' },
       });
+      
+      await this.workflowsService.createDefaultWorkflow(project.id, tx);
+      
       return project;
     });
   }

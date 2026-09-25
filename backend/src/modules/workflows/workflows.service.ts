@@ -5,11 +5,48 @@ import { CreateStatusDto } from './dto/create-status.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { CreateTransitionDto } from './dto/create-transition.dto';
 import { UpdateTransitionsMatrixDto } from './dto/update-transitions-matrix.dto';
-import { IssueStatus } from '@prisma/client';
+import { IssueStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class WorkflowsService {
   constructor(private prisma: PrismaService, private eventEmitter: EventEmitter2) {}
+
+  async createDefaultWorkflow(projectId: string, tx: Prisma.TransactionClient = this.prisma) {
+    const workflow = await tx.workflow.create({
+      data: { projectId },
+    });
+
+    const todo = await tx.workflowStatus.create({
+      data: { workflowId: workflow.id, name: 'To Do', category: IssueStatus.TODO, order: 0, color: '#e2e8f0' },
+    });
+    const inProgress = await tx.workflowStatus.create({
+      data: { workflowId: workflow.id, name: 'In Progress', category: IssueStatus.IN_PROGRESS, order: 1, color: '#bfdbfe' },
+    });
+    const inPreview = await tx.workflowStatus.create({
+      data: { workflowId: workflow.id, name: 'In Preview', category: IssueStatus.IN_PREVIEW, order: 2, color: '#fef08a' },
+    });
+    const done = await tx.workflowStatus.create({
+      data: { workflowId: workflow.id, name: 'Done', category: IssueStatus.DONE, order: 3, color: '#bbf7d0' },
+    });
+
+    await tx.workflowTransition.createMany({
+      data: [
+        { workflowId: workflow.id, fromStatusId: null, toStatusId: todo.id },
+        { workflowId: workflow.id, fromStatusId: todo.id, toStatusId: inProgress.id },
+        { workflowId: workflow.id, fromStatusId: inProgress.id, toStatusId: inPreview.id },
+        { workflowId: workflow.id, fromStatusId: inPreview.id, toStatusId: done.id },
+        { workflowId: workflow.id, fromStatusId: done.id, toStatusId: inProgress.id },
+      ],
+    });
+
+    return tx.workflow.findUnique({
+      where: { id: workflow.id },
+      include: {
+        statuses: { orderBy: { order: 'asc' } },
+        transitions: true,
+      },
+    }) as Promise<NonNullable<Awaited<ReturnType<typeof tx.workflow.findUnique>>>>;
+  }
 
   async getWorkflow(projectId: string) {
     let workflow = await this.prisma.workflow.findUnique({
@@ -24,25 +61,7 @@ export class WorkflowsService {
 
     if (!workflow) {
       // Create default workflow
-      workflow = await this.prisma.workflow.create({
-        data: {
-          projectId,
-          statuses: {
-            create: [
-              { name: 'To Do', category: IssueStatus.TODO, order: 0 },
-              { name: 'In Progress', category: IssueStatus.IN_PROGRESS, order: 1 },
-              { name: 'In Preview', category: IssueStatus.IN_PREVIEW, order: 2 },
-              { name: 'Done', category: IssueStatus.DONE, order: 3 },
-            ],
-          },
-        },
-        include: {
-          statuses: {
-            orderBy: { order: 'asc' },
-          },
-          transitions: true,
-        },
-      });
+      workflow = await this.createDefaultWorkflow(projectId);
     }
 
     return workflow;

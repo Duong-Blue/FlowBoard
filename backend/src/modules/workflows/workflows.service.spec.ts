@@ -60,14 +60,49 @@ describe('WorkflowsService', () => {
       expect(prisma.workflow.create).not.toHaveBeenCalled();
     });
 
-    it('should create default workflow if none exists', async () => {
-      prisma.workflow.findUnique.mockResolvedValue(null);
-      const mockCreated = { id: 'w2', statuses: [], transitions: [] };
-      prisma.workflow.create.mockResolvedValue(mockCreated);
+    it('should call createDefaultWorkflow if none exists', async () => {
+      prisma.workflow.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 'w2' }); // for the return inside createDefaultWorkflow
+
+      prisma.workflow.create.mockResolvedValue({ id: 'w2' });
+      prisma.workflowStatus.create.mockResolvedValue({ id: 'mock-status-id' });
+
+      vi.spyOn(service, 'createDefaultWorkflow');
 
       const result = await service.getWorkflow('p2');
-      expect(result).toBe(mockCreated);
+      expect(service.createDefaultWorkflow).toHaveBeenCalledWith('p2');
       expect(prisma.workflow.create).toHaveBeenCalled();
+      expect(prisma.workflowStatus.create).toHaveBeenCalledTimes(4);
+      expect(prisma.workflowTransition.createMany).toHaveBeenCalled();
+      expect(result).toEqual({ id: 'w2' });
+    });
+  });
+
+  describe('createDefaultWorkflow', () => {
+    it('should create default statuses and transitions', async () => {
+      prisma.workflow.create.mockResolvedValue({ id: 'w1' });
+      prisma.workflowStatus.create
+        .mockResolvedValueOnce({ id: 's-todo' })
+        .mockResolvedValueOnce({ id: 's-in-progress' })
+        .mockResolvedValueOnce({ id: 's-in-preview' })
+        .mockResolvedValueOnce({ id: 's-done' });
+      prisma.workflow.findUnique.mockResolvedValue({ id: 'w1', statuses: [], transitions: [] });
+
+      const result = await service.createDefaultWorkflow('p1');
+
+      expect(prisma.workflow.create).toHaveBeenCalledWith({ data: { projectId: 'p1' } });
+      expect(prisma.workflowStatus.create).toHaveBeenCalledTimes(4);
+      expect(prisma.workflowTransition.createMany).toHaveBeenCalledWith({
+        data: [
+          { workflowId: 'w1', fromStatusId: null, toStatusId: 's-todo' },
+          { workflowId: 'w1', fromStatusId: 's-todo', toStatusId: 's-in-progress' },
+          { workflowId: 'w1', fromStatusId: 's-in-progress', toStatusId: 's-in-preview' },
+          { workflowId: 'w1', fromStatusId: 's-in-preview', toStatusId: 's-done' },
+          { workflowId: 'w1', fromStatusId: 's-done', toStatusId: 's-in-progress' },
+        ],
+      });
+      expect(result).toEqual({ id: 'w1', statuses: [], transitions: [] });
     });
   });
 
