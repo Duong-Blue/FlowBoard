@@ -244,10 +244,11 @@ const issueSlice = createSlice({
       state.list.unshift(action.payload);
       state.total += 1;
       
-      const status = action.payload.status as keyof BoardColumns;
-      if (state.board.columns[status]) {
-        state.board.columns[status].push(action.payload);
+      const colKey = action.payload.workflowStatusId || action.payload.status;
+      if (!state.board.columns[colKey]) {
+        state.board.columns[colKey] = [];
       }
+      state.board.columns[colKey].push(action.payload);
     },
     updateIssue: (state, action: PayloadAction<Issue>) => {
       const index = state.list.findIndex(i => i.id === action.payload.id);
@@ -272,7 +273,7 @@ const issueSlice = createSlice({
       // Create deep copy of previous state
       state.board.previousBoardState = JSON.parse(JSON.stringify(state.board.columns));
       
-      const { issueId, sourceStatus, targetStatus, beforeIssueId, afterIssueId, correlationId } = action.payload;
+      const { issueId, targetStatus, targetWorkflowStatusId, beforeIssueId, afterIssueId, correlationId } = action.payload;
       if (correlationId) {
         if (!state.board.pendingCorrelationIds) {
           state.board.pendingCorrelationIds = [];
@@ -280,14 +281,35 @@ const issueSlice = createSlice({
         state.board.pendingCorrelationIds.push(correlationId);
       }
       
-      const sourceCol = state.board.columns[sourceStatus];
-      const targetCol = state.board.columns[targetStatus];
+      let sourceColKey: string | null = null;
+      let issueIndex = -1;
       
-      const issueIndex = sourceCol.findIndex(i => i.id === issueId);
-      if (issueIndex === -1) return;
+      for (const key of Object.keys(state.board.columns)) {
+        const idx = state.board.columns[key].findIndex(i => i.id === issueId);
+        if (idx !== -1) {
+          sourceColKey = key;
+          issueIndex = idx;
+          break;
+        }
+      }
+      
+      if (!sourceColKey || issueIndex === -1) return;
+      
+      const targetColKey = targetWorkflowStatusId || (targetStatus as string);
+      
+      if (!state.board.columns[targetColKey]) {
+        state.board.columns[targetColKey] = [];
+      }
+      
+      const sourceCol = state.board.columns[sourceColKey];
+      const targetCol = state.board.columns[targetColKey];
       
       const [issue] = sourceCol.splice(issueIndex, 1);
-      issue.status = targetStatus;
+      
+      if (targetWorkflowStatusId) {
+        issue.workflowStatusId = targetWorkflowStatusId;
+      }
+      issue.status = targetStatus as any;
       
       if (beforeIssueId) {
         const targetIndex = targetCol.findIndex(i => i.id === beforeIssueId);
@@ -323,6 +345,7 @@ const issueSlice = createSlice({
           if (item) {
             if (issue.updatedAt !== undefined) item.updatedAt = issue.updatedAt;
             if (issue.status !== undefined) item.status = issue.status;
+            if (issue.workflowStatusId !== undefined) item.workflowStatusId = issue.workflowStatusId;
             if (issue.title !== undefined) item.title = issue.title;
             break;
           }
@@ -349,23 +372,17 @@ const issueSlice = createSlice({
         };
         
         if (Array.isArray(action.payload)) {
-          state.board.columns = defaultColumns;
+          state.board.columns = { ...defaultColumns };
           action.payload.forEach(issue => {
-            const status = issue.status as keyof BoardColumns;
-            if (state.board.columns[status]) {
-              state.board.columns[status].push(issue);
-            } else {
-              state.board.columns.TODO.push(issue);
+            const colKey = issue.workflowStatusId || issue.status || 'TODO';
+            if (!state.board.columns[colKey]) {
+              state.board.columns[colKey] = [];
             }
+            state.board.columns[colKey].push(issue);
           });
         } else if (action.payload && typeof action.payload === 'object') {
           const payloadObj = action.payload as unknown as Record<string, Issue[]>;
-          state.board.columns = {
-            TODO: payloadObj.TODO || [],
-            IN_PROGRESS: payloadObj.IN_PROGRESS || [],
-            IN_PREVIEW: payloadObj.IN_PREVIEW || [],
-            DONE: payloadObj.DONE || [],
-          };
+          state.board.columns = { ...defaultColumns, ...payloadObj };
         } else {
           state.board.columns = defaultColumns;
         }
