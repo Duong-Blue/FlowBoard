@@ -60,4 +60,5 @@ model Issue {
   @@index([projectId, createdAt])
   @@index([projectId, dueDate])
   @@index([parentId])
+  @@index([projectId, workflowStatusId, order])
 }
