@@ -21,7 +21,7 @@ import { PageLoader } from '../../components/shared/PageLoader';
 import { BoardColumn } from './components/BoardColumn';
 import { DragOverlayCard } from './components/DragOverlayCard';
 import type { Issue, IssueStatus, Member, WorkflowStatus } from '../../store/types';
-import { useGetWorkflowQuery } from '../../store/api/workflowsApi';
+import { useProjectWorkflow, DEFAULT_CATEGORY_COLORS } from '@/hooks/useProjectWorkflow';
 import { toast } from 'sonner';
 import { LayoutList, LayoutDashboard, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -33,7 +33,7 @@ export default function BoardPage() {
   const { t } = useTranslation('issues');
   const { orgId } = useParams<{ orgId: string }>();
   const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
-  const { data: workflow, isLoading: isWorkflowLoading } = useGetWorkflowQuery(projectId || '', { skip: !projectId });
+  const { statuses, isLoading: isWorkflowLoading } = useProjectWorkflow(projectId);
   const { isConnected } = useBoardRealtime(projectId);
   const dispatch = useAppDispatch();
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
@@ -44,18 +44,18 @@ export default function BoardPage() {
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
 
   const defaultStatuses: WorkflowStatus[] = useMemo(() => [
-    { id: 'TODO', workflowId: '', name: t('columns.todo'), category: 'TODO', order: 0 },
-    { id: 'IN_PROGRESS', workflowId: '', name: t('columns.inProgress'), category: 'IN_PROGRESS', order: 1 },
-    { id: 'IN_PREVIEW', workflowId: '', name: t('columns.inPreview'), category: 'IN_PREVIEW', order: 2 },
-    { id: 'DONE', workflowId: '', name: t('columns.done'), category: 'DONE', order: 3 },
+    { id: 'TODO', workflowId: '', name: t('columns.todo'), category: 'TODO', order: 0, color: DEFAULT_CATEGORY_COLORS.TODO },
+    { id: 'IN_PROGRESS', workflowId: '', name: t('columns.inProgress'), category: 'IN_PROGRESS', order: 1, color: DEFAULT_CATEGORY_COLORS.IN_PROGRESS },
+    { id: 'IN_PREVIEW', workflowId: '', name: t('columns.inPreview'), category: 'IN_PREVIEW', order: 2, color: DEFAULT_CATEGORY_COLORS.IN_PREVIEW },
+    { id: 'DONE', workflowId: '', name: t('columns.done'), category: 'DONE', order: 3, color: DEFAULT_CATEGORY_COLORS.DONE },
   ], [t]);
 
   const activeStatuses = useMemo(() => {
-    if (workflow?.statuses && workflow.statuses.length > 0) {
-      return [...workflow.statuses].sort((a, b) => a.order - b.order);
+    if (statuses && statuses.length > 0) {
+      return statuses;
     }
     return defaultStatuses;
-  }, [workflow?.statuses, defaultStatuses]);
+  }, [statuses, defaultStatuses]);
 
   const allIssues = useMemo(() => Object.values(columns).flat(), [columns]);
 
@@ -136,7 +136,7 @@ export default function BoardPage() {
     
     // Determine target column
     if (overData?.type === 'Column') {
-      targetStatusObj = overData.status as WorkflowStatus;
+      targetStatusObj = (overData.status as WorkflowStatus) || activeStatuses.find(s => s.id === overData.columnId || s.category === overData.columnId);
     } else if (overData?.type === 'Issue') {
       targetStatusObj = activeStatuses.find(s => s.id === overData.issue.workflowStatusId) || activeStatuses.find(s => s.category === overData.issue.status);
     } else {

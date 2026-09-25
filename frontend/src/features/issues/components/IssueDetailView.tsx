@@ -53,18 +53,19 @@ export function IssueDetailView({ issue, members, canDelete, onUpdate, onDelete 
     }
   };
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (newStatus === issue.status) return;
+  const handleStatusChange = async (newStatus: string, newWorkflowStatusId?: string) => {
+    if (newStatus === issue.status && (!newWorkflowStatusId || newWorkflowStatusId === issue.workflowStatusId)) return;
     try {
       await dispatch(
         updateIssueStatus({
           projectId: issue.projectId,
           issueId: issue.id,
           status: newStatus,
+          workflowStatusId: newWorkflowStatusId,
         })
       ).unwrap();
       toast.success(t('detail.statusUpdated', 'Status updated successfully'));
-      await onUpdate({ status: newStatus });
+      await onUpdate({ status: newStatus, workflowStatusId: newWorkflowStatusId });
     } catch (err: unknown) {
       const error = err as any;
       const errorMsg =

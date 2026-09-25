@@ -1,15 +1,17 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type Issue, type IssueUser, type IssueType, type DeadlineState } from '@/store/types';
 import { SemanticBadge } from '@/components/shared/SemanticBadge';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDate, getDeadlineState } from '@/lib/dateUtils';
+import { useProjectWorkflow } from '@/hooks/useProjectWorkflow';
 
 interface IssueMetadataSidebarProps {
   issue: Issue;
   members: IssueUser[];
   onUpdate: (data: Partial<Issue>) => void;
-  onStatusChange?: (status: string) => void;
+  onStatusChange?: (status: string, workflowStatusId?: string) => void;
 }
 
 const TYPE_OPTIONS: IssueType[] = ['TASK', 'BUG', 'FEATURE', 'IMPROVEMENT'];
@@ -35,9 +37,32 @@ const getDeadlineBadgeStatus = (state: DeadlineState) => {
 
 export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange }: IssueMetadataSidebarProps) {
   const { t } = useTranslation(['issues', 'common']);
+  const { statuses, getStatusById, getStatusColor, getAllowedTransitions } = useProjectWorkflow(issue.projectId);
+
   const reporter = members.find(m => m.id === issue.reporterId) || issue.reporter;
   const assignee = members.find(m => m.id === issue.assigneeId) || issue.assignee;
   const deadlineState = issue.deadlineState || getDeadlineState(issue.status, issue.dueDate, issue.completedAt);
+
+  const currentWfStatus = getStatusById(issue.workflowStatusId) || getStatusById(issue.status);
+  const currentStatusId = currentWfStatus?.id || issue.workflowStatusId || issue.status;
+
+  const allowedTransitions = useMemo(() => {
+    return getAllowedTransitions(currentStatusId);
+  }, [getAllowedTransitions, currentStatusId]);
+
+  const transitionOptions = useMemo(() => {
+    if (statuses.length === 0) return [];
+    if (allowedTransitions.length === 0) return statuses;
+    const hasCurrent = allowedTransitions.some((s) => s.id === currentStatusId);
+    if (!hasCurrent && currentWfStatus) {
+      return [currentWfStatus, ...allowedTransitions];
+    }
+    return allowedTransitions;
+  }, [statuses, allowedTransitions, currentStatusId, currentWfStatus]);
+
+  const activeStatusObj = currentWfStatus || getStatusById(currentStatusId);
+  const activeStatusName = activeStatusObj?.name || issue.status;
+  const activeStatusColor = getStatusColor(currentStatusId);
 
   return (
     <div className="space-y-6">
@@ -69,28 +94,61 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
       <div>
         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t('detail.status')}</h4>
         <Select 
-          value={issue.status} 
+          value={currentStatusId} 
           onValueChange={(val) => {
+            const selectedWfStatus = getStatusById(val) || statuses.find((s) => s.id === val || s.category === val);
+            const targetCategory = selectedWfStatus?.category || selectedWfStatus?.name || val;
+            const targetWfId = selectedWfStatus?.id || val;
+
             if (onStatusChange) {
-              onStatusChange(val);
+              onStatusChange(targetCategory, targetWfId);
             } else {
-              onUpdate({ status: val });
+              onUpdate({ status: targetCategory, workflowStatusId: targetWfId });
             }
           }}
         >
           <SelectTrigger className="w-full h-8 px-2 border-transparent hover:border-border hover:bg-slate-50 justify-start">
-            <SemanticBadge status={issue.status === 'TODO' ? 'pending' : issue.status === 'DONE' ? 'active' : 'member'}>
-              {issue.status}
-            </SemanticBadge>
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border"
+              style={{
+                backgroundColor: `${activeStatusColor}20`,
+                color: activeStatusColor,
+                borderColor: `${activeStatusColor}40`,
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: activeStatusColor }} />
+              <span>{activeStatusName}</span>
+            </span>
           </SelectTrigger>
           <SelectContent>
-            {STATUS_OPTIONS.map(status => (
-              <SelectItem key={status} value={status}>
-                <SemanticBadge status={status === 'TODO' ? 'pending' : status === 'DONE' ? 'active' : 'member'}>
-                  {status}
-                </SemanticBadge>
-              </SelectItem>
-            ))}
+            {transitionOptions.length > 0 ? (
+              transitionOptions.map((st) => {
+                const color = st.color || getStatusColor(st.id);
+                return (
+                  <SelectItem key={st.id} value={st.id}>
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border"
+                      style={{
+                        backgroundColor: `${color}20`,
+                        color: color,
+                        borderColor: `${color}40`,
+                      }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                      <span>{st.name}</span>
+                    </span>
+                  </SelectItem>
+                );
+              })
+            ) : (
+              STATUS_OPTIONS.map(status => (
+                <SelectItem key={status} value={status}>
+                  <SemanticBadge status={status === 'TODO' ? 'pending' : status === 'DONE' ? 'active' : 'member'}>
+                    {status}
+                  </SemanticBadge>
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       </div>

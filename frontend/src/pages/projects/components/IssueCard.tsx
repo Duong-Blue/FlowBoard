@@ -5,6 +5,7 @@ import { useAppSelector } from '../../../store';
 import type { Issue } from '../../../store/types';
 import { SemanticBadge } from '../../../components/shared/SemanticBadge';
 import { getDeadlineState, formatDate } from '@/lib/dateUtils';
+import { useProjectWorkflow } from '@/hooks/useProjectWorkflow';
 import { Calendar, CheckSquare } from 'lucide-react';
 
 interface IssueCardProps {
@@ -17,6 +18,8 @@ export function IssueCard({ issue, disabled }: IssueCardProps) {
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
   const projectList = useAppSelector((state) => state.project.list);
   const navigate = useNavigate();
+  const { getStatusById, getStatusColor } = useProjectWorkflow(issue.projectId || projectId);
+
   const {
     attributes,
     listeners,
@@ -59,6 +62,10 @@ export function IssueCard({ issue, disabled }: IssueCardProps) {
     }
   };
 
+  const statusObj = issue.workflowStatus || getStatusById(issue.workflowStatusId) || getStatusById(issue.status);
+  const statusName = statusObj?.name || issue.status;
+  const statusColor = getStatusColor(issue.workflowStatusId || issue.status);
+
   const deadlineState = issue.deadlineState || getDeadlineState(issue.status, issue.dueDate, issue.completedAt);
 
   let deadlineBadgeStyle = 'bg-slate-100 text-slate-600 border-slate-200';
@@ -71,7 +78,14 @@ export function IssueCard({ issue, disabled }: IssueCardProps) {
   }
 
   const totalSubtasks = issue.subtaskMetrics?.total ?? issue.subtasks?.length ?? 0;
-  const completedSubtasks = issue.subtaskMetrics?.completed ?? issue.subtasks?.filter((st) => st.status === 'DONE').length ?? 0;
+  const completedSubtasks = issue.subtaskMetrics?.completed ?? issue.subtasks?.filter((st) => {
+    if (st.workflowStatusId) {
+      const stWf = getStatusById(st.workflowStatusId);
+      if (stWf) return stWf.category === 'DONE';
+    }
+    if (st.workflowStatus?.category) return st.workflowStatus.category === 'DONE';
+    return st.status === 'DONE' || st.status === 'COMPLETED';
+  }).length ?? 0;
 
   return (
     <div
@@ -83,11 +97,24 @@ export function IssueCard({ issue, disabled }: IssueCardProps) {
       className={`bg-white p-3 rounded-md shadow-sm border border-slate-200 cursor-grab active:cursor-grabbing hover:border-slate-300 transition-colors ${disabled ? 'cursor-default active:cursor-default' : ''}`}
     >
       <div className="flex justify-between items-start mb-2">
-        {issue.key ? (
-          <span className="text-xs font-mono font-semibold text-slate-500">{issue.key}</span>
-        ) : (
-          <span />
-        )}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {issue.key && (
+            <span className="text-xs font-mono font-semibold text-slate-500">{issue.key}</span>
+          )}
+          {statusName && (
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border"
+              style={{
+                backgroundColor: `${statusColor}20`,
+                color: statusColor,
+                borderColor: `${statusColor}40`,
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: statusColor }} />
+              <span>{statusName}</span>
+            </span>
+          )}
+        </div>
         <SemanticBadge status={
           issue.priority === 'HIGH' ? 'admin' :
           issue.priority === 'MEDIUM' ? 'member' : 'guest'

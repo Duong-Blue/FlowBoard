@@ -8,6 +8,7 @@ import { createSubtask, updateIssueStatus, deleteSubtask } from '@/store/slices/
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useProjectWorkflow } from '@/hooks/useProjectWorkflow';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ export interface SubtaskSectionProps {
 export function SubtaskSection({ projectId, issueId, subtasks: propSubtasks }: SubtaskSectionProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { orgId, projectKey } = useParams<{ orgId?: string; projectKey?: string }>();
+  const { getStatusById, getDefaultStatusId } = useProjectWorkflow(projectId);
   const [newTitle, setNewTitle] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [subtaskToDelete, setSubtaskToDelete] = React.useState<Issue | null>(null);
@@ -37,10 +39,19 @@ export function SubtaskSection({ projectId, issueId, subtasks: propSubtasks }: S
 
   const subtasks = propSubtasks ?? issueFromStore?.subtasks ?? [];
 
+  const isSubtaskDone = React.useCallback((s: Issue) => {
+    if (s.workflowStatusId) {
+      const wfStatus = getStatusById(s.workflowStatusId);
+      if (wfStatus) return wfStatus.category === 'DONE';
+    }
+    if (s.workflowStatus?.category) {
+      return s.workflowStatus.category === 'DONE';
+    }
+    return s.status === 'DONE' || s.status === 'COMPLETED';
+  }, [getStatusById]);
+
   const total = subtasks.length;
-  const completed = subtasks.filter(
-    (s) => s.status === 'DONE' || s.status === 'COMPLETED'
-  ).length;
+  const completed = subtasks.filter(isSubtaskDone).length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   const handleCreateSubtask = async (e?: React.FormEvent) => {
@@ -50,11 +61,16 @@ export function SubtaskSection({ projectId, issueId, subtasks: propSubtasks }: S
 
     try {
       setIsSubmitting(true);
+      const defaultTodoStatusId = getDefaultStatusId('TODO');
       await dispatch(
         createSubtask({
           projectId,
           issueId,
-          data: { title: titleTrimmed },
+          data: {
+            title: titleTrimmed,
+            status: 'TODO',
+            workflowStatusId: defaultTodoStatusId,
+          },
         })
       ).unwrap();
       setNewTitle('');
@@ -66,14 +82,16 @@ export function SubtaskSection({ projectId, issueId, subtasks: propSubtasks }: S
   };
 
   const handleToggleStatus = async (subtask: Issue) => {
-    const isDone = subtask.status === 'DONE' || subtask.status === 'COMPLETED';
+    const isDone = isSubtaskDone(subtask);
     const newStatus = isDone ? 'TODO' : 'DONE';
+    const newWfStatusId = getDefaultStatusId(newStatus);
     try {
       await dispatch(
         updateIssueStatus({
           projectId,
           issueId: subtask.id,
           status: newStatus,
+          workflowStatusId: newWfStatusId,
         })
       ).unwrap();
     } catch (err) {
@@ -139,7 +157,7 @@ export function SubtaskSection({ projectId, issueId, subtasks: propSubtasks }: S
       {subtasks.length > 0 && (
         <ul className="space-y-1 divide-y divide-border/40 rounded-md border border-border/50 bg-card p-1">
           {subtasks.map((subtask) => {
-            const isDone = subtask.status === 'DONE' || subtask.status === 'COMPLETED';
+            const isDone = isSubtaskDone(subtask);
             const assigneeName = subtask.assignee?.displayName || 
               (subtask.assignee?.firstName ? `${subtask.assignee.firstName} ${subtask.assignee.lastName || ''}`.trim() : subtask.assignee?.email);
             const initials = assigneeName

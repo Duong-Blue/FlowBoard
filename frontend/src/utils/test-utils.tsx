@@ -12,6 +12,7 @@ import orgReducer from '../store/slices/orgSlice';
 import projectReducer from '../store/slices/projectSlice';
 import issueReducer from '../store/slices/issueSlice';
 import notificationReducer from '../store/slices/notificationSlice';
+import { workflowsApi } from '../store/api/workflowsApi';
 import type { RootState } from '../store/types';
 import { Toaster } from 'sonner';
 import '../i18n/config';
@@ -34,7 +35,10 @@ export function renderWithProviders(
         project: projectReducer,
         issue: issueReducer,
         notification: notificationReducer,
+        [workflowsApi.reducerPath]: workflowsApi.reducer,
       },
+      middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware().concat(workflowsApi.middleware),
       preloadedState: preloadedState as any,
     }),
     route = '/',

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store';
@@ -15,8 +15,9 @@ import { IssueFormDialog } from './components/IssueFormDialog';
 import { SavedViewsDropdown } from '../../features/views/SavedViewsDropdown';
 import { toast } from 'sonner';
 import { Plus, Search, Edit2, Trash2, LayoutList, LayoutDashboard, ListTree, List, CornerDownRight, Calendar as CalendarIcon } from 'lucide-react';
-import type { Issue, IssueUser, Member } from '../../store/types';
+import type { Issue, IssueUser, Member, WorkflowStatus } from '../../store/types';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
+import { useProjectWorkflow, DEFAULT_CATEGORY_COLORS } from '@/hooks/useProjectWorkflow';
 import NotFound from '../NotFound';
 
 export interface TreeIssueItem {
@@ -61,6 +62,7 @@ export default function IssueListPage() {
   const { t } = useTranslation(['issues', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
   const { project, projectId, loading: projectLoading, is404, loading: resolvedLoading } = useResolvedProject();
+  const { statuses, getStatusById, getStatusColor } = useProjectWorkflow(projectId);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
@@ -70,6 +72,18 @@ export default function IssueListPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingIssue, setEditingIssue] = useState<Issue | undefined>();
   const [viewMode, setViewMode] = useState<'hierarchical' | 'flat'>('hierarchical');
+
+  const defaultStatuses: WorkflowStatus[] = useMemo(() => [
+    { id: 'TODO', workflowId: '', name: t('columns.todo'), category: 'TODO', order: 0, color: DEFAULT_CATEGORY_COLORS.TODO },
+    { id: 'IN_PROGRESS', workflowId: '', name: t('columns.inProgress'), category: 'IN_PROGRESS', order: 1, color: DEFAULT_CATEGORY_COLORS.IN_PROGRESS },
+    { id: 'IN_PREVIEW', workflowId: '', name: t('columns.inPreview'), category: 'IN_PREVIEW', order: 2, color: DEFAULT_CATEGORY_COLORS.IN_PREVIEW },
+    { id: 'DONE', workflowId: '', name: t('columns.done'), category: 'DONE', order: 3, color: DEFAULT_CATEGORY_COLORS.DONE },
+  ], [t]);
+
+  const activeStatuses = useMemo(() => {
+    if (statuses && statuses.length > 0) return statuses;
+    return defaultStatuses;
+  }, [statuses, defaultStatuses]);
 
   const currentMember = members.find((m) => m.userId === currentUser?.id);
   const userRole = currentMember?.role;
@@ -252,9 +266,11 @@ export default function IssueListPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">{t('board.all')}</SelectItem>
-            <SelectItem value="TODO">{t('columns.todo')}</SelectItem>
-            <SelectItem value="IN_PROGRESS">{t('columns.inProgress')}</SelectItem>
-            <SelectItem value="DONE">{t('columns.done')}</SelectItem>
+            {activeStatuses.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={filters.priority || 'ALL'} onValueChange={(v) => handleFilterChange('priority', v === 'ALL' ? undefined : v)}>
@@ -337,12 +353,27 @@ export default function IssueListPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <SemanticBadge status={
-                        issue.status === 'TODO' ? 'archived' : 
-                        issue.status === 'IN_PROGRESS' ? 'active' : 'owner'
-                      }>
-                        {issue.status}
-                      </SemanticBadge>
+                      {(() => {
+                        const statusMeta = getStatusById(issue.workflowStatusId) || activeStatuses.find(s => s.id === issue.workflowStatusId || s.category === issue.status);
+                        const statusName = statusMeta?.name || issue.workflowStatus?.name || issue.status;
+                        const statusColor = statusMeta?.color || getStatusColor(issue.workflowStatusId || issue.status);
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                            style={{
+                              backgroundColor: `${statusColor}18`,
+                              color: statusColor,
+                              borderColor: `${statusColor}40`,
+                            }}
+                          >
+                            <span
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: statusColor }}
+                            />
+                            {statusName}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3">
                       <SemanticBadge status={

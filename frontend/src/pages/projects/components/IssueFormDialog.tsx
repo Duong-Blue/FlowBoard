@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../../../components/ui/dialog';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -7,6 +8,7 @@ import { Label } from '../../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { type Issue } from '../../../store/types';
 import type { Member } from '../../../store/types';
+import { useProjectWorkflow } from '@/hooks/useProjectWorkflow';
 
 interface IssueFormDialogProps {
   open: boolean;
@@ -14,14 +16,19 @@ interface IssueFormDialogProps {
   issue?: Issue;
   members: Member[];
   onSubmit: (data: Partial<Issue>) => Promise<void>;
+  projectId?: string;
 }
 
-export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }: IssueFormDialogProps) {
+export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit, projectId }: IssueFormDialogProps) {
   const { t } = useTranslation(['issues', 'common']);
+  const params = useParams<{ projectId?: string }>();
+  const effectiveProjectId = projectId || issue?.projectId || params.projectId;
+  const { statuses, getDefaultStatusId } = useProjectWorkflow(effectiveProjectId);
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('TASK');
-  const [status, setStatus] = useState('TODO');
+  const [workflowStatusId, setWorkflowStatusId] = useState('TODO');
   const [priority, setPriority] = useState('MEDIUM');
   const [assigneeId, setAssigneeId] = useState<string>('unassigned');
   const [startDate, setStartDate] = useState('');
@@ -34,14 +41,20 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
       setTitle(issue?.title || '');
       setDescription(issue?.description || '');
       setType(issue?.type || 'TASK');
-      setStatus(issue?.status || 'TODO');
+      const defaultWfId =
+        issue?.workflowStatusId ||
+        (issue?.status ? (statuses.find((s) => s.id === issue.status || s.category === issue.status || s.name === issue.status)?.id) : undefined) ||
+        getDefaultStatusId('TODO') ||
+        statuses[0]?.id ||
+        'TODO';
+      setWorkflowStatusId(defaultWfId);
       setPriority(issue?.priority || 'MEDIUM');
       setAssigneeId(issue?.assigneeId || 'unassigned');
       setStartDate(issue?.startDate ? issue.startDate.split('T')[0] : '');
       setDueDate(issue?.dueDate ? issue.dueDate.split('T')[0] : '');
       setDateError(null);
     }
-  }, [open, issue]);
+  }, [open, issue, statuses, getDefaultStatusId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,11 +69,16 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
     
     setLoading(true);
     try {
+      const selectedWfStatus = statuses.find((s) => s.id === workflowStatusId);
+      const statusValue = selectedWfStatus?.category || selectedWfStatus?.name || (statuses.length === 0 ? workflowStatusId : 'TODO');
+      const finalWfStatusId = selectedWfStatus ? selectedWfStatus.id : (workflowStatusId !== 'TODO' && workflowStatusId !== 'IN_PROGRESS' && workflowStatusId !== 'DONE' ? workflowStatusId : undefined);
+
       await onSubmit({
         title,
         description,
         type,
-        status,
+        status: statusValue,
+        workflowStatusId: finalWfStatusId,
         priority,
         assigneeId: assigneeId === 'unassigned' ? undefined : assigneeId,
         startDate: startDate ? new Date(startDate).toISOString() : undefined,
@@ -118,14 +136,32 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit }
             </div>
             <div className="grid gap-2">
               <Label htmlFor="status">{t('form.statusLabel')}</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={workflowStatusId} onValueChange={setWorkflowStatusId}>
                 <SelectTrigger id="status">
                   <SelectValue placeholder={t('form.statusLabel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TODO">{t('columns.todo')}</SelectItem>
-                  <SelectItem value="IN_PROGRESS">{t('columns.inProgress')}</SelectItem>
-                  <SelectItem value="DONE">{t('columns.done')}</SelectItem>
+                  {statuses.length > 0 ? (
+                    statuses.map((st) => (
+                      <SelectItem key={st.id} value={st.id}>
+                        <div className="flex items-center gap-2">
+                          {st.color && (
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: st.color }}
+                            />
+                          )}
+                          <span>{st.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="TODO">{t('columns.todo')}</SelectItem>
+                      <SelectItem value="IN_PROGRESS">{t('columns.inProgress')}</SelectItem>
+                      <SelectItem value="DONE">{t('columns.done')}</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>

@@ -171,8 +171,11 @@ export const deleteSubtask = createAsyncThunk(
 
 export const updateIssueStatus = createAsyncThunk(
   'issue/updateIssueStatus',
-  async ({ projectId, issueId, status }: { projectId: string; issueId: string; status: string }) => {
-    const response = await api.patch(`/projects/${projectId}/issues/${issueId}`, { status });
+  async ({ projectId, issueId, status, workflowStatusId }: { projectId: string; issueId: string; status?: string; workflowStatusId?: string }) => {
+    const payload: Record<string, any> = {};
+    if (workflowStatusId) payload.workflowStatusId = workflowStatusId;
+    if (status) payload.status = status;
+    const response = await api.patch(`/projects/${projectId}/issues/${issueId}`, payload);
     return response.data;
   }
 );

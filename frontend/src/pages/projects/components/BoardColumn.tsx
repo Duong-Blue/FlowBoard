@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { Issue, WorkflowStatus } from '../../../store/types';
+import { DEFAULT_CATEGORY_COLORS } from '@/hooks/useProjectWorkflow';
 import { IssueCard } from './IssueCard';
 import { SemanticBadge } from '../../../components/shared/SemanticBadge';
 
@@ -23,14 +24,19 @@ export function BoardColumn({ status, issues, disabled }: BoardColumnProps) {
     disabled,
   });
 
+  const statusColor =
+    status.color ||
+    (status.category ? DEFAULT_CATEGORY_COLORS[status.category] : undefined) ||
+    '#6B7280';
+
   return (
     <div className="flex flex-col bg-slate-50/80 rounded-lg border border-slate-200 min-w-[300px] w-[300px] max-h-full">
       <div className="p-3 border-b border-slate-200 flex items-center justify-between bg-slate-100/50 rounded-t-lg">
         <div className="flex items-center gap-2">
-          {status.color && (
+          {statusColor && (
             <span
               className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: status.color }}
+              style={{ backgroundColor: statusColor }}
             />
           )}
           <h3 className="font-semibold text-slate-700 text-sm">{status.name}</h3>

@@ -1,23 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getIssues } from '@/services/issueService';
 import type { Issue } from '@/store/types';
+import { useProjectWorkflow } from '@/hooks/useProjectWorkflow';
 
 interface CalendarBoardProps {
   projectId: string;
   orgId: string;
   projectKey: string;
 }
-
-const STATUS_STYLE: Record<string, { labelKey: string; defaultLabel: string; badge: string }> = {
-  TODO: { labelKey: 'columns.todo', defaultLabel: 'To Do', badge: 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200' },
-  IN_PROGRESS: { labelKey: 'columns.inProgress', defaultLabel: 'In Progress', badge: 'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200' },
-  IN_PREVIEW: { labelKey: 'columns.inPreview', defaultLabel: 'In Preview', badge: 'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200' },
-  DONE: { labelKey: 'columns.done', defaultLabel: 'Done', badge: 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200' },
-};
 
 function formatDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -36,6 +30,7 @@ function parseLocalDate(dateStr?: string | null): Date | null {
 export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardProps) {
   const { t } = useTranslation('issues');
   const navigate = useNavigate();
+  const { statuses, getStatusById, getStatusColor } = useProjectWorkflow(projectId);
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -246,22 +241,40 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
                 {/* Day Issues List */}
                 <div className="flex-1 space-y-1 overflow-y-auto max-h-[140px] pr-0.5 no-scrollbar">
                   {dayIssues.map((issue) => {
-                    const statusConfig = STATUS_STYLE[issue.status as string] || {
-                      labelKey: '',
-                      defaultLabel: issue.status,
-                      badge: 'bg-slate-100 text-slate-700 border-slate-200',
-                    };
+                    const statusMeta = getStatusById(issue.workflowStatusId) || statuses.find(s => s.category === issue.status);
+                    const statusName = statusMeta?.name || issue.workflowStatus?.name || issue.status;
+                    const statusColor = statusMeta?.color || getStatusColor(issue.workflowStatusId || issue.status);
 
                     return (
                       <button
                         key={`${dateKey}-${issue.id}`}
                         type="button"
                         onClick={() => handleIssueClick(issue)}
-                        className={`w-full text-left p-1.5 rounded border text-xs shadow-2xs transition-all hover:scale-[1.01] ${statusConfig.badge}`}
+                        className="w-full text-left p-1.5 rounded border text-xs shadow-2xs transition-all hover:scale-[1.01] bg-white border-slate-200 flex flex-col gap-1"
+                        style={{
+                          borderLeftWidth: '3px',
+                          borderLeftColor: statusColor,
+                        }}
                       >
                         <div className="font-medium truncate flex items-center gap-1">
                           <span className="font-mono text-[10px] opacity-75 shrink-0">{issue.key}</span>
                           <span className="truncate">{issue.title}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0"
+                            style={{
+                              backgroundColor: `${statusColor}18`,
+                              color: statusColor,
+                              borderColor: `${statusColor}40`,
+                            }}
+                          >
+                            <span
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: statusColor }}
+                            />
+                            {statusName}
+                          </span>
                         </div>
                       </button>
                     );
