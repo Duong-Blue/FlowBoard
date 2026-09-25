@@ -36,13 +36,26 @@ describe('IssuesService (Integration)', () => {
 
   beforeEach(async () => {
     // Clean up
-    await prisma.savedView.deleteMany({});
-    await prisma.issue.deleteMany({});
-    await prisma.projectMember.deleteMany({});
-    await prisma.project.deleteMany({});
-    await (prisma as any).organizationMember?.deleteMany({});
-    await prisma.organization.deleteMany({});
-    await prisma.user.deleteMany({});
+    try {
+      await prisma.comment.deleteMany({});
+      await prisma.issueActivity.deleteMany({});
+      await prisma.notification.deleteMany({});
+      await prisma.issueRelation.deleteMany({});
+      await prisma.attachment.deleteMany({});
+      await prisma.savedView.deleteMany({});
+      await prisma.issue.deleteMany({});
+      await prisma.workflowTransition.deleteMany({});
+      await prisma.workflowStatus.deleteMany({});
+      await prisma.workflow.deleteMany({});
+      await prisma.projectMember.deleteMany({});
+      await prisma.project.deleteMany({});
+      await prisma.organizationMember.deleteMany({});
+      await prisma.organization.deleteMany({});
+      await prisma.user.deleteMany({});
+    } catch (err: any) {
+      console.error('CLEANUP ERROR:', err.code, err.message);
+      throw err;
+    }
 
     // Setup users
     const ts = Date.now();
@@ -86,11 +99,13 @@ describe('IssuesService (Integration)', () => {
       data: { name: 'Test Proj', organizationId: orgId, key: 'TEST' },
     });
     projectId = project.id;
+    await service.getOrCreateDefaultWorkflow(projectId);
 
     const otherProject = await prisma.project.create({
       data: { name: 'Other Proj', organizationId: orgId, key: 'OTH' },
     });
     otherProjectId = otherProject.id;
+    await service.getOrCreateDefaultWorkflow(otherProjectId);
 
     // Setup Members
     await prisma.projectMember.createMany({
@@ -192,15 +207,22 @@ describe('IssuesService (Integration)', () => {
     });
 
     it('should allow MEMBER and ADMIN to move issues', async () => {
+      const workflow = await prisma.workflow.findUnique({
+        where: { projectId },
+        include: { statuses: true },
+      });
+      const inProgressStatus = workflow?.statuses.find(s => s.category === IssueStatus.IN_PROGRESS);
+
       await service.moveIssue(
         projectId,
         i1,
         memberId,
-        { status: IssueStatus.IN_PROGRESS },
+        { targetWorkflowStatusId: inProgressStatus?.id },
         ProjectRole.MEMBER,
       );
       const updated1 = await prisma.issue.findUnique({ where: { id: i1 } });
       expect(updated1?.status).toBe(IssueStatus.IN_PROGRESS);
+      expect(updated1?.workflowStatusId).toBe(inProgressStatus?.id);
     });
 
     it('should reorder within the same column (between)', async () => {

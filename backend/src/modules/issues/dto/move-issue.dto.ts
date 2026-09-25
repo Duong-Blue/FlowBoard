@@ -2,8 +2,14 @@ import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { IssueStatus } from '@prisma/client';
 
 export class MoveIssueDto {
+  @IsOptional()
   @IsEnum(IssueStatus)
-  status: IssueStatus;
+  status?: IssueStatus;
+
+  @IsOptional()
+  @IsString()
+  @IsUUID()
+  targetWorkflowStatusId?: string;
 
   @IsOptional()
   @IsString()

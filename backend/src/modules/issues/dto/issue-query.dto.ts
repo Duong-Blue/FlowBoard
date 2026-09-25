@@ -20,6 +20,10 @@ export class IssueQueryDto {
   status?: IssueStatus;
 
   @IsOptional()
+  @IsString()
+  workflowStatusId?: string;
+
+  @IsOptional()
   @IsEnum(IssuePriority)
   priority?: IssuePriority;
 

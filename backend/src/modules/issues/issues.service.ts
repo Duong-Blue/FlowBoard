@@ -38,6 +38,52 @@ export class IssuesService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
+  async getOrCreateDefaultWorkflow(projectId: string) {
+    const existing = await this.prisma.workflow.findUnique({
+      where: { projectId },
+      include: { statuses: true, transitions: true },
+    });
+    if (existing) return existing;
+
+    return this.prisma.$transaction(async (tx) => {
+      const workflow = await tx.workflow.create({
+        data: { projectId },
+      });
+
+      const todo = await tx.workflowStatus.create({
+        data: { workflowId: workflow.id, name: 'To Do', category: IssueStatus.TODO, order: 0 },
+      });
+      const inProgress = await tx.workflowStatus.create({
+        data: { workflowId: workflow.id, name: 'In Progress', category: IssueStatus.IN_PROGRESS, order: 1 },
+      });
+      const inPreview = await tx.workflowStatus.create({
+        data: { workflowId: workflow.id, name: 'In Preview', category: IssueStatus.IN_PREVIEW, order: 2 },
+      });
+      const done = await tx.workflowStatus.create({
+        data: { workflowId: workflow.id, name: 'Done', category: IssueStatus.DONE, order: 3 },
+      });
+
+      const transitionsData = [
+        { workflowId: workflow.id, fromStatusId: null, toStatusId: todo.id },
+        { workflowId: workflow.id, fromStatusId: todo.id, toStatusId: inProgress.id },
+        { workflowId: workflow.id, fromStatusId: inProgress.id, toStatusId: todo.id },
+        { workflowId: workflow.id, fromStatusId: inProgress.id, toStatusId: inPreview.id },
+        { workflowId: workflow.id, fromStatusId: inProgress.id, toStatusId: done.id },
+        { workflowId: workflow.id, fromStatusId: inPreview.id, toStatusId: inProgress.id },
+        { workflowId: workflow.id, fromStatusId: inPreview.id, toStatusId: done.id },
+        { workflowId: workflow.id, fromStatusId: done.id, toStatusId: todo.id },
+        { workflowId: workflow.id, fromStatusId: done.id, toStatusId: inProgress.id },
+      ];
+
+      await tx.workflowTransition.createMany({ data: transitionsData });
+
+      return tx.workflow.findUniqueOrThrow({
+        where: { id: workflow.id },
+        include: { statuses: true, transitions: true },
+      });
+    });
+  }
+
   private computeDeadlineState(
     status: IssueStatus,
     dueDate: Date | null,
@@ -114,46 +160,29 @@ export class IssuesService {
   }
 
   private async validateStatusTransition(
-    currentStatus: IssueStatus,
-    targetStatus: IssueStatus,
+    workflowId: string,
+    currentStatusId: string | null,
+    targetStatusId: string,
+    targetCategory: IssueStatus,
     userRole: ProjectRole,
     hasActiveBlockers: boolean,
     isSubtask: boolean = false,
   ): Promise<void> {
-    if (currentStatus === targetStatus) return;
+    if (currentStatusId === targetStatusId) return;
 
-    const allowed: Record<IssueStatus, IssueStatus[]> = {
-      [IssueStatus.TODO]: isSubtask
-        ? [IssueStatus.IN_PROGRESS, IssueStatus.DONE]
-        : [IssueStatus.IN_PROGRESS],
-      [IssueStatus.IN_PROGRESS]: [
-        IssueStatus.TODO,
-        IssueStatus.IN_PREVIEW,
-        IssueStatus.DONE,
-      ],
-      [IssueStatus.IN_PREVIEW]: [IssueStatus.IN_PROGRESS, IssueStatus.DONE],
-      [IssueStatus.DONE]: isSubtask
-        ? [IssueStatus.TODO, IssueStatus.IN_PROGRESS]
-        : [IssueStatus.IN_PROGRESS],
-    };
+    const transition = await this.prisma.workflowTransition.findFirst({
+      where: {
+        workflowId,
+        fromStatusId: currentStatusId,
+        toStatusId: targetStatusId,
+      },
+    });
 
-    if (!allowed[currentStatus].includes(targetStatus)) {
-      throw new BadRequestException(
-        `Invalid status transition from ${currentStatus} to ${targetStatus}`,
-      );
+    if (!transition) {
+      throw new BadRequestException('Invalid status transition');
     }
 
-    if (targetStatus === IssueStatus.DONE) {
-      if (
-        currentStatus === IssueStatus.IN_PROGRESS &&
-        userRole !== ProjectRole.ADMIN &&
-        !isSubtask
-      ) {
-        throw new BadRequestException(
-          'Direct transition from IN_PROGRESS to DONE requires ADMIN role',
-        );
-      }
-
+    if (targetCategory === IssueStatus.DONE) {
       if (hasActiveBlockers) {
         throw new BadRequestException(
           'Cannot move issue to DONE while it is blocked by unresolved issues',
@@ -197,13 +226,21 @@ export class IssuesService {
     if (allDone) {
       const parent = await tx.issue.findUnique({
         where: { id: parentId },
-        select: { id: true, status: true },
+        select: { id: true, status: true, projectId: true },
       });
 
       if (parent && parent.status !== IssueStatus.DONE) {
+        const workflow = await tx.workflow.findUnique({
+          where: { projectId: parent.projectId },
+          include: { statuses: true },
+        });
+
+        const doneStatus = workflow?.statuses.find(s => s.category === IssueStatus.DONE);
+        const targetWorkflowStatusId = doneStatus ? doneStatus.id : null;
+
         await tx.issue.update({
           where: { id: parent.id },
-          data: { status: IssueStatus.DONE, completedAt: new Date() },
+          data: { status: IssueStatus.DONE, workflowStatusId: targetWorkflowStatusId, completedAt: new Date() },
         });
 
         await tx.issueActivity.create({
@@ -214,6 +251,7 @@ export class IssuesService {
             metadata: {
               from: parent.status,
               to: IssueStatus.DONE,
+              toWorkflowStatusId: targetWorkflowStatusId,
               autoCompleted: true,
             },
           },
@@ -238,6 +276,25 @@ export class IssuesService {
       await this.validateAssignee(projectId, dto.assigneeId);
     }
 
+    const workflow = await this.getOrCreateDefaultWorkflow(projectId);
+    let targetWorkflowStatusId = dto.workflowStatusId;
+    let targetCategory = dto.status;
+
+    if (targetWorkflowStatusId) {
+      const ws = workflow.statuses.find((s) => s.id === targetWorkflowStatusId);
+      if (!ws) throw new BadRequestException('Invalid workflowStatusId');
+      targetCategory = ws.category;
+    } else if (targetCategory) {
+      const ws = workflow.statuses.find((s) => s.category === targetCategory);
+      if (!ws) throw new BadRequestException(`No workflow status for category ${targetCategory}`);
+      targetWorkflowStatusId = ws.id;
+    } else {
+      const ws = workflow.statuses.find((s) => s.category === IssueStatus.TODO);
+      if (!ws) throw new BadRequestException('No default TODO status found');
+      targetWorkflowStatusId = ws.id;
+      targetCategory = ws.category;
+    }
+
     const createdIssue = await this.prisma.$transaction(async (tx) => {
       const project = await tx.project.update({
         where: { id: projectId },
@@ -247,10 +304,8 @@ export class IssuesService {
 
       const issueKey = `${project.key}-${project.issueSequence}`;
 
-      const status = dto.status || IssueStatus.TODO;
-
       const lastIssue = await tx.issue.findFirst({
-        where: { projectId, status },
+        where: { projectId, workflowStatusId: targetWorkflowStatusId },
         orderBy: { order: 'desc' },
         select: { order: true },
       });
@@ -263,7 +318,8 @@ export class IssuesService {
           key: issueKey,
           title: dto.title,
           description: dto.description || null,
-          status,
+          status: targetCategory,
+          workflowStatusId: targetWorkflowStatusId,
           type: dto.type || IssueType.TASK,
           order,
           priority: dto.priority || IssuePriority.MEDIUM,
@@ -273,6 +329,7 @@ export class IssuesService {
         include: {
           reporter: { select: USER_SELECT },
           assignee: { select: USER_SELECT },
+          workflowStatus: true,
         },
       });
 
@@ -328,6 +385,10 @@ export class IssuesService {
 
     if (query.status) {
       where.status = query.status;
+    }
+
+    if (query.workflowStatusId) {
+      where.workflowStatusId = query.workflowStatusId;
     }
 
     if (query.priority) {
@@ -428,6 +489,7 @@ export class IssuesService {
         include: {
           reporter: { select: USER_SELECT },
           assignee: { select: USER_SELECT },
+          workflowStatus: true,
         },
       }),
       this.prisma.issue.count({ where }),
@@ -452,6 +514,7 @@ export class IssuesService {
       include: {
         reporter: { select: USER_SELECT },
         assignee: { select: USER_SELECT },
+        workflowStatus: true,
       },
     });
 
@@ -529,6 +592,7 @@ export class IssuesService {
       include: {
         reporter: { select: USER_SELECT },
         assignee: { select: USER_SELECT },
+        workflowStatus: true,
       },
     });
 
@@ -564,8 +628,9 @@ export class IssuesService {
       throw new ForbiddenException('Insufficient permissions to move issues');
     }
 
+    const workflow = await this.getOrCreateDefaultWorkflow(projectId);
+
     const movedIssue = await this.prisma.$transaction(async (tx) => {
-      // Lock the project to serialize concurrent moves within the same project
       await tx.$queryRaw`SELECT 1 FROM "Project" WHERE id = ${projectId} FOR UPDATE`;
 
       const issue = await tx.issue.findUnique({ where: { id: issueId } });
@@ -574,6 +639,21 @@ export class IssuesService {
       }
       if (issue.projectId !== projectId) {
         throw new ForbiddenException('Issue belongs to a different project');
+      }
+
+      let targetWorkflowStatusId = dto.targetWorkflowStatusId;
+      let targetCategory = dto.status;
+
+      if (targetWorkflowStatusId) {
+        const ws = workflow.statuses.find((s) => s.id === targetWorkflowStatusId);
+        if (!ws) throw new BadRequestException('Invalid targetWorkflowStatusId');
+        targetCategory = ws.category;
+      } else if (targetCategory) {
+        const ws = workflow.statuses.find((s) => s.category === targetCategory);
+        if (!ws) throw new BadRequestException(`No workflow status for category ${targetCategory}`);
+        targetWorkflowStatusId = ws.id;
+      } else {
+        throw new BadRequestException('Must provide targetWorkflowStatusId or status');
       }
 
       let a: string | null = null;
@@ -591,7 +671,7 @@ export class IssuesService {
         }
         if (
           afterIssue.projectId !== projectId ||
-          afterIssue.status !== dto.status
+          afterIssue.workflowStatusId !== targetWorkflowStatusId
         ) {
           throw new BadRequestException(
             'afterIssueId invalid (wrong project or target status)',
@@ -612,7 +692,7 @@ export class IssuesService {
         }
         if (
           beforeIssue.projectId !== projectId ||
-          beforeIssue.status !== dto.status
+          beforeIssue.workflowStatusId !== targetWorkflowStatusId
         ) {
           throw new BadRequestException(
             'beforeIssueId invalid (wrong project or target status)',
@@ -623,7 +703,7 @@ export class IssuesService {
 
       if (!dto.afterIssueId && !dto.beforeIssueId) {
         const lastIssue = await tx.issue.findFirst({
-          where: { projectId, status: dto.status },
+          where: { projectId, workflowStatusId: targetWorkflowStatusId },
           orderBy: { order: 'desc' },
           select: { order: true },
         });
@@ -645,48 +725,54 @@ export class IssuesService {
       }
 
       let completedAt: Date | null | undefined = undefined;
-      if (issue.status !== dto.status) {
-        if (dto.status === IssueStatus.DONE) {
+      if (issue.workflowStatusId !== targetWorkflowStatusId) {
+        if (targetCategory === IssueStatus.DONE) {
           completedAt = new Date();
         } else if (issue.status === IssueStatus.DONE) {
           completedAt = null;
         }
       }
 
+      if (issue.workflowStatusId !== targetWorkflowStatusId) {
+        const hasBlockers = await this.checkHasActiveBlockers(issueId);
+        const isSubtask = issue.parentId !== null;
+        await this.validateStatusTransition(
+          workflow.id,
+          issue.workflowStatusId,
+          targetWorkflowStatusId,
+          targetCategory,
+          userRole,
+          hasBlockers,
+          isSubtask,
+        );
+      }
+
       const updatedIssue = await tx.issue.update({
         where: { id: issueId },
         data: {
-          status: dto.status,
+          status: targetCategory,
+          workflowStatusId: targetWorkflowStatusId,
           order: newOrder,
           completedAt,
         },
         include: {
           reporter: { select: USER_SELECT },
           assignee: { select: USER_SELECT },
+          workflowStatus: true,
         },
       });
 
-      if (issue.status !== dto.status) {
-        const hasBlockers = await this.checkHasActiveBlockers(issueId);
-        const isSubtask = issue.parentId !== null;
-        await this.validateStatusTransition(
-          issue.status,
-          dto.status,
-          userRole,
-          hasBlockers,
-          isSubtask,
-        );
-
+      if (issue.workflowStatusId !== targetWorkflowStatusId) {
         await tx.issueActivity.create({
           data: {
             issueId,
             actorId,
             type: 'STATUS_CHANGED',
-            metadata: { from: issue.status, to: dto.status },
+            metadata: { from: issue.status, to: targetCategory, fromWorkflowStatusId: issue.workflowStatusId, toWorkflowStatusId: targetWorkflowStatusId },
           },
         });
 
-        if (dto.status === IssueStatus.DONE && issue.parentId) {
+        if (targetCategory === IssueStatus.DONE && issue.parentId) {
           await this.handleParentAutoComplete(
             tx,
             issueId,
@@ -732,10 +818,28 @@ export class IssuesService {
       await this.validateAssignee(projectId, dto.assigneeId);
     }
 
+    const workflow = await this.getOrCreateDefaultWorkflow(projectId);
+
+    let targetWorkflowStatusId = dto.workflowStatusId;
+    let targetCategory = dto.status;
+    let willChangeStatus = false;
+
+    if (targetWorkflowStatusId && targetWorkflowStatusId !== oldIssue.workflowStatusId) {
+      willChangeStatus = true;
+      const ws = workflow.statuses.find((s) => s.id === targetWorkflowStatusId);
+      if (!ws) throw new BadRequestException('Invalid workflowStatusId');
+      targetCategory = ws.category;
+    } else if (targetCategory && targetCategory !== oldIssue.status) {
+      willChangeStatus = true;
+      const ws = workflow.statuses.find((s) => s.category === targetCategory);
+      if (!ws) throw new BadRequestException(`No workflow status for category ${targetCategory}`);
+      targetWorkflowStatusId = ws.id;
+    }
+
     const updatedIssue = await this.prisma.$transaction(async (tx) => {
       let completedAt: Date | null | undefined = undefined;
-      if (dto.status !== undefined && dto.status !== oldIssue.status) {
-        if (dto.status === IssueStatus.DONE) {
+      if (willChangeStatus) {
+        if (targetCategory === IssueStatus.DONE) {
           completedAt = new Date();
         } else if (oldIssue.status === IssueStatus.DONE) {
           completedAt = null;
@@ -747,7 +851,8 @@ export class IssuesService {
         data: {
           title: dto.title,
           description: dto.description,
-          status: dto.status,
+          status: willChangeStatus ? targetCategory : undefined,
+          workflowStatusId: willChangeStatus ? targetWorkflowStatusId : undefined,
           type: dto.type,
           priority: dto.priority,
           assigneeId: dto.assigneeId,
@@ -767,6 +872,7 @@ export class IssuesService {
         include: {
           reporter: { select: USER_SELECT },
           assignee: { select: USER_SELECT },
+          workflowStatus: true,
         },
       });
 
@@ -795,12 +901,14 @@ export class IssuesService {
         });
       }
 
-      if (dto.status !== undefined && dto.status !== oldIssue.status) {
+      if (willChangeStatus) {
         const hasBlockers = await this.checkHasActiveBlockers(issueId);
         const isSubtask = oldIssue.parentId !== null;
         await this.validateStatusTransition(
-          oldIssue.status,
-          dto.status,
+          workflow.id,
+          oldIssue.workflowStatusId,
+          targetWorkflowStatusId!,
+          targetCategory!,
           userRole,
           hasBlockers,
           isSubtask,
@@ -811,11 +919,11 @@ export class IssuesService {
             issueId,
             actorId,
             type: 'STATUS_CHANGED',
-            metadata: { from: oldIssue.status, to: dto.status },
+            metadata: { from: oldIssue.status, to: targetCategory, fromWorkflowStatusId: oldIssue.workflowStatusId, toWorkflowStatusId: targetWorkflowStatusId },
           },
         });
 
-        if (dto.status === IssueStatus.DONE) {
+        if (targetCategory === IssueStatus.DONE) {
           await tx.issueActivity.create({
             data: { issueId, actorId, type: 'ISSUE_COMPLETED', metadata: {} },
           });
@@ -825,7 +933,7 @@ export class IssuesService {
           });
         }
 
-        if (dto.status === IssueStatus.DONE && oldIssue.parentId) {
+        if (targetCategory === IssueStatus.DONE && oldIssue.parentId) {
           await this.handleParentAutoComplete(
             tx,
             issueId,

@@ -30,6 +30,9 @@ describe('IssuesService', () => {
     },
     issueActivity: { create: vi.fn() },
     issueRelation: { findMany: vi.fn() },
+    workflow: { findUnique: vi.fn(), create: vi.fn(), findUniqueOrThrow: vi.fn() },
+    workflowStatus: { create: vi.fn() },
+    workflowTransition: { createMany: vi.fn(), findFirst: vi.fn() },
   };
 
   const mockEventEmitter = {
@@ -55,6 +58,14 @@ describe('IssuesService', () => {
   });
 
   describe('create', () => {
+    beforeEach(() => {
+      mockPrisma.workflow.findUnique.mockResolvedValue({
+        id: 'wf1',
+        statuses: [{ id: 'ws1', category: IssueStatus.TODO }],
+        transitions: [],
+      });
+    });
+
     it('should create issue and format key correctly', async () => {
       mockPrisma.project.update.mockResolvedValue({
         key: 'PROJ',
@@ -221,6 +232,15 @@ describe('IssuesService', () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date('2026-09-21T12:00:00Z'));
       mockPrisma.project.findFirst.mockResolvedValue({ id: 'p1' });
+      mockPrisma.workflow.findUnique.mockResolvedValue({
+        id: 'wf1',
+        statuses: [
+          { id: 'ws-in-progress', category: IssueStatus.IN_PROGRESS },
+          { id: 'ws-done', category: IssueStatus.DONE }
+        ],
+        transitions: [],
+      });
+      mockPrisma.workflowTransition.findFirst.mockResolvedValue({});
     });
 
     afterEach(() => {
@@ -323,10 +343,10 @@ describe('IssuesService', () => {
       expect(mockPrisma.issue.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'parent1' },
-          data: {
+          data: expect.objectContaining({
             status: IssueStatus.DONE,
             completedAt: new Date('2026-09-21T12:00:00Z'),
-          },
+          }),
         }),
       );
     });
@@ -364,9 +384,12 @@ describe('IssuesService', () => {
 
   describe('validateStatusTransition', () => {
     it('should allow valid transitions', async () => {
+      mockPrisma.workflowTransition.findFirst.mockResolvedValue({});
       await expect(
         service['validateStatusTransition'](
-          IssueStatus.TODO,
+          'wf1',
+          'ws1',
+          'ws2',
           IssueStatus.IN_PROGRESS,
           ProjectRole.MEMBER,
           false,
@@ -375,9 +398,12 @@ describe('IssuesService', () => {
     });
 
     it('should throw for invalid transition', async () => {
+      mockPrisma.workflowTransition.findFirst.mockResolvedValue(null);
       await expect(
         service['validateStatusTransition'](
-          IssueStatus.TODO,
+          'wf1',
+          'ws1',
+          'ws2',
           IssueStatus.DONE,
           ProjectRole.MEMBER,
           false,
@@ -386,9 +412,12 @@ describe('IssuesService', () => {
     });
 
     it('should throw for DONE transition if blocked', async () => {
+      mockPrisma.workflowTransition.findFirst.mockResolvedValue({});
       await expect(
         service['validateStatusTransition'](
-          IssueStatus.IN_PROGRESS,
+          'wf1',
+          'ws1',
+          'ws2',
           IssueStatus.DONE,
           ProjectRole.ADMIN,
           true,

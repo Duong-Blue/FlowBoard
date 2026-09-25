@@ -44,6 +44,11 @@ export class RealtimeService {
     this.gateway.server.to(`user:${userId}`).emit(type, event);
   }
 
+  @OnEvent('workflow.updated')
+  handleWorkflowUpdated(payload: { projectId: string }) {
+    this.broadcastToProject(payload.projectId, 'workflow.updated', payload);
+  }
+
   @OnEvent('project.member.removed')
   handleProjectMemberRemoved(payload: { projectId: string; userId: string }) {
     const sockets = this.gateway.userSocketMap.get(payload.userId);
