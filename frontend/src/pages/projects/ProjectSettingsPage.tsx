@@ -133,7 +133,7 @@ export default function ProjectSettingsPage() {
           />
         )}
 
-        {activeTab === 'workflow' && <WorkflowSettingsTab />}
+        {activeTab === 'workflow' && <WorkflowSettingsTab projectId={projectId} isAdmin={isAdmin} />}
       </div>
     </div>
   );
