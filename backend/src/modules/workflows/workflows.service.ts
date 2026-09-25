@@ -83,6 +83,10 @@ export class WorkflowsService {
       throw new BadRequestException('fallbackStatusId is required');
     }
 
+    if (statusId === fallbackStatusId) {
+      throw new BadRequestException('fallbackStatusId cannot be the same as the status being deleted');
+    }
+
     const workflow = await this.getWorkflow(projectId);
 
     if (workflow.statuses.length <= 1) {
@@ -101,6 +105,16 @@ export class WorkflowsService {
         data: { workflowStatusId: fallbackStatusId, status: fallbackStatus.category },
       });
 
+      await tx.workflowTransition.deleteMany({
+        where: {
+          workflowId: workflow.id,
+          OR: [
+            { fromStatusId: statusId },
+            { toStatusId: statusId },
+          ],
+        },
+      });
+
       return tx.workflowStatus.delete({
         where: { id: statusId },
       });
@@ -112,6 +126,25 @@ export class WorkflowsService {
 
   async createTransition(projectId: string, dto: CreateTransitionDto) {
     const workflow = await this.getWorkflow(projectId);
+
+    if (dto.fromStatusId === dto.toStatusId) {
+      throw new BadRequestException('Cannot transition to the same status');
+    }
+
+    const fromStatus = workflow.statuses.find(s => s.id === dto.fromStatusId);
+    const toStatus = workflow.statuses.find(s => s.id === dto.toStatusId);
+
+    if (!fromStatus || !toStatus) {
+      throw new BadRequestException('Transition statuses must belong to the workflow');
+    }
+
+    const existing = workflow.transitions.find(
+      t => t.fromStatusId === dto.fromStatusId && t.toStatusId === dto.toStatusId
+    );
+    if (existing) {
+      throw new BadRequestException('Transition already exists');
+    }
+
     const transition = await this.prisma.workflowTransition.create({
       data: {
         workflowId: workflow.id,
@@ -138,6 +171,25 @@ export class WorkflowsService {
   async updateTransitionsMatrix(projectId: string, dto: UpdateTransitionsMatrixDto) {
     const workflow = await this.getWorkflow(projectId);
     
+    if (dto.transitions && dto.transitions.length > 0) {
+      const validStatusIds = new Set(workflow.statuses.map(s => s.id));
+      const seen = new Set<string>();
+
+      for (const t of dto.transitions) {
+        if (!validStatusIds.has(t.fromStatusId) || !validStatusIds.has(t.toStatusId)) {
+          throw new BadRequestException('Transition statuses must belong to the workflow');
+        }
+        if (t.fromStatusId === t.toStatusId) {
+          throw new BadRequestException('Cannot transition to the same status');
+        }
+        const key = `${t.fromStatusId}->${t.toStatusId}`;
+        if (seen.has(key)) {
+          throw new BadRequestException('Duplicate transitions in matrix');
+        }
+        seen.add(key);
+      }
+    }
+
     const result = await this.prisma.$transaction(async (tx) => {
       await tx.workflowTransition.deleteMany({
         where: { workflowId: workflow.id },

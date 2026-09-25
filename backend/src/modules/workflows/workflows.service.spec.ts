@@ -1,12 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WorkflowsService } from './workflows.service';
 import { PrismaService } from '../../database/prisma.service';
 import { IssueStatus } from '@prisma/client';
 import { BadRequestException } from '@nestjs/common';
+import { vi, describe, beforeEach, it, expect } from 'vitest';
 
 describe('WorkflowsService', () => {
   let service: WorkflowsService;
   let prisma: any;
+  let eventEmitter: any;
 
   beforeEach(async () => {
     prisma = {
@@ -32,10 +35,15 @@ describe('WorkflowsService', () => {
       $transaction: vi.fn(async (cb) => cb(prisma)),
     };
 
+    eventEmitter = {
+      emit: vi.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WorkflowsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: EventEmitter2, useValue: eventEmitter },
       ],
     }).compile();
 
@@ -68,6 +76,10 @@ describe('WorkflowsService', () => {
       await expect(service.deleteStatus('p1', 's1', '')).rejects.toThrow(BadRequestException);
     });
 
+    it('should throw if fallbackStatusId is the same as statusId', async () => {
+      await expect(service.deleteStatus('p1', 's1', 's1')).rejects.toThrow(BadRequestException);
+    });
+
     it('should throw if it is the last status', async () => {
       prisma.workflow.findUnique.mockResolvedValue({
         id: 'w1',
@@ -76,7 +88,7 @@ describe('WorkflowsService', () => {
       await expect(service.deleteStatus('p1', 's1', 's2')).rejects.toThrow('last remaining status');
     });
 
-    it('should delete status and reassign issues', async () => {
+    it('should delete status, reassign issues, and delete relations', async () => {
       prisma.workflow.findUnique.mockResolvedValue({
         id: 'w1',
         statuses: [
@@ -91,9 +103,63 @@ describe('WorkflowsService', () => {
         where: { workflowStatusId: 's1' },
         data: { workflowStatusId: 's2', status: IssueStatus.DONE },
       });
+      expect(prisma.workflowTransition.deleteMany).toHaveBeenCalledWith({
+        where: {
+          workflowId: 'w1',
+          OR: [
+            { fromStatusId: 's1' },
+            { toStatusId: 's1' },
+          ],
+        },
+      });
       expect(prisma.workflowStatus.delete).toHaveBeenCalledWith({
         where: { id: 's1' },
       });
+    });
+  });
+
+  describe('createTransition', () => {
+    it('should throw if fromStatusId equals toStatusId', async () => {
+      prisma.workflow.findUnique.mockResolvedValue({ id: 'w1', statuses: [{ id: 's1' }] });
+      await expect(service.createTransition('p1', { fromStatusId: 's1', toStatusId: 's1', name: '' })).rejects.toThrow('Cannot transition to the same status');
+    });
+
+    it('should throw if statuses do not belong to the workflow', async () => {
+      prisma.workflow.findUnique.mockResolvedValue({ id: 'w1', statuses: [{ id: 's1' }] });
+      await expect(service.createTransition('p1', { fromStatusId: 's1', toStatusId: 's2', name: '' })).rejects.toThrow('Transition statuses must belong to the workflow');
+    });
+
+    it('should throw if transition already exists', async () => {
+      prisma.workflow.findUnique.mockResolvedValue({
+        id: 'w1',
+        statuses: [{ id: 's1' }, { id: 's2' }],
+        transitions: [{ fromStatusId: 's1', toStatusId: 's2' }],
+      });
+      await expect(service.createTransition('p1', { fromStatusId: 's1', toStatusId: 's2', name: '' })).rejects.toThrow('Transition already exists');
+    });
+  });
+
+  describe('updateTransitionsMatrix', () => {
+    it('should throw if any status does not belong to the workflow', async () => {
+      prisma.workflow.findUnique.mockResolvedValue({ id: 'w1', statuses: [{ id: 's1' }] });
+      await expect(service.updateTransitionsMatrix('p1', { transitions: [{ fromStatusId: 's1', toStatusId: 's2' }] })).rejects.toThrow('Transition statuses must belong to the workflow');
+    });
+
+    it('should throw if there is a self transition', async () => {
+      prisma.workflow.findUnique.mockResolvedValue({ id: 'w1', statuses: [{ id: 's1' }] });
+      await expect(service.updateTransitionsMatrix('p1', { transitions: [{ fromStatusId: 's1', toStatusId: 's1' }] })).rejects.toThrow('Cannot transition to the same status');
+    });
+
+    it('should throw if there are duplicate transitions', async () => {
+      prisma.workflow.findUnique.mockResolvedValue({ id: 'w1', statuses: [{ id: 's1' }, { id: 's2' }] });
+      await expect(service.updateTransitionsMatrix('p1', { transitions: [{ fromStatusId: 's1', toStatusId: 's2' }, { fromStatusId: 's1', toStatusId: 's2' }] })).rejects.toThrow('Duplicate transitions in matrix');
+    });
+
+    it('should update matrix successfully', async () => {
+      prisma.workflow.findUnique.mockResolvedValue({ id: 'w1', statuses: [{ id: 's1' }, { id: 's2' }] });
+      await service.updateTransitionsMatrix('p1', { transitions: [{ fromStatusId: 's1', toStatusId: 's2' }] });
+      expect(prisma.workflowTransition.deleteMany).toHaveBeenCalled();
+      expect(prisma.workflowTransition.createMany).toHaveBeenCalled();
     });
   });
 });
