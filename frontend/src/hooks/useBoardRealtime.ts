@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useSocketContext } from '../providers/SocketProvider';
 import { useAppDispatch } from '../store';
 import { fetchBoardIssues, reconcileBoardIssue } from '../store/slices/issueSlice';
+import { workflowsApi } from '../store/api/workflowsApi';
 
 export function useBoardRealtime(projectId: string | undefined) {
   const { socket, isConnected } = useSocketContext();
@@ -38,6 +39,25 @@ export function useBoardRealtime(projectId: string | undefined) {
       dispatch(fetchBoardIssues(projectId));
     };
 
+    const handleWorkflowUpdated = (data?: { eventId?: string; correlationId?: string; payload?: any }) => {
+      const eventId = data?.eventId;
+      if (eventId) {
+        if (processedEventIdsRef.current.has(eventId)) {
+          return;
+        }
+        processedEventIdsRef.current.add(eventId);
+        if (processedEventIdsRef.current.size > 100) {
+          const firstKey = processedEventIdsRef.current.values().next().value;
+          if (firstKey !== undefined) {
+            processedEventIdsRef.current.delete(firstKey);
+          }
+        }
+      }
+
+      dispatch(workflowsApi.util.invalidateTags([{ type: 'Workflow', id: projectId }]));
+      dispatch(fetchBoardIssues(projectId));
+    };
+
     const handleConnect = () => {
       socket.emit('subscribe:project', { projectId });
       dispatch(fetchBoardIssues(projectId));
@@ -55,6 +75,7 @@ export function useBoardRealtime(projectId: string | undefined) {
       socket.on(event, handleBoardEvent);
     });
 
+    socket.on('workflow.updated', handleWorkflowUpdated);
     socket.on('connect', handleConnect);
 
     return () => {
@@ -62,6 +83,7 @@ export function useBoardRealtime(projectId: string | undefined) {
       events.forEach((event) => {
         socket.off(event, handleBoardEvent);
       });
+      socket.off('workflow.updated', handleWorkflowUpdated);
       socket.off('connect', handleConnect);
     };
   }, [socket, projectId, dispatch]);
