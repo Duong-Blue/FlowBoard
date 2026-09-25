@@ -80,6 +80,7 @@ export class RealtimeGateway
 
       client.join(`user:${userId}`);
     } catch (e) {
+      console.error('Error verifying token in getAuthenticatedUser:', e);
       client.disconnect(true);
     }
   }

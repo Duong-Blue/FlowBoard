@@ -1,5 +1,5 @@
 
-import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest';
+import { vi, describe, beforeEach, it, expect } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RealtimeService } from './realtime.service';
 import { RealtimeGateway } from './realtime.gateway';
@@ -7,7 +7,9 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('RealtimeService', () => {
   let service: RealtimeService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let gateway: RealtimeGateway;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let eventEmitter: EventEmitter2;
 
     beforeEach(async () => {

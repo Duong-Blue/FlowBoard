@@ -1,6 +1,6 @@
 // @ts-nocheck
 import '@testing-library/jest-dom';
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { renderWithProviders } from '../../../utils/test-utils';
 import { CalendarBoard } from './CalendarBoard';
 import { vi, describe, it, expect, beforeEach } from 'vitest';

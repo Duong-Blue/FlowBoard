@@ -87,7 +87,7 @@ export class IssuesService {
   private computeDeadlineState(
     status: IssueStatus,
     dueDate: Date | null,
-    completedAt: Date | null,
+    _completedAt: Date | null,
   ): 'NO_DUE_DATE' | 'COMPLETED' | 'OVERDUE' | 'DUE_SOON' | 'UPCOMING' {
     if (!dueDate) return 'NO_DUE_DATE';
     if (status === IssueStatus.DONE) return 'COMPLETED';
@@ -166,7 +166,7 @@ export class IssuesService {
     targetCategory: IssueStatus,
     userRole: ProjectRole,
     hasActiveBlockers: boolean,
-    isSubtask: boolean = false,
+    _isSubtask: boolean = false,
   ): Promise<void> {
     if (currentStatusId === targetStatusId) return;
 
@@ -238,7 +238,7 @@ export class IssuesService {
 
         if (!isParentDone) {
           const doneStatuses = await tx.workflowStatus.findMany({
-            where: { projectId: parent.projectId, category: IssueStatus.DONE },
+            where: { workflow: { projectId: parent.projectId }, category: IssueStatus.DONE },
             orderBy: { order: 'asc' },
           });
 
@@ -711,7 +711,7 @@ export class IssuesService {
           throw new Error('a >= b');
         }
         newOrder = generateKeyBetween(a, b);
-      } catch (_err) {
+      } catch {
         throw new BadRequestException(
           'Invalid neighbor combination for fractional indexing',
         );

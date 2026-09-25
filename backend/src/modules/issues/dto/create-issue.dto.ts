@@ -4,7 +4,6 @@ import {
   IsString,
   IsEnum,
   IsDateString,
-  ValidateIf,
   ValidationArguments,
   registerDecorator,
   ValidationOptions,
@@ -15,7 +14,7 @@ export function IsAfter(
   property: string,
   validationOptions?: ValidationOptions,
 ) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'isAfter',
       target: object.constructor,

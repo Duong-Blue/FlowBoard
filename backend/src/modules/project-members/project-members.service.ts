@@ -89,7 +89,7 @@ export class ProjectMembersService {
     return createdMember;
   }
 
-  async findAll(projectParam: string, requesterId: string) {
+  async findAll(projectParam: string, _requesterId: string) {
     const projectId = await this.resolveProjectId(projectParam);
     return this.prisma.projectMember.findMany({
       where: { projectId },

@@ -26,12 +26,12 @@ vi.mock('@/hooks/useProjectWorkflow', () => ({
       ];
       return list.find(s => s.id === id || s.category === id);
     },
-    getStatusColor: (id?: string) => '#e2e8f0',
+    getStatusColor: (_id?: string) => '#e2e8f0',
     getDefaultStatusId: (cat?: string) => {
       if (cat === 'DONE') return 'ws-done';
       return 'ws-todo';
     },
-    getAllowedTransitions: (fromId?: string) => [
+    getAllowedTransitions: (_fromId?: string) => [
       { id: 'ws-todo', workflowId: 'wf1', name: 'Backlog', category: 'TODO', order: 0, color: '#e2e8f0' },
       { id: 'ws-inprog', workflowId: 'wf1', name: 'In Progress', category: 'IN_PROGRESS', order: 1, color: '#bfdbfe' },
     ],

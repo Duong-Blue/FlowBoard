@@ -43,13 +43,13 @@ export class SubtasksService {
       
       if (workflowStatusId) {
         const ws = await tx.workflowStatus.findUnique({
-          where: { id: workflowStatusId, projectId },
+          where: { id: workflowStatusId, workflow: { projectId } },
         });
         if (!ws) throw new NotFoundException('Workflow status not found');
         targetCategory = ws.category;
       } else {
         const ws = await tx.workflowStatus.findFirst({
-          where: { projectId, category: targetCategory },
+          where: { workflow: { projectId }, category: targetCategory },
           orderBy: { order: 'asc' },
         });
         if (ws) {

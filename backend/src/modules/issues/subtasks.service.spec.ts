@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SubtasksService } from './subtasks.service';
 import { PrismaService } from '../../database/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
 describe('SubtasksService', () => {
   let service: SubtasksService;

@@ -89,6 +89,7 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
           setIssues(res.items || []);
         }
       } catch (err) {
+        console.error('Failed to fetch calendar issues:', err);
         if (isMounted) {
           setError(t('common:status.error', { defaultValue: 'Failed to load calendar issues' }));
         }

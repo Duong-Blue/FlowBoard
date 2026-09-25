@@ -199,6 +199,7 @@ export default function BoardPage() {
         afterIssueId
       });
     } catch (err) {
+      console.error('Failed to move issue:', err);
       dispatch(rollbackMove());
       toast.error('Failed to move issue');
     }

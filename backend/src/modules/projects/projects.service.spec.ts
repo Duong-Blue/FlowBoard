@@ -8,6 +8,7 @@ import { vi } from 'vitest';
 describe('ProjectsService', () => {
   let service: ProjectsService;
   let prisma: PrismaService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let workflowsService: WorkflowsService;
 
   beforeEach(async () => {

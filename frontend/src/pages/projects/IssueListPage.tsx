@@ -110,6 +110,7 @@ export default function IssueListPage() {
         dispatch(setIssues({ items: issuesRes.items, total: issuesRes.meta.total }));
         setMembers(membersRes);
       } catch (err) {
+        console.error('Error fetching project data:', err);
         dispatch(setError(t('common:status.error')));
         toast.error(t('common:status.error'));
       } finally {
@@ -150,6 +151,7 @@ export default function IssueListPage() {
       dispatch(removeIssue(id));
       toast.success(t('common:status.success'));
     } catch (err) {
+      console.error('Error deleting issue:', err);
       toast.error(t('common:status.error'));
     }
   };

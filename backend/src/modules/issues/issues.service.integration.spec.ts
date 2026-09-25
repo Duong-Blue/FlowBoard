@@ -1,15 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../database/prisma.service';
 import { IssuesService } from './issues.service';
-import { DatabaseModule } from '../../database/database.module';
 import { AppModule } from '../../app.module';
 import { ProjectRole, IssueStatus } from '@prisma/client';
 import {
   ForbiddenException,
-  NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { generateKeyBetween } from 'fractional-indexing';
 
 describe('IssuesService (Integration)', () => {
   let service: IssuesService;

@@ -3,10 +3,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SavedViewsService } from './saved-views.service';
 import { PrismaService } from '../../database/prisma.service';
 import { ProjectRole } from '@prisma/client';
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
 describe('SavedViewsService', () => {
   let service: SavedViewsService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let prismaService: PrismaService;
 
   const mockPrismaService = {
