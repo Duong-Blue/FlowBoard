@@ -1,24 +1,24 @@
 import { useTranslation } from 'react-i18next';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import type { Issue, IssueStatus } from '../../../store/types';
+import type { Issue, WorkflowStatus } from '../../../store/types';
 import { IssueCard } from './IssueCard';
 import { SemanticBadge } from '../../../components/shared/SemanticBadge';
 
 interface BoardColumnProps {
-  id: IssueStatus;
-  title: string;
+  status: WorkflowStatus;
   issues: Issue[];
   disabled?: boolean;
 }
 
-export function BoardColumn({ id, title, issues, disabled }: BoardColumnProps) {
+export function BoardColumn({ status, issues, disabled }: BoardColumnProps) {
   const { t } = useTranslation('issues');
   const { setNodeRef, isOver } = useDroppable({
-    id,
+    id: status.id,
     data: {
       type: 'Column',
-      columnId: id,
+      columnId: status.id,
+      status,
     },
     disabled,
   });
@@ -26,7 +26,15 @@ export function BoardColumn({ id, title, issues, disabled }: BoardColumnProps) {
   return (
     <div className="flex flex-col bg-slate-50/80 rounded-lg border border-slate-200 min-w-[300px] w-[300px] max-h-full">
       <div className="p-3 border-b border-slate-200 flex items-center justify-between bg-slate-100/50 rounded-t-lg">
-        <h3 className="font-semibold text-slate-700 text-sm">{title}</h3>
+        <div className="flex items-center gap-2">
+          {status.color && (
+            <span
+              className="w-3 h-3 rounded-full flex-shrink-0"
+              style={{ backgroundColor: status.color }}
+            />
+          )}
+          <h3 className="font-semibold text-slate-700 text-sm">{status.name}</h3>
+        </div>
         <SemanticBadge status="neutral">{issues.length.toString()}</SemanticBadge>
       </div>
 

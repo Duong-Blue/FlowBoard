@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   DndContext, 
@@ -20,7 +20,8 @@ import { getProjectMembers } from '../../services/memberService';
 import { PageLoader } from '../../components/shared/PageLoader';
 import { BoardColumn } from './components/BoardColumn';
 import { DragOverlayCard } from './components/DragOverlayCard';
-import type { Issue, IssueStatus, Member } from '../../store/types';
+import type { Issue, IssueStatus, Member, WorkflowStatus } from '../../store/types';
+import { useGetWorkflowQuery } from '../../store/api/workflowsApi';
 import { toast } from 'sonner';
 import { LayoutList, LayoutDashboard, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -28,17 +29,11 @@ import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { useBoardRealtime } from '@/hooks/useBoardRealtime';
 import NotFound from '../NotFound';
 
-const COLUMN_KEY_MAP: Record<IssueStatus, string> = {
-  TODO: 'columns.todo',
-  IN_PROGRESS: 'columns.inProgress',
-  IN_PREVIEW: 'columns.inPreview',
-  DONE: 'columns.done',
-};
-
 export default function BoardPage() {
   const { t } = useTranslation('issues');
   const { orgId } = useParams<{ orgId: string }>();
   const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
+  const { data: workflow, isLoading: isWorkflowLoading } = useGetWorkflowQuery(projectId || '', { skip: !projectId });
   const { isConnected } = useBoardRealtime(projectId);
   const dispatch = useAppDispatch();
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
@@ -48,12 +43,41 @@ export default function BoardPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
 
-  const COLUMNS: { id: IssueStatus; title: string }[] = [
-    { id: 'TODO', title: t(COLUMN_KEY_MAP['TODO'] as any) },
-    { id: 'IN_PROGRESS', title: t(COLUMN_KEY_MAP['IN_PROGRESS'] as any) },
-    { id: 'IN_PREVIEW', title: t(COLUMN_KEY_MAP['IN_PREVIEW'] as any) },
-    { id: 'DONE', title: t(COLUMN_KEY_MAP['DONE'] as any) }
-  ];
+  const defaultStatuses: WorkflowStatus[] = useMemo(() => [
+    { id: 'TODO', workflowId: '', name: t('columns.todo'), category: 'TODO', order: 0 },
+    { id: 'IN_PROGRESS', workflowId: '', name: t('columns.inProgress'), category: 'IN_PROGRESS', order: 1 },
+    { id: 'IN_PREVIEW', workflowId: '', name: t('columns.inPreview'), category: 'IN_PREVIEW', order: 2 },
+    { id: 'DONE', workflowId: '', name: t('columns.done'), category: 'DONE', order: 3 },
+  ], [t]);
+
+  const activeStatuses = useMemo(() => {
+    if (workflow?.statuses && workflow.statuses.length > 0) {
+      return [...workflow.statuses].sort((a, b) => a.order - b.order);
+    }
+    return defaultStatuses;
+  }, [workflow?.statuses, defaultStatuses]);
+
+  const allIssues = useMemo(() => Object.values(columns).flat(), [columns]);
+
+  const issuesByStatusId = useMemo(() => {
+    const map: Record<string, Issue[]> = {};
+    activeStatuses.forEach((s) => {
+      map[s.id] = [];
+    });
+
+    allIssues.forEach((issue) => {
+      if (issue.workflowStatusId && map[issue.workflowStatusId]) {
+        map[issue.workflowStatusId].push(issue);
+      } else {
+        const matchingStatus = activeStatuses.find((s) => s.category === issue.status);
+        if (matchingStatus && map[matchingStatus.id]) {
+          map[matchingStatus.id].push(issue);
+        }
+      }
+    });
+
+    return map;
+  }, [allIssues, activeStatuses]);
 
   const currentMember = members.find((m) => m.userId === currentUser?.id);
   const userRole = currentMember?.role;
@@ -105,19 +129,26 @@ export default function BoardPage() {
 
     if (!activeData || !activeData.issue) return;
 
-    const sourceStatus = activeData.issue.status as IssueStatus;
-    let targetStatus: IssueStatus;
+    const sourceStatusObj = activeStatuses.find(s => s.id === activeData.issue.workflowStatusId) || activeStatuses.find(s => s.category === activeData.issue.status);
+    const sourceStatusCategory = sourceStatusObj?.category as IssueStatus || 'TODO';
+    
+    let targetStatusObj: WorkflowStatus | undefined;
     
     // Determine target column
     if (overData?.type === 'Column') {
-      targetStatus = overData.columnId as IssueStatus;
+      targetStatusObj = overData.status as WorkflowStatus;
     } else if (overData?.type === 'Issue') {
-      targetStatus = overData.issue.status as IssueStatus;
+      targetStatusObj = activeStatuses.find(s => s.id === overData.issue.workflowStatusId) || activeStatuses.find(s => s.category === overData.issue.status);
     } else {
       return;
     }
 
-    const targetColumnIssues = (columns[targetStatus] || []).filter(i => i.id !== activeId);
+    if (!targetStatusObj) return;
+
+    const targetWorkflowStatusId = targetStatusObj.id;
+    const targetStatusCategory = targetStatusObj.category;
+
+    const targetColumnIssues = (issuesByStatusId[targetWorkflowStatusId] || []).filter(i => i.id !== activeId);
     
     // Same position, no change
     if (activeId === overId) return;
@@ -128,7 +159,6 @@ export default function BoardPage() {
     if (overData?.type === 'Issue') {
       const overIndex = targetColumnIssues.findIndex(i => i.id === overId);
       if (overIndex !== -1) {
-        // Find if dragging below or above
         const isBelowOverItem = over && active.rect.current.translated && active.rect.current.translated.top > over.rect.top + over.rect.height;
         const modifier = isBelowOverItem ? 1 : 0;
         const newIndex = overIndex >= 0 ? overIndex + modifier : overIndex + 1;
@@ -138,13 +168,11 @@ export default function BoardPage() {
         } else if (newIndex >= targetColumnIssues.length) {
           afterIssueId = targetColumnIssues[targetColumnIssues.length - 1]?.id || null;
         } else {
-          // It is between two items
           afterIssueId = targetColumnIssues[newIndex - 1].id;
           beforeIssueId = targetColumnIssues[newIndex].id;
         }
       }
     } else {
-      // Dropping onto an empty column or at the end
       if (targetColumnIssues.length > 0) {
         afterIssueId = targetColumnIssues[targetColumnIssues.length - 1].id;
       }
@@ -155,8 +183,9 @@ export default function BoardPage() {
     // Dispatch optimistic update
     dispatch(moveCardOptimistic({
       issueId: activeId,
-      sourceStatus,
-      targetStatus,
+      sourceStatus: sourceStatusCategory,
+      targetStatus: targetStatusCategory,
+      targetWorkflowStatusId,
       beforeIssueId,
       afterIssueId,
       correlationId
@@ -164,7 +193,8 @@ export default function BoardPage() {
 
     try {
       await moveIssue(projectId, activeId, {
-        status: targetStatus,
+        status: targetStatusCategory,
+        targetWorkflowStatusId,
         beforeIssueId,
         afterIssueId
       });
@@ -174,7 +204,7 @@ export default function BoardPage() {
     }
   };
 
-  if (projectLoading || (loading && !Object.values(columns).some(col => col.length > 0))) {
+  if (projectLoading || isWorkflowLoading || (loading && !Object.values(columns).some(col => col.length > 0))) {
     return <PageLoader />;
   }
 
@@ -229,12 +259,11 @@ export default function BoardPage() {
           onDragEnd={handleDragEnd}
         >
           <div className="flex gap-4 h-full pb-4">
-            {COLUMNS.map(col => (
+            {activeStatuses.map(status => (
               <BoardColumn
-                key={col.id}
-                id={col.id}
-                title={col.title}
-                issues={columns[col.id] || []}
+                key={status.id}
+                status={status}
+                issues={issuesByStatusId[status.id] || []}
                 disabled={!canDrag}
               />
             ))}
