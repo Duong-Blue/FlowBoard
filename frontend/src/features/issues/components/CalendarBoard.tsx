@@ -169,10 +169,12 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
     <div className="flex flex-col h-full bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
       {/* Calendar Header Controls */}
       <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50/50">
-        <div className="flex items-center gap-3">
-          <CalendarIcon className="h-5 w-5 text-blue-600" />
-          <h2 className="text-lg font-bold text-slate-900 capitalize">{monthName}</h2>
-          {loading && <span className="text-xs text-slate-500 animate-pulse">{t('common:status.loading', { defaultValue: 'Loading...' })}</span>}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <CalendarIcon className="h-5 w-5 text-blue-600 shrink-0" />
+          <span className="text-xs sm:text-sm font-semibold text-slate-500 hidden xs:inline">{t('board.calendarView', { defaultValue: 'Calendar' })}</span>
+          <span className="text-slate-300 hidden xs:inline">•</span>
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 capitalize">{monthName}</h2>
+          {loading && <span className="text-xs text-slate-500 animate-pulse ml-2">{t('common:status.loading', { defaultValue: 'Loading...' })}</span>}
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleToday} className="text-xs">
@@ -190,13 +192,23 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
       </div>
 
       {error && (
-        <div className="p-3 bg-rose-50 text-rose-700 text-xs border-b border-rose-200">
-          {error}
+        <div className="p-3 bg-rose-50 text-rose-700 text-xs border-b border-rose-200 flex items-center justify-between">
+          <span>{error}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setCurrentDate(new Date(currentDate));
+            }}
+            className="h-6 text-xs text-rose-700 hover:text-rose-800 hover:bg-rose-100"
+          >
+            Retry
+          </Button>
         </div>
       )}
 
-      {/* Main Grid View */}
-      <div className="flex-1 flex flex-col overflow-y-auto">
+      {/* Main Desktop Grid View (sm and larger) */}
+      <div className="hidden sm:flex flex-1 flex-col overflow-y-auto">
         {/* Days of week header */}
         <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-100/70 text-center font-semibold text-xs text-slate-600 py-2.5">
           {weekDays.map((day) => (
@@ -205,7 +217,7 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
         </div>
 
         {/* Date cells grid */}
-        <div className="flex-1 grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-200 bg-slate-200/40">
+        <div className="flex-1 grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-200 bg-slate-200/40 min-h-[500px]">
           {gridDays.map((day) => {
             const dateKey = formatDateKey(day);
             const isCurrentMonth = day.getMonth() === month;
@@ -285,6 +297,66 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
             );
           })}
         </div>
+      </div>
+
+      {/* Mobile Agenda Fallback View (< 640px) */}
+      <div className="flex sm:hidden flex-1 flex-col overflow-y-auto p-3 space-y-3">
+        {loading ? (
+          <div className="p-8 text-center text-sm text-slate-500 animate-pulse">
+            {t('common:status.loading', { defaultValue: 'Loading calendar...' })}
+          </div>
+        ) : gridDays.filter(day => day.getMonth() === month && (dayIssuesMap[formatDateKey(day)] || []).length > 0).length === 0 ? (
+          <div className="p-8 text-center text-sm text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+            No issues scheduled for this month.
+          </div>
+        ) : (
+          gridDays
+            .filter(day => day.getMonth() === month && (dayIssuesMap[formatDateKey(day)] || []).length > 0)
+            .map((day) => {
+              const dateKey = formatDateKey(day);
+              const dayIssues = dayIssuesMap[dateKey] || [];
+              const isToday = dateKey === todayKey;
+              return (
+                <div key={dateKey} className="rounded-lg border border-slate-200 bg-white p-3 shadow-2xs">
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isToday ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                      {day.getDate()}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-600">
+                      {day.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {dayIssues.map((issue) => {
+                      const statusMeta = getStatusById(issue.workflowStatusId) || statuses.find(s => s.category === issue.status);
+                      const statusName = statusMeta?.name || issue.workflowStatus?.name || issue.status;
+                      const statusColor = statusMeta?.color || getStatusColor(issue.workflowStatusId || issue.status);
+                      return (
+                        <button
+                          key={issue.id}
+                          type="button"
+                          onClick={() => handleIssueClick(issue)}
+                          className="w-full text-left p-2 rounded border border-slate-200 hover:border-blue-300 bg-slate-50/50 flex flex-col gap-1 transition-colors"
+                          style={{ borderLeftWidth: '4px', borderLeftColor: statusColor }}
+                        >
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-mono text-[10px] text-slate-500 font-semibold">{issue.key}</span>
+                            <span
+                              className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+                              style={{ backgroundColor: `${statusColor}20`, color: statusColor }}
+                            >
+                              {statusName}
+                            </span>
+                          </div>
+                          <span className="text-xs font-medium text-slate-800 truncate">{issue.title}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })
+        )}
       </div>
 
       {/* Unscheduled Issues Drawer / Footer */}

@@ -59,7 +59,20 @@ describe('CalendarBoard', () => {
       <CalendarBoard projectId="proj1" orgId="org1" projectKey="PROJ1" />
     );
 
-    expect(await screen.findByText('Calendar Task 1')).toBeInTheDocument();
-    expect(screen.getByText('Custom To Do')).toBeInTheDocument();
+    const taskElements = await screen.findAllByText('Calendar Task 1');
+    expect(taskElements.length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Custom To Do').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Calendar').length).toBeGreaterThan(0);
+  });
+
+  it('renders error state with retry button when fetching fails', async () => {
+    vi.mocked(issueService.getIssues).mockRejectedValue(new Error('Network error'));
+
+    renderWithProviders(
+      <CalendarBoard projectId="proj1" orgId="org1" projectKey="PROJ1" />
+    );
+
+    expect(await screen.findByText(/An error occurred|Failed to load/i)).toBeInTheDocument();
+    expect(screen.getByText('Retry')).toBeInTheDocument();
   });
 });
