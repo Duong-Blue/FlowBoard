@@ -21,6 +21,7 @@ describe('AuthService', () => {
     usersService = {
       findOne: vi.fn(),
       findByEmail: vi.fn(),
+      findById: vi.fn(),
       create: vi.fn(),
       updateRefreshToken: vi.fn(),
       findByRefreshTokenHash: vi.fn(),
@@ -45,23 +46,25 @@ describe('AuthService', () => {
 
   it('should register a new user', async () => {
     vi.mocked(usersService.findByEmail).mockResolvedValue(null);
-    vi.mocked(usersService.create).mockResolvedValue({
+    const mockUser = {
       id: 1,
       email: 'test@example.com',
-    } as any);
+    } as any;
+    vi.mocked(usersService.create).mockResolvedValue(mockUser);
+    vi.mocked(usersService.findById).mockResolvedValue(mockUser);
     vi.mocked(prisma.refreshToken.create).mockResolvedValue({} as any);
 
     const result = await authService.register({
       email: 'test@example.com',
       password: 'password',
       name: 'Test',
-    });
+    } as any);
     expect(result).toBeDefined();
     expect(usersService.create).toHaveBeenCalled();
   });
 
   it('should login valid user', async () => {
-    const passwordHash = bcrypt.hashSync('password123', 10);
+    const passwordHash = 'password123';
     const user = {
       id: 1,
       email: 'test@example.com',
@@ -69,6 +72,7 @@ describe('AuthService', () => {
       isActive: true,
     };
     vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+    vi.mocked(usersService.findById).mockResolvedValue(user as any);
     vi.mocked(bcrypt.compare).mockResolvedValue(true);
     vi.mocked(prisma.refreshToken.create).mockResolvedValue({} as any);
 

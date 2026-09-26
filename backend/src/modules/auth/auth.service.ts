@@ -30,12 +30,12 @@ export class AuthService {
       firstName: registerDto.firstName,
       lastName: registerDto.lastName,
     });
-    return this.generateTokens(user);
+    return this.issueSessionTokens(user.id);
   }
 
   async login(loginDto: LoginDto) {
     const user = await this.usersService.findByEmail(loginDto.email);
-    if (!user) {
+    if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid email or password');
     }
     const isPasswordValid = await bcrypt.compare(
@@ -46,7 +46,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
     await this.usersService.updateLastLogin(user.id);
-    return this.generateTokens(user);
+    return this.issueSessionTokens(user.id);
   }
 
   async refresh(refreshToken: string) {
@@ -125,7 +125,12 @@ export class AuthService {
     });
   }
 
-  private async generateTokens(user: any) {
+  async issueSessionTokens(userId: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    
     const payload = { email: user.email, sub: user.id };
     const accessToken = this.jwtService.sign(payload);
     const rawRefreshToken = randomBytes(32).toString('hex');
