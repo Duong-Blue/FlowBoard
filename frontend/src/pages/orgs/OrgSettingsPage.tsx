@@ -128,7 +128,7 @@ export default function OrgSettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="logoUrl">Logo URL</Label>
+              <Label htmlFor="logoUrl">{t('orgSettings.logoUrlLabel')}</Label>
               <Input
                 id="logoUrl"
                 value={logoUrl}

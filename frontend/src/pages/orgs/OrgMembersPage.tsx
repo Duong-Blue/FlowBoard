@@ -101,7 +101,7 @@ export default function OrgMembersPage() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium text-slate-900">
-                      {member.name} {isSelf && <span className="text-slate-500 font-normal">(You)</span>}
+                      {member.name} {isSelf && <span className="text-slate-500 font-normal">{t('orgMembers.you')}</span>}
                     </span>
                     <span className="text-xs text-slate-500">{member.email}</span>
                   </div>

@@ -11,7 +11,7 @@ import { Label } from '../../components/ui/label';
 import type { RootState } from '../../store/types';
 
 export default function CreateOrgPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['workspace', 'common']);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const orgs = useSelector((state: RootState) => state.org.list);
@@ -31,7 +31,7 @@ export default function CreateOrgPage() {
       dispatch(setOrgs([...orgs, newOrg]));
       navigate(`/workspace/orgs/${newOrg.slug || newOrg.id}/projects`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t('workspace.createOrg.failed', 'Failed to create organization'));
+      setError(err instanceof Error ? err.message : t('createOrg.failed'));
     } finally {
       setLoading(false);
     }
@@ -40,18 +40,18 @@ export default function CreateOrgPage() {
   return (
     <div className="max-w-md mx-auto space-y-6 mt-10">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">{t('workspace.createOrg.title', 'Create Organization')}</h1>
-        <p className="text-slate-500">{t('workspace.createOrg.subtitle', 'Setup a new workspace for your team')}</p>
+        <h1 className="text-3xl font-bold">{t('createOrg.title')}</h1>
+        <p className="text-slate-500">{t('createOrg.subtitle')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">{error}</div>}
 
         <div className="space-y-2">
-          <Label htmlFor="name">{t('workspace.createOrg.nameLabel', 'Organization Name')}</Label>
+          <Label htmlFor="name">{t('createOrg.nameLabel')}</Label>
           <Input 
             id="name" 
-            placeholder={t('workspace.createOrg.namePlaceholder', 'Acme Corp')} 
+            placeholder={t('createOrg.namePlaceholder')} 
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -59,10 +59,10 @@ export default function CreateOrgPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">{t('workspace.createOrg.descriptionLabel', 'Description (Optional)')}</Label>
+          <Label htmlFor="description">{t('createOrg.descriptionLabel')}</Label>
           <Input 
             id="description" 
-            placeholder={t('workspace.createOrg.descriptionPlaceholder', 'What does your team do?')} 
+            placeholder={t('createOrg.descriptionPlaceholder')} 
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -70,10 +70,10 @@ export default function CreateOrgPage() {
 
         <div className="pt-4 flex gap-4">
           <Button type="button" variant="outline" className="w-full" onClick={() => navigate('/workspace')}>
-            {t('common.cancel', 'Cancel')}
+            {t('common:buttons.cancel')}
           </Button>
           <Button type="submit" className="w-full" disabled={loading || !name}>
-            {loading ? t('common.creating', 'Creating...') : t('common.create', 'Create')}
+            {loading ? t('common:buttons.creating') : t('common:buttons.create')}
           </Button>
         </div>
       </form>

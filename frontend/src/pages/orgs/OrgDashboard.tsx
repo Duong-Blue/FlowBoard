@@ -118,11 +118,9 @@ export default function OrgDashboard() {
       <EmptyState
         icon={Building2}
         title={t('sidebar.noOrganizations')}
-        description={t('createOrg.subtitle')}
-        action={
+        description={t('createOrg.subtitle')}        action={
           <Button onClick={() => navigate('/workspace/orgs/new')}>
-            <Plus className="mr-2 h-4 w-4" /> {t('createOrg.title')}
-          </Button>
+            <Plus className="mr-2 h-4 w-4" /> {t('createOrg.title')}          </Button>
         }
       />
     );

@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Building2, Check, ChevronDown, Plus } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setActiveOrg } from '@/store/slices/orgSlice';
@@ -18,6 +19,7 @@ export interface OrganizationSwitcherProps {
 }
 
 export function OrganizationSwitcher({ className, onSelectOrg }: OrganizationSwitcherProps) {
+  const { t } = useTranslation('workspace');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { orgId } = useParams<{ orgId?: string }>();
@@ -50,7 +52,7 @@ export function OrganizationSwitcher({ className, onSelectOrg }: OrganizationSwi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label="Switch organization"
+        aria-label={t('sidebar.selectOrganization')}
         className={cn(
           'w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-xl',
           className,
@@ -71,10 +73,10 @@ export function OrganizationSwitcher({ className, onSelectOrg }: OrganizationSwi
             )}
             <div className="min-w-0 flex-1">
               <div className="font-semibold text-sm text-white truncate">
-                {activeOrg?.name || 'Select Organization'}
+                {activeOrg?.name || t('sidebar.selectOrganization')}
               </div>
               <div className="text-[11px] text-slate-400 truncate">
-                {activeOrg?.slug ? `@${activeOrg.slug}` : activeOrg ? 'Organization' : 'No org selected'}
+                {activeOrg?.slug ? `@${activeOrg.slug}` : activeOrg ? t('sidebar.organizationSection') : t('sidebar.noOrgSelected')}
               </div>
             </div>
           </div>
@@ -87,7 +89,7 @@ export function OrganizationSwitcher({ className, onSelectOrg }: OrganizationSwi
         className="w-56 bg-slate-900 border-slate-800 text-slate-200 p-1 shadow-xl rounded-xl z-50"
       >
         <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          Organizations
+          {t('sidebar.organizations')}
         </DropdownMenuLabel>
         
         {orgs.length > 0 ? (
@@ -123,7 +125,7 @@ export function OrganizationSwitcher({ className, onSelectOrg }: OrganizationSwi
         ) : (
           <div className="px-3 py-2 text-xs text-slate-500 flex items-center gap-2">
             <Building2 className="h-3.5 w-3.5" />
-            <span>No organizations found</span>
+            <span>{t('sidebar.noOrganizations')}</span>
           </div>
         )}
 
@@ -134,7 +136,7 @@ export function OrganizationSwitcher({ className, onSelectOrg }: OrganizationSwi
           className="cursor-pointer rounded-lg px-2 py-2 text-sm hover:bg-slate-800 focus:bg-slate-800 text-blue-400 focus:text-blue-300 flex items-center gap-2 font-medium"
         >
           <Plus className="h-4 w-4 shrink-0" />
-          <span>Create Organization</span>
+          <span>{t('sidebar.createOrganization')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
