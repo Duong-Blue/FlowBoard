@@ -1,7 +1,7 @@
 model User {
   id                 String               @id @default(uuid())
   email              String               @unique
-  passwordHash       String
+  passwordHash       String?
   firstName          String
   lastName           String
   displayName        String?
@@ -12,6 +12,8 @@ model User {
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   refreshTokens      RefreshToken[]
+  oauthAccounts      OAuthAccount[]
+  oauthExchangeCodes OAuthExchangeCode[]
   orgMemberships     OrganizationMember[]
   notifications      Notification[]       @relation("UserNotifications")
   actedNotifications Notification[]       @relation("NotificationActor")
