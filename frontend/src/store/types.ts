@@ -228,3 +228,86 @@ export interface NotificationItem {
   issue?: NotificationIssue | null;
 }
 
+export type SearchEntityType = 'ISSUE' | 'PROJECT' | 'USER';
+
+export interface SearchFilters {
+  orgId?: string;
+  projectId?: string;
+  workflowStatusId?: string;
+  statusCategory?: string;
+  priority?: string;
+  issueType?: string;
+  assigneeId?: string;
+  reporterId?: string;
+  dueDateFrom?: string;
+  dueDateTo?: string;
+  sortBy?: 'relevance' | 'createdAt' | 'updatedAt' | 'priority' | 'dueDate';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface SearchSuggestionsParams {
+  q: string;
+  orgId?: string;
+  projectId?: string;
+  limit?: number;
+}
+
+export interface SearchQueryParams extends SearchFilters {
+  q?: string;
+  type?: SearchEntityType;
+  cursor?: string;
+  limit?: number;
+}
+
+export interface SearchIssueItem {
+  id: string;
+  title: string;
+  key: string;
+  projectId: string;
+  projectKey?: string;
+  projectName?: string;
+  orgId?: string;
+  workflowStatus?: {
+    id: string;
+    name: string;
+    category: string;
+    color?: string | null;
+  } | null;
+  type?: string;
+  priority?: string;
+  createdAt: string;
+  updatedAt: string;
+  dueDate?: string | null;
+}
+
+export interface SearchProjectItem {
+  id: string;
+  name: string;
+  key: string;
+  organizationId: string;
+}
+
+export interface SearchUserItem {
+  id: string;
+  displayName: string;
+  email: string;
+  avatarUrl?: string | null;
+}
+
+export interface SearchSuggestionsResponse {
+  exactMatch: SearchIssueItem | null;
+  issues: SearchIssueItem[];
+  projects: SearchProjectItem[];
+  users: SearchUserItem[];
+}
+
+export interface SearchResponse<T = SearchIssueItem | SearchProjectItem | SearchUserItem> {
+  items: T[];
+  meta: {
+    limit: number;
+    nextCursor: string | null;
+    hasNextPage: boolean;
+  };
+}
+
+

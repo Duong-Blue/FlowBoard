@@ -9,6 +9,11 @@ interface AuthState {
 
 const getStoredUser = (): User | null => {
   try {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      localStorage.removeItem('user');
+      return null;
+    }
     const item = localStorage.getItem('user');
     return item ? JSON.parse(item) : null;
   } catch {

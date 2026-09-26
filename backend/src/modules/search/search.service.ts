@@ -4,6 +4,27 @@ import { SearchSuggestionsQueryDto } from './dto/search-suggestions-query.dto';
 import { SearchQueryDto, SearchEntityType, SearchSortBy, SearchSortOrder } from './dto/search-query.dto';
 import { Prisma } from '@prisma/client';
 
+const ISSUE_SELECT = {
+  id: true,
+  title: true,
+  key: true,
+  projectId: true,
+  type: true,
+  priority: true,
+  createdAt: true,
+  updatedAt: true,
+  dueDate: true,
+  project: {
+    select: { id: true, key: true, name: true, organizationId: true }
+  },
+  workflowStatus: {
+    select: { id: true, name: true, category: true, color: true }
+  },
+  assignee: {
+    select: { id: true, displayName: true, email: true, avatarUrl: true }
+  }
+};
+
 @Injectable()
 export class SearchService {
   constructor(private prisma: PrismaService) {}
@@ -58,7 +79,7 @@ export class SearchService {
           key: parsedKey,
           projectId: { in: accessibleProjectIds }
         },
-        include: { workflowStatus: true, project: true }
+        select: ISSUE_SELECT
       });
       
       if (issue) {
@@ -74,7 +95,7 @@ export class SearchService {
           { description: { contains: q, mode: 'insensitive' } }
         ]
       },
-      include: { workflowStatus: true, project: true },
+      select: ISSUE_SELECT,
       take: dto.limit
     });
 
@@ -270,7 +291,7 @@ export class SearchService {
     const issueIds = items.map(r => r.id);
     const fullIssues = await this.prisma.issue.findMany({
       where: { id: { in: issueIds } },
-      include: { workflowStatus: true, project: true }
+      select: ISSUE_SELECT
     });
 
     const orderedIssues = items.map(r => fullIssues.find(i => i.id === r.id)).filter(Boolean);
@@ -295,6 +316,7 @@ export class SearchService {
 
     const items = await this.prisma.project.findMany({
       where,
+      select: { id: true, name: true, key: true, organizationId: true, updatedAt: true },
       orderBy: { updatedAt: 'desc' },
       take: limit + 1,
       ...(dto.cursor ? { skip: 1, cursor: { id: this.decodeCursor(dto.cursor).id } } : {})
@@ -358,6 +380,12 @@ export class SearchService {
         name: issue.workflowStatus.name,
         category: issue.workflowStatus.category,
         color: issue.workflowStatus.color,
+      } : null,
+      assignee: issue.assignee ? {
+        id: issue.assignee.id,
+        displayName: issue.assignee.displayName,
+        email: issue.assignee.email,
+        avatarUrl: issue.assignee.avatarUrl,
       } : null,
       type: issue.type,
       priority: issue.priority,
