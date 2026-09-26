@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -53,6 +53,7 @@ export function GlobalSearchModal() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
 
   // 1. Listen for Ctrl+K / Cmd+K globally
   useEffect(() => {
@@ -77,19 +78,25 @@ export function GlobalSearchModal() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [dispatch]);
 
-  // Focus input when modal opens & reset state
+  // Focus input when modal opens & reset state, abort on close
   useEffect(() => {
     if (isModalOpen) {
       setQueryText('');
       setSuggestions(null);
       setSelectedIndex(0);
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
     }
   }, [isModalOpen]);
 
-  // 2. Debounced search with AbortController cancellation
+  // 2. Debounced search with AbortController cancellation & sequence guard
   useEffect(() => {
     const trimmed = query.trim();
 
@@ -113,6 +120,7 @@ export function GlobalSearchModal() {
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
+      const currentRequestId = ++requestIdRef.current;
 
       try {
         const res = await getSuggestions(
@@ -124,7 +132,9 @@ export function GlobalSearchModal() {
           },
           controller.signal,
         );
-        setSuggestions(res);
+        if (currentRequestId === requestIdRef.current) {
+          setSuggestions(res);
+        }
       } catch (err: any) {
         if (
           err?.name === 'CanceledError' ||
@@ -136,7 +146,7 @@ export function GlobalSearchModal() {
         }
         console.error('Failed to fetch suggestions:', err);
       } finally {
-        if (abortControllerRef.current === controller) {
+        if (currentRequestId === requestIdRef.current) {
           setIsLoading(false);
         }
       }
@@ -201,87 +211,99 @@ export function GlobalSearchModal() {
     setSelectedIndex(0);
   }, [flatItems]);
 
-  const handleSelect = (item: FlatItem) => {
-    if (item.group === 'recent') {
-      setQueryText(item.data);
-      return;
-    }
+  const handleViewAll = useCallback(
+    (q: string) => {
+      if (!q.trim()) return;
+      dispatch(addRecentQuery(q.trim()));
+      navigate(`/workspace/search?q=${encodeURIComponent(q.trim())}`);
+      dispatch(setModalOpen(false));
+    },
+    [dispatch, navigate],
+  );
 
-    if (item.group === 'exact' || item.group === 'issue') {
-      const issue: SearchIssueItem = item.data;
-      dispatch(addRecentQuery(query.trim() || issue.key || issue.title));
-      const targetOrgId = issue.orgId || activeOrgId || (orgs.length > 0 ? orgs[0].id : '');
-      const targetProjKey =
-        issue.projectKey || projects.find((p) => p.id === issue.projectId)?.key || '';
+  const handleSelect = useCallback(
+    (item: FlatItem) => {
+      if (item.group === 'recent') {
+        setQueryText(item.data);
+        return;
+      }
 
-      if (targetOrgId && targetProjKey) {
-        navigate(
-          `/workspace/orgs/${targetOrgId}/projects/${targetProjKey}/issues/${issue.key || issue.id}`,
+      if (item.group === 'exact' || item.group === 'issue') {
+        const issue: SearchIssueItem = item.data;
+        dispatch(addRecentQuery(query.trim() || issue.key || issue.title));
+        const targetOrgId = issue.orgId || activeOrgId || (orgs.length > 0 ? orgs[0].id : '');
+        const targetProjKey =
+          issue.projectKey || projects.find((p) => p.id === issue.projectId)?.key || '';
+
+        if (targetOrgId && targetProjKey) {
+          navigate(
+            `/workspace/orgs/${targetOrgId}/projects/${targetProjKey}/issues/${issue.key || issue.id}`,
+          );
+        } else {
+          navigate(`/workspace/search?q=${encodeURIComponent(issue.key || issue.title)}`);
+        }
+        dispatch(setModalOpen(false));
+        return;
+      }
+
+      if (item.group === 'project') {
+        const proj: SearchProjectItem = item.data;
+        dispatch(addRecentQuery(query.trim() || proj.name));
+        const targetOrgId = proj.organizationId || activeOrgId || (orgs.length > 0 ? orgs[0].id : '');
+        if (targetOrgId && proj.key) {
+          navigate(`/workspace/orgs/${targetOrgId}/projects/${proj.key}`);
+        }
+        dispatch(setModalOpen(false));
+        return;
+      }
+
+      if (item.group === 'user') {
+        const u: SearchUserItem = item.data;
+        dispatch(addRecentQuery(query.trim() || u.displayName));
+        const targetOrgId = activeOrgId || (orgs.length > 0 ? orgs[0].id : '');
+        if (targetOrgId) {
+          navigate(`/workspace/orgs/${targetOrgId}/members`);
+        }
+        dispatch(setModalOpen(false));
+        return;
+      }
+
+      if (item.group === 'action') {
+        handleViewAll(item.data);
+        return;
+      }
+    },
+    [query, activeOrgId, orgs, projects, dispatch, navigate, handleViewAll],
+  );
+
+  const handleKeyDownModal = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex((prev) => (flatItems.length > 0 ? (prev + 1) % flatItems.length : 0));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          flatItems.length > 0 ? (prev - 1 + flatItems.length) % flatItems.length : 0,
         );
-      } else {
-        navigate(`/workspace/search?q=${encodeURIComponent(issue.key || issue.title)}`);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (flatItems.length > 0 && flatItems[selectedIndex]) {
+          handleSelect(flatItems[selectedIndex]);
+        } else if (query.trim()) {
+          handleViewAll(query);
+        }
+      } else if (e.key === 'Escape') {
+        dispatch(setModalOpen(false));
       }
-      dispatch(setModalOpen(false));
-      return;
-    }
+    },
+    [flatItems, selectedIndex, handleSelect, query, handleViewAll, dispatch],
+  );
 
-    if (item.group === 'project') {
-      const proj: SearchProjectItem = item.data;
-      dispatch(addRecentQuery(query.trim() || proj.name));
-      const targetOrgId = proj.organizationId || activeOrgId || (orgs.length > 0 ? orgs[0].id : '');
-      if (targetOrgId && proj.key) {
-        navigate(`/workspace/orgs/${targetOrgId}/projects/${proj.key}`);
-      }
-      dispatch(setModalOpen(false));
-      return;
-    }
-
-    if (item.group === 'user') {
-      const u: SearchUserItem = item.data;
-      dispatch(addRecentQuery(query.trim() || u.displayName));
-      const targetOrgId = activeOrgId || (orgs.length > 0 ? orgs[0].id : '');
-      if (targetOrgId) {
-        navigate(`/workspace/orgs/${targetOrgId}/members`);
-      }
-      dispatch(setModalOpen(false));
-      return;
-    }
-
-    if (item.group === 'action') {
-      handleViewAll(item.data);
-      return;
-    }
-  };
-
-  const handleViewAll = (q: string) => {
-    if (!q.trim()) return;
-    dispatch(addRecentQuery(q.trim()));
-    navigate(`/workspace/search?q=${encodeURIComponent(q.trim())}`);
-    dispatch(setModalOpen(false));
-  };
-
-  const handleKeyDownModal = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex((prev) => (flatItems.length > 0 ? (prev + 1) % flatItems.length : 0));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex((prev) =>
-        flatItems.length > 0 ? (prev - 1 + flatItems.length) % flatItems.length : 0,
-      );
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (flatItems.length > 0 && flatItems[selectedIndex]) {
-        handleSelect(flatItems[selectedIndex]);
-      } else if (query.trim()) {
-        handleViewAll(query);
-      }
-    } else if (e.key === 'Escape') {
-      dispatch(setModalOpen(false));
-    }
-  };
-
-  const getItemIndex = (id: string) => flatItems.findIndex((item) => item.id === id);
+  const getItemIndex = useCallback(
+    (id: string) => flatItems.findIndex((item) => item.id === id),
+    [flatItems],
+  );
 
   return (
     <Dialog open={isModalOpen} onOpenChange={(open) => dispatch(setModalOpen(open))}>

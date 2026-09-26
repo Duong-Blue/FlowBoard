@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { setProjects } from '@/store/slices/projectSlice';
@@ -118,6 +118,8 @@ export default function FullSearchPage() {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  const requestIdRef = useRef(0);
+
   // Sync search input when qParam changes externally
   useEffect(() => {
     setSearchInput(qParam);
@@ -158,10 +160,10 @@ export default function FullSearchPage() {
     [setSearchParams]
   );
 
-  // Perform search whenever parameters change
+  // Perform search whenever parameters change with AbortController & sequence guard
   useEffect(() => {
     const controller = new AbortController();
-    let isMounted = true;
+    const currentRequestId = ++requestIdRef.current;
 
     setLoading(true);
 
@@ -182,24 +184,28 @@ export default function FullSearchPage() {
 
     fullSearch(queryDto, controller.signal)
       .then((res) => {
-        if (isMounted) {
+        if (currentRequestId === requestIdRef.current) {
           setResults(res.items || []);
           setMeta(res.meta || { limit: 20, nextCursor: null, hasNextPage: false });
         }
       })
       .catch((err) => {
-        if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+        if (
+          err?.name !== 'CanceledError' &&
+          err?.name !== 'AbortError' &&
+          err?.code !== 'ERR_CANCELED' &&
+          err?.message !== 'canceled'
+        ) {
           console.error('Search failed:', err);
         }
       })
       .finally(() => {
-        if (isMounted) {
+        if (currentRequestId === requestIdRef.current) {
           setLoading(false);
         }
       });
 
     return () => {
-      isMounted = false;
       controller.abort();
     };
   }, [
@@ -213,28 +219,34 @@ export default function FullSearchPage() {
     sortOrderParam,
   ]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateUrlParams({ q: searchInput.trim() });
-  };
+  const handleSearchSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      updateUrlParams({ q: searchInput.trim() });
+    },
+    [searchInput, updateUrlParams]
+  );
 
-  const handleTabChange = (newType: SearchEntityType) => {
-    if (newType === typeParam) return;
-    if (newType !== 'ISSUE') {
-      updateUrlParams({
-        type: newType,
-        workflowStatusId: null,
-        priority: null,
-        issueType: null,
-        sortBy: null,
-        sortOrder: null,
-      });
-    } else {
-      updateUrlParams({ type: 'ISSUE' });
-    }
-  };
+  const handleTabChange = useCallback(
+    (newType: SearchEntityType) => {
+      if (newType === typeParam) return;
+      if (newType !== 'ISSUE') {
+        updateUrlParams({
+          type: newType,
+          workflowStatusId: null,
+          priority: null,
+          issueType: null,
+          sortBy: null,
+          sortOrder: null,
+        });
+      } else {
+        updateUrlParams({ type: 'ISSUE' });
+      }
+    },
+    [typeParam, updateUrlParams]
+  );
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     updateUrlParams({
       projectId: null,
       workflowStatusId: null,
@@ -243,11 +255,14 @@ export default function FullSearchPage() {
       sortBy: null,
       sortOrder: null,
     });
-  };
+  }, [updateUrlParams]);
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback(async () => {
     if (!meta.nextCursor || loadingMore) return;
     setLoadingMore(true);
+
+    const controller = new AbortController();
+    const currentRequestId = requestIdRef.current;
 
     try {
       const queryDto: SearchQueryParams = {
@@ -266,33 +281,62 @@ export default function FullSearchPage() {
         if (sortOrderParam) queryDto.sortOrder = sortOrderParam as any;
       }
 
-      const res = await fullSearch(queryDto);
-      setResults((prev) => [...prev, ...(res.items || [])]);
-      setMeta(res.meta);
-    } catch (err) {
+      const res = await fullSearch(queryDto, controller.signal);
+      if (currentRequestId === requestIdRef.current) {
+        setResults((prev) => [...prev, ...(res.items || [])]);
+        setMeta(res.meta);
+      }
+    } catch (err: any) {
+      if (
+        err?.name !== 'CanceledError' &&
+        err?.name !== 'AbortError' &&
+        err?.code !== 'ERR_CANCELED' &&
+        err?.message === 'canceled'
+      ) {
+        return;
+      }
       console.error('Failed to load more search results:', err);
     } finally {
-      setLoadingMore(false);
+      if (currentRequestId === requestIdRef.current) {
+        setLoadingMore(false);
+      }
     }
-  };
+  }, [
+    meta.nextCursor,
+    loadingMore,
+    qParam,
+    typeParam,
+    projectIdParam,
+    workflowStatusIdParam,
+    priorityParam,
+    issueTypeParam,
+    sortByParam,
+    sortOrderParam,
+  ]);
 
-  const handleIssueClick = (item: SearchIssueItem) => {
-    const targetOrgId = item.orgId || activeOrgId || orgList[0]?.id;
-    const targetProjectKey =
-      item.projectKey || projectList.find((p) => p.id === item.projectId)?.key;
-    if (targetOrgId && targetProjectKey) {
-      navigate(
-        `/workspace/orgs/${targetOrgId}/projects/${targetProjectKey}/issues/${item.key || item.id}`
-      );
-    }
-  };
+  const handleIssueClick = useCallback(
+    (item: SearchIssueItem) => {
+      const targetOrgId = item.orgId || activeOrgId || orgList[0]?.id;
+      const targetProjectKey =
+        item.projectKey || projectList.find((p) => p.id === item.projectId)?.key;
+      if (targetOrgId && targetProjectKey) {
+        navigate(
+          `/workspace/orgs/${targetOrgId}/projects/${targetProjectKey}/issues/${item.key || item.id}`
+        );
+      }
+    },
+    [activeOrgId, orgList, projectList, navigate]
+  );
 
-  const handleProjectClick = (item: SearchProjectItem) => {
-    const targetOrgId = item.organizationId || activeOrgId || orgList[0]?.id;
-    if (targetOrgId) {
-      navigate(`/workspace/orgs/${targetOrgId}/projects/${item.key || item.id}`);
-    }
-  };
+  const handleProjectClick = useCallback(
+    (item: SearchProjectItem) => {
+      const targetOrgId = item.organizationId || activeOrgId || orgList[0]?.id;
+      if (targetOrgId) {
+        navigate(`/workspace/orgs/${targetOrgId}/projects/${item.key || item.id}`);
+      }
+    },
+    [activeOrgId, orgList, navigate]
+  );
 
   const hasActiveFilters =
     Boolean(projectIdParam) ||
