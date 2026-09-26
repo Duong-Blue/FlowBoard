@@ -69,11 +69,18 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-    const isAuthEndpoint = originalRequest.url?.includes('/auth/login') ||
-                          originalRequest.url?.includes('/auth/register') ||
-                          originalRequest.url?.includes('/auth/refresh');
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+      const requestAuthHeader = originalRequest.headers?.Authorization as string | undefined;
+      const requestToken = requestAuthHeader?.replace('Bearer ', '');
+      const currentToken = store?.getState()?.auth?.accessToken;
+
+      if (requestToken && currentToken && requestToken !== currentToken) {
+        if (originalRequest.headers) originalRequest.headers.Authorization = `Bearer ${currentToken}`;
+        return api(originalRequest);
+      }
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
