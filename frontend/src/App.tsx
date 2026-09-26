@@ -19,6 +19,7 @@ import ProjectCalendarPage from './pages/projects/ProjectCalendarPage';
 import { IssueDetailPage } from './features/issues/pages/IssueDetailPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
 import HomePage from './pages/public/HomePage';
 import InvitationsPage from './pages/invitations/InvitationsPage';
 import AcceptInvitationPage from './pages/invitations/AcceptInvitationPage';
@@ -70,6 +71,7 @@ const router = createBrowserRouter([
         children: [
           { path: 'login', element: <LoginPage /> },
           { path: 'register', element: <RegisterPage /> },
+          { path: 'oauth/callback', element: <OAuthCallbackPage /> },
           { path: 'invitations/accept', element: <AcceptInvitationPage /> },
         ],
       },
