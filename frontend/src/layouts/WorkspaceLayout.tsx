@@ -7,11 +7,13 @@ import { getProjects } from '../services/projectService';
 import { setOrgs, setActiveOrg, setLoading as setOrgLoading } from '../store/slices/orgSlice';
 import { setProjects, setActiveProject, setLoading as setProjectLoading } from '../store/slices/projectSlice';
 import { logout } from '../store/slices/authSlice';
+import { setModalOpen } from '../store/slices/searchSlice';
 import { WorkspaceSidebar } from './WorkspaceSidebar';
-import { Menu, Settings, LogOut } from 'lucide-react';
+import { Menu, Settings, LogOut, Search } from 'lucide-react';
 import { AppBreadcrumb } from '../components/shared/AppBreadcrumb';
 import { NotificationCenter } from '../components/shared/NotificationCenter';
 import { LanguageSwitcher } from '../components/shared/LanguageSwitcher';
+import { GlobalSearchModal } from '../components/shared/GlobalSearchModal';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import {
   DropdownMenu,
@@ -165,6 +167,18 @@ export default function WorkspaceLayout() {
             <AppBreadcrumb />
           </div>
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => dispatch(setModalOpen(true))}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-slate-100 hover:bg-slate-200/80 rounded-lg border border-slate-200/80 transition-colors cursor-pointer"
+              aria-label="Open search modal"
+            >
+              <Search size={14} className="text-slate-400" />
+              <span>Search...</span>
+              <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white border border-slate-200 rounded text-slate-500 shadow-2xs">
+                Ctrl K
+              </kbd>
+            </button>
             <LanguageSwitcher />
             <NotificationCenter />
             <DropdownMenu>
@@ -212,6 +226,7 @@ export default function WorkspaceLayout() {
           <Outlet context={{ isInit }} />
         </div>
       </main>
+      <GlobalSearchModal />
     </div>
   );
 }

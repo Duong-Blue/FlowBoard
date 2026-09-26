@@ -25,6 +25,7 @@ import InvitationsPage from './pages/invitations/InvitationsPage';
 import AcceptInvitationPage from './pages/invitations/AcceptInvitationPage';
 import DocumentTitleHelper from './components/DocumentTitleHelper';
 import OrgSettingsPage from './pages/orgs/OrgSettingsPage';
+import FullSearchPage from './pages/search/FullSearchPage';
 import { Toaster } from './components/ui/sonner';
 import { SocketProvider } from './providers/SocketProvider';
 
@@ -83,6 +84,7 @@ const router = createBrowserRouter([
             element: <WorkspaceLayout />,
             children: [
               { index: true, element: <WorkspaceIndexRedirect /> },
+              { path: 'search', element: <FullSearchPage /> },
               { path: 'orgs/new', element: <CreateOrgPage /> },
               { path: 'orgs/:orgId/overview', element: <OrgDashboard /> },
               { path: 'orgs/:orgId', element: <Navigate to="overview" replace /> },
