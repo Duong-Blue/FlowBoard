@@ -22,5 +22,7 @@ model Project {
   notifications Notification[]
 
   @@unique([organizationId, key])
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([key(ops: raw("gin_trgm_ops"))], type: Gin)
   workflow Workflow?
 }

@@ -61,4 +61,6 @@ model Issue {
   @@index([projectId, dueDate])
   @@index([parentId])
   @@index([projectId, workflowStatusId, order])
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin)
 }
