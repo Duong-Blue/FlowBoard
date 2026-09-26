@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { getIssues, createIssue, updateIssue, deleteIssue } from '../../services/issueService';
 import { getProjectMembers } from '../../services/memberService';
 import { setIssues, setLoading, setError, setFilters, addIssue, updateIssue as updateIssueAction, removeIssue } from '../../store/slices/issueSlice';
+import { ProjectPageShell } from '@/components/shared/ProjectPageShell';
 import { PageLoader } from '../../components/shared/PageLoader';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { SemanticBadge } from '../../components/shared/SemanticBadge';
@@ -14,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { IssueFormDialog } from './components/IssueFormDialog';
 import { SavedViewsDropdown } from '../../features/views/SavedViewsDropdown';
 import { toast } from 'sonner';
-import { Plus, Search, Edit2, Trash2, LayoutList, LayoutDashboard, ListTree, List, CornerDownRight, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, LayoutList, ListTree, List, CornerDownRight } from 'lucide-react';
 import type { Issue, IssueUser, Member, WorkflowStatus } from '../../store/types';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { useProjectWorkflow, DEFAULT_CATEGORY_COLORS } from '@/hooks/useProjectWorkflow';
@@ -171,39 +172,22 @@ export default function IssueListPage() {
     : issues.map((issue) => ({ issue, depth: 0 }));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('board.title')}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/board`}>
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              {t('board.boardView')}
-            </Link>
+    <ProjectPageShell
+      project={project}
+      title={t('board.listView')}
+      activeView="list"
+      actions={
+        canCreateOrEdit ? (
+          <Button onClick={() => { setEditingIssue(undefined); setDialogOpen(true); }}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('board.createIssue')}
           </Button>
-          <Button variant="default" className="pointer-events-none opacity-50">
-            <LayoutList className="mr-2 h-4 w-4" />
-            {t('board.listView')}
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/calendar`}>
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {t('board.calendarView', { defaultValue: 'Calendar' })}
-            </Link>
-          </Button>
-          {canCreateOrEdit && (
-            <Button onClick={() => { setEditingIssue(undefined); setDialogOpen(true); }}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('board.createIssue')}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
+        ) : undefined
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
           <Input
             placeholder={t('board.searchPlaceholder')}
@@ -263,7 +247,7 @@ export default function IssueListPage() {
           </button>
         </div>
         <Select value={filters.status || 'ALL'} onValueChange={(v) => handleFilterChange('status', v === 'ALL' ? undefined : v)}>
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger className="w-[150px] shrink-0">
             <SelectValue placeholder={t('detail.status')} />
           </SelectTrigger>
           <SelectContent>
@@ -276,7 +260,7 @@ export default function IssueListPage() {
           </SelectContent>
         </Select>
         <Select value={filters.priority || 'ALL'} onValueChange={(v) => handleFilterChange('priority', v === 'ALL' ? undefined : v)}>
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger className="w-[150px] shrink-0">
             <SelectValue placeholder={t('detail.priority')} />
           </SelectTrigger>
           <SelectContent>
@@ -287,7 +271,7 @@ export default function IssueListPage() {
           </SelectContent>
         </Select>
         <Select value={filters.assigneeId || 'ALL'} onValueChange={(v) => handleFilterChange('assigneeId', v === 'ALL' ? undefined : v)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] shrink-0">
             <SelectValue placeholder={t('detail.assignee')} />
           </SelectTrigger>
           <SelectContent>
@@ -408,9 +392,20 @@ export default function IssueListPage() {
             </table>
           </div>
           
-          <div className="flex items-center justify-between border-t px-4 py-3">
-            <div className="text-sm text-slate-500">
-              Total {total}
+          <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-slate-500">
+            <div>
+              {(() => {
+                const page = filters.page || 1;
+                const limit = filters.limit || 10;
+                const startItem = total === 0 ? 0 : (page - 1) * limit + 1;
+                const endItem = Math.min(page * limit, total);
+                return t('board.showingIssues', {
+                  start: startItem,
+                  end: endItem,
+                  total,
+                  defaultValue: `Showing ${startItem} - ${endItem} of ${total} issues`,
+                });
+              })()}
             </div>
             <div className="flex items-center gap-2">
               <Button 
@@ -424,7 +419,7 @@ export default function IssueListPage() {
               <Button 
                 variant="outline" 
                 size="sm"
-                disabled={issues.length < (filters.limit || 10)}
+                disabled={issues.length < (filters.limit || 10) || (filters.page || 1) * (filters.limit || 10) >= total}
                 onClick={() => handleFilterChange('page', (filters.page || 1) + 1)}
               >
                 Next
@@ -441,6 +436,7 @@ export default function IssueListPage() {
         members={members}
         onSubmit={handleCreateOrUpdate}
       />
-    </div>
+      </div>
+    </ProjectPageShell>
   );
 }
