@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LayoutDashboard, Menu } from 'lucide-react';
 import { useAppSelector } from '@/store';
 import { Button } from '@/components/ui/button';
+import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 import {
   Sheet,
   SheetContent,
@@ -12,14 +14,15 @@ import {
 } from '@/components/ui/sheet';
 
 export default function PublicHeader() {
+  const { t } = useTranslation('landing');
   const [open, setOpen] = useState(false);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
   const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Features', href: '#features' },
-    { name: 'Workflow', href: '#workflow' },
-    { name: 'Highlights', href: '#highlights' },
+    { name: t('header.home'), href: '/' },
+    { name: t('header.features'), href: '#features' },
+    { name: t('header.workflow'), href: '#workflow' },
+    { name: t('header.highlights'), href: '#highlights' },
   ];
 
   const handleLinkClick = () => {
@@ -45,7 +48,7 @@ export default function PublicHeader() {
         <nav aria-label="Main navigation" className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
             <a
-              key={link.name}
+              key={link.href}
               href={link.href}
               className="text-sm font-medium text-slate-600 transition-colors hover:text-indigo-600"
             >
@@ -56,17 +59,18 @@ export default function PublicHeader() {
 
         {/* Desktop Action Buttons */}
         <div className="hidden items-center gap-3 md:flex">
+          <LanguageSwitcher />
           {isAuthenticated ? (
             <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white">
-              <Link to="/workspace">Go to workspace</Link>
+              <Link to="/workspace">{t('header.goToWorkspace')}</Link>
             </Button>
           ) : (
             <>
               <Button variant="ghost" asChild className="text-slate-700 hover:text-slate-900">
-                <Link to="/login">Sign in</Link>
+                <Link to="/login">{t('header.signIn')}</Link>
               </Button>
               <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                <Link to="/register">Get started</Link>
+                <Link to="/register">{t('header.getStarted')}</Link>
               </Button>
             </>
           )}
@@ -74,16 +78,19 @@ export default function PublicHeader() {
 
         {/* Mobile Hamburger Menu Sheet */}
         <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden text-slate-700"
-              aria-label="Open menu"
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
+          <div className="flex items-center gap-2 md:hidden">
+            <LanguageSwitcher />
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-slate-700"
+                aria-label={t('header.openMenu')}
+              >
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+          </div>
           <SheetContent side="right" className="flex flex-col justify-between w-full max-w-xs p-6">
             <div className="space-y-6">
               <SheetHeader className="text-left">
@@ -106,7 +113,7 @@ export default function PublicHeader() {
               <nav aria-label="Mobile navigation" className="flex flex-col space-y-4 pt-2">
                 {navLinks.map((link) => (
                   <a
-                    key={link.name}
+                    key={link.href}
                     href={link.href}
                     onClick={handleLinkClick}
                     className="text-base font-medium text-slate-700 hover:text-indigo-600 transition-colors py-1"
@@ -121,15 +128,15 @@ export default function PublicHeader() {
             <div className="flex flex-col gap-3 pt-6 border-t border-slate-200">
               {isAuthenticated ? (
                 <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleLinkClick}>
-                  <Link to="/workspace">Go to workspace</Link>
+                  <Link to="/workspace">{t('header.goToWorkspace')}</Link>
                 </Button>
               ) : (
                 <>
                   <Button variant="outline" asChild className="w-full border-slate-300 text-slate-700" onClick={handleLinkClick}>
-                    <Link to="/login">Sign in</Link>
+                    <Link to="/login">{t('header.signIn')}</Link>
                   </Button>
                   <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleLinkClick}>
-                    <Link to="/register">Get started</Link>
+                    <Link to="/register">{t('header.getStarted')}</Link>
                   </Button>
                 </>
               )}
