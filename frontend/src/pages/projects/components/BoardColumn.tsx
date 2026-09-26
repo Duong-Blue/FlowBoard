@@ -46,8 +46,8 @@ export function BoardColumn({ status, issues, disabled }: BoardColumnProps) {
 
       <div
         ref={setNodeRef}
-        className={`flex-1 p-2 overflow-y-auto flex flex-col gap-2 transition-colors ${
-          isOver ? 'bg-slate-100' : ''
+        className={`flex-1 p-2 overflow-y-auto flex flex-col gap-2 transition-colors min-h-[150px] ${
+          isOver ? 'bg-blue-50/50 border-2 border-dashed border-blue-400 rounded-b-lg' : ''
         }`}
       >
         <SortableContext items={issues.map(i => i.id)} strategy={verticalListSortingStrategy}>
@@ -55,7 +55,13 @@ export function BoardColumn({ status, issues, disabled }: BoardColumnProps) {
             <IssueCard key={issue.id} issue={issue} disabled={disabled} />
           ))}
           {issues.length === 0 && (
-            <div className="h-full min-h-[100px] flex items-center justify-center border-2 border-dashed border-slate-200 rounded-md text-slate-400 text-sm">
+            <div
+              className={`flex-1 min-h-[150px] flex items-center justify-center border-2 border-dashed rounded-md text-sm transition-colors ${
+                isOver
+                  ? 'border-blue-400 bg-blue-100/50 text-blue-600 font-medium'
+                  : 'border-slate-200 text-slate-400 hover:border-slate-300'
+              }`}
+            >
               {t('columns.dropHere')}
             </div>
           )}

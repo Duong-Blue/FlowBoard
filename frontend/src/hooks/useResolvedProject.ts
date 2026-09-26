@@ -9,8 +9,16 @@ export const useResolvedProject = () => {
   const orgs = useAppSelector((state: RootState) => state.org.list);
   const projects = useAppSelector((state: RootState) => state.project.list);
 
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState<boolean>(Boolean(orgId && projectKey));
+  const matchingOrg = orgs.find((o) => o.id === orgId || o.slug === orgId);
+  const targetOrgId = matchingOrg?.id || orgId;
+
+  const foundProject = (orgId && projectKey) ? projects.find((p: Project) => 
+    (p.key?.toLowerCase() === projectKey.toLowerCase() || p.id === projectKey) &&
+    ((p.organizationId || p.orgId) === targetOrgId || (p.organizationId || p.orgId) === orgId)
+  ) : null;
+
+  const [fetchedProject, setFetchedProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState<boolean>(!foundProject && Boolean(orgId && projectKey));
   const [error, setError] = useState<string | null>(null);
   const [is404, setIs404] = useState(false);
   
@@ -18,54 +26,48 @@ export const useResolvedProject = () => {
 
   useEffect(() => {
     if (!orgId || !projectKey) return;
+    if (foundProject) return; // already in store, no fetch needed
 
-    const matchingOrg = orgs.find((o) => o.id === orgId || o.slug === orgId);
-    const targetOrgId = matchingOrg?.id || orgId;
+    const fetchProject = async () => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
 
-    const found = projects.find((p: Project) => 
-      (p.key?.toLowerCase() === projectKey.toLowerCase() || p.id === projectKey) &&
-      ((p.organizationId || p.orgId) === targetOrgId || (p.organizationId || p.orgId) === orgId)
-    );
-
-    if (found) {
-      setProject(found);
-      setLoading(false);
-      setIs404(false);
+      setLoading(true);
       setError(null);
-    } else {
-      const fetchProject = async () => {
-        abortControllerRef.current?.abort();
-        abortControllerRef.current = new AbortController();
+      setIs404(false);
 
-        setLoading(true);
-        setError(null);
-        setIs404(false);
-
-        try {
-          const data = await getProject(orgId, projectKey);
-          if (abortControllerRef.current?.signal.aborted) return; 
-          setProject(data);
-        } catch (err: any) {
-          if (abortControllerRef.current?.signal.aborted) return; 
-          if (err?.response?.status === 404 || err?.status === 404) {
-            setIs404(true);
-          } else {
-            setError(err?.message || 'Failed to fetch project');
-          }
-        } finally {
-          if (abortControllerRef.current?.signal.aborted) return; 
+      try {
+        const data = await getProject(orgId, projectKey);
+        if (abortControllerRef.current?.signal.aborted) return; 
+        setFetchedProject(data);
+      } catch (err: any) {
+        if (abortControllerRef.current?.signal.aborted) return; 
+        if (err?.response?.status === 404 || err?.status === 404) {
+          setIs404(true);
+        } else {
+          setError(err?.message || 'Failed to fetch project');
+        }
+      } finally {
+        if (!abortControllerRef.current?.signal.aborted) {
           setLoading(false);
         }
-      };
+      }
+    };
 
-      fetchProject();
-    }
+    fetchProject();
 
     return () => {
       abortControllerRef.current?.abort();
-      abortControllerRef.current = null; 
     };
-  }, [orgId, projectKey, projects, orgs]);
+  }, [orgId, projectKey, foundProject?.id]);
 
-  return { project, projectId: project?.id, loading, error, is404 };
+  const finalProject = foundProject || fetchedProject;
+
+  return {
+    project: finalProject,
+    projectId: finalProject?.id,
+    loading: loading && !foundProject,
+    error,
+    is404,
+  };
 };

@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import { 
   DndContext, 
   DragOverlay, 
@@ -17,26 +16,23 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import { fetchBoardIssues, moveCardOptimistic, rollbackMove } from '../../store/slices/issueSlice';
 import { moveIssue } from '../../services/issueService';
 import { getProjectMembers } from '../../services/memberService';
+import { ProjectPageShell } from '@/components/shared/ProjectPageShell';
 import { PageLoader } from '../../components/shared/PageLoader';
 import { BoardColumn } from './components/BoardColumn';
 import { DragOverlayCard } from './components/DragOverlayCard';
 import type { Issue, IssueStatus, Member, WorkflowStatus } from '../../store/types';
 import { useProjectWorkflow, DEFAULT_CATEGORY_COLORS } from '@/hooks/useProjectWorkflow';
 import { toast } from 'sonner';
-import { LayoutList, LayoutDashboard, Calendar as CalendarIcon } from 'lucide-react';
-import { Button } from '../../components/ui/button';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { useBoardRealtime } from '@/hooks/useBoardRealtime';
 import NotFound from '../NotFound';
 
 export default function BoardPage() {
   const { t } = useTranslation('issues');
-  const { orgId } = useParams<{ orgId: string }>();
   const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
   const { statuses, isLoading: isWorkflowLoading } = useProjectWorkflow(projectId);
   const { isConnected } = useBoardRealtime(projectId);
   const dispatch = useAppDispatch();
-  const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
   const currentUser = useAppSelector((state) => state.auth.user);
   const { columns, loading } = useAppSelector((state) => state.issue.board);
   
@@ -86,7 +82,7 @@ export default function BoardPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -213,45 +209,24 @@ export default function BoardPage() {
     return <NotFound />;
   }
 
-  const currentOrgId = orgId || activeOrgId || project.organizationId || project.orgId;
-
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <div className="flex-none pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">{t('board.title')}</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'
-                }`}
-                title={isConnected ? t('board.realtimeConnected') : t('board.disconnected')}
-              />
-              <span>{isConnected ? t('board.live') : t('board.offline')}</span>
-            </div>
-            <Button variant="default" className="pointer-events-none opacity-50">
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              {t('board.boardView')}
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/issues?view=list`}>
-                <LayoutList className="mr-2 h-4 w-4" />
-                {t('board.listView')}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to={`/workspace/orgs/${currentOrgId}/projects/${project.key}/calendar`}>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {t('board.calendarView', { defaultValue: 'Calendar' })}
-              </Link>
-            </Button>
-          </div>
+    <ProjectPageShell
+      project={project}
+      title={t('board.title')}
+      activeView="board"
+      fullHeight
+      realtimeIndicator={
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+          <span
+            className={`h-2 w-2 rounded-full ${
+              isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'
+            }`}
+            title={isConnected ? t('board.realtimeConnected') : t('board.disconnected')}
+          />
+          <span>{isConnected ? t('board.live') : t('board.offline')}</span>
         </div>
-      </div>
-
+      }
+    >
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
         <DndContext
           sensors={canDrag ? sensors : undefined}
@@ -275,6 +250,6 @@ export default function BoardPage() {
           </DragOverlay>
         </DndContext>
       </div>
-    </div>
+    </ProjectPageShell>
   );
 }
