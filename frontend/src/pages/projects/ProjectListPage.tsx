@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { setProjects, setLoading } from '../../store/slices/projectSlice';
@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
 import { toast } from 'sonner';
-import { Plus, Search, ChevronRight, Users, Layers, X, FolderPlus } from 'lucide-react';
+import { Plus, Search, ChevronRight, Users, Layers, X, FolderPlus, AlertCircle, RotateCw } from 'lucide-react';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { SemanticBadge } from '../../components/shared/SemanticBadge';
 
@@ -16,27 +16,49 @@ export default function ProjectListPage() {
   const { t } = useTranslation(['workspace', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const { list: projects, loading } = useAppSelector((state) => state.project);
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  const searchQuery = searchParams.get('search') || '';
+  const [isError, setIsError] = useState(false);
+
+  const fetchProjects = useCallback(async () => {
+    if (!orgId) return;
+    dispatch(setLoading(true));
+    setIsError(false);
+    try {
+      const data = await getProjects(orgId);
+      dispatch(setProjects(data));
+    } catch {
+      setIsError(true);
+      toast.error(t('common:status.error'));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [orgId, dispatch, t]);
 
   useEffect(() => {
-    if (!orgId) return;
-
-    const fetchProjects = async () => {
-      dispatch(setLoading(true));
-      try {
-        const data = await getProjects(orgId);
-        dispatch(setProjects(data));
-      } catch {
-        toast.error(t('common:status.error'));
-      } finally {
-        dispatch(setLoading(false));
+    let ignore = false;
+    Promise.resolve().then(() => {
+      if (!ignore) {
+        fetchProjects();
       }
+    });
+    return () => {
+      ignore = true;
     };
+  }, [fetchProjects]);
 
-    fetchProjects();
-  }, [orgId, dispatch, t]);
+  const handleSearchChange = (value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value.trim()) {
+      newParams.set('search', value.trim());
+    } else {
+      newParams.delete('search');
+    }
+    setSearchParams(newParams, { replace: true });
+  };
 
   const filteredProjects = useMemo(() => {
     if (!searchQuery.trim()) return projects;
@@ -68,7 +90,7 @@ export default function ProjectListPage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{t('projects.title')}</h1>
-            {!loading && (
+            {!loading && !isError && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                 {projects.length}
               </span>
@@ -85,7 +107,7 @@ export default function ProjectListPage() {
       </div>
 
       {/* Toolbar: Search and Filter */}
-      {projects.length > 0 && (
+      {!loading && !isError && (projects.length > 0 || searchQuery) && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/50 p-3 rounded-lg border border-slate-200/80">
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -93,12 +115,13 @@ export default function ProjectListPage() {
               type="text"
               placeholder={t('projects.searchPlaceholder')}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-9 pr-8 bg-white border-slate-200 text-sm"
+              aria-label={t('projects.searchPlaceholder')}
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => handleSearchChange('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full"
                 aria-label="Clear search"
               >
@@ -135,6 +158,20 @@ export default function ProjectListPage() {
             </Card>
           ))}
         </div>
+      ) : isError ? (
+        /* Error State with Retry Button */
+        <EmptyState
+          icon={AlertCircle}
+          title={t('common:status.error')}
+          description={t('common:emptyState.noData')}
+          action={
+            <Button onClick={fetchProjects} className="gap-2">
+              <RotateCw className="h-4 w-4" />
+              {t('common:buttons.retry')}
+            </Button>
+          }
+          className="my-12 py-16"
+        />
       ) : projects.length === 0 ? (
         /* Empty State: No Projects Created */
         <EmptyState
@@ -156,7 +193,7 @@ export default function ProjectListPage() {
           title={t('common:emptyState.noResults')}
           description={t('projects.emptyState')}
           action={
-            <Button variant="outline" onClick={() => setSearchQuery('')} className="gap-2">
+            <Button variant="outline" onClick={() => handleSearchChange('')} className="gap-2">
               {t('common:buttons.cancel')}
             </Button>
           }
@@ -169,6 +206,7 @@ export default function ProjectListPage() {
             const projectKey = project.key || project.id;
             const issueCount = project.issueCount ?? project._count?.issues ?? 0;
             const memberCount = project.memberCount ?? project._count?.members ?? 1;
+            const boardUrl = `/workspace/orgs/${orgId}/projects/${projectKey}/issues`;
 
             return (
               <Card
@@ -193,7 +231,13 @@ export default function ProjectListPage() {
 
                   <div>
                     <CardTitle className="text-lg font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
-                      {project.name}
+                      <Link
+                        to={boardUrl}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-600 rounded"
+                      >
+                        {project.name}
+                      </Link>
                     </CardTitle>
                     <CardDescription className="mt-1.5 text-sm text-slate-500 line-clamp-2 min-h-[2.5rem]">
                       {project.description || ''}
@@ -217,24 +261,37 @@ export default function ProjectListPage() {
                 <CardFooter className="border-t border-slate-100 pt-3 pb-3 bg-slate-50/40 flex items-center justify-between text-xs font-medium text-slate-600">
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
-                      onClick={() => navigate(`/workspace/orgs/${orgId}/projects/${projectKey}/members`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/workspace/orgs/${orgId}/projects/${projectKey}/members`);
+                      }}
+                      aria-label={`${t('sidebar.members')} - ${project.name}`}
                       className="hover:text-indigo-600 hover:underline text-slate-500 transition-colors"
                     >
                       {t('sidebar.members')}
                     </button>
                     <span className="text-slate-300">•</span>
                     <button
-                      onClick={() => navigate(`/workspace/orgs/${orgId}/projects/${projectKey}/settings`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/workspace/orgs/${orgId}/projects/${projectKey}/settings`);
+                      }}
+                      aria-label={`${t('sidebar.settings')} - ${project.name}`}
                       className="hover:text-indigo-600 hover:underline text-slate-500 transition-colors"
                     >
                       {t('sidebar.settings')}
                     </button>
                   </div>
 
-                  <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-0.5 transition-transform">
+                  <Link
+                    to={boardUrl}
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={`${t('sidebar.board')} - ${project.name}`}
+                    className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-0.5 transition-transform"
+                  >
                     <span>{t('sidebar.board')}</span>
                     <ChevronRight className="h-4 w-4 ml-0.5" />
-                  </div>
+                  </Link>
                 </CardFooter>
               </Card>
             );
