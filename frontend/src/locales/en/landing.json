@@ -1,0 +1,101 @@
+{
+  "header": {
+    "home": "Home",
+    "features": "Features",
+    "workflow": "Workflow",
+    "highlights": "Highlights",
+    "goToWorkspace": "Go to workspace",
+    "signIn": "Sign in",
+    "getStarted": "Get started",
+    "openMenu": "Open menu"
+  },
+  "hero": {
+    "badge": "Project Management for Engineering Teams",
+    "titlePrefix": "Clear project management for",
+    "titleHighlight": "structured team workflows",
+    "subtitle": "Organize projects, manage issues, and keep your team aligned in one focused workspace.",
+    "getStarted": "Get started",
+    "exploreFeatures": "Explore features",
+    "noCard": "No credit card required • Setup in minutes",
+    "searchPlaceholder": "Search issues...",
+    "updatedAgo": "Updated 2m ago"
+  },
+  "highlights": {
+    "title": "High-fidelity project execution without cognitive overhead",
+    "subtitle": "Designed specifically for engineering teams needing clarity, predictable status management, and rapid task updates.",
+    "item1Title": "Structured Issue Management",
+    "item1Desc": "Track bugs, tasks, and feature requests with explicit priority levels, custom subtasks, and rich activity logs.",
+    "item2Title": "Multi-tenant Workspaces",
+    "item2Desc": "Isolate organizational projects, manage team member invitations, and control fine-grained role permissions.",
+    "item3Title": "Workflow Visibility",
+    "item3Desc": "Keep pipeline steps transparent across four core states with instant drag-and-drop feedback and relations tracking."
+  },
+  "features": {
+    "badge": "Deep Dive",
+    "title": "Built for technical discipline",
+    "subtitle": "Explore the core capabilities powering FlowBoard workflows.",
+    "keyHighlights": "Key Highlights",
+    "interactivePreview": "Interactive Preview",
+    "stepOf": "Step {{step}} of {{total}}",
+    "feature0": {
+      "title": "Kanban Board View",
+      "description": "Visualize your engineering team workflow with dynamic status columns, fluid drag-and-drop reordering, and real-time board updates.",
+      "h1": "Fractional indexing for smooth card reordering",
+      "h2": "Column status grouping (TODO, IN PROGRESS, IN PREVIEW, DONE)",
+      "h3": "Filter by assignee, priority, or search term"
+    },
+    "feature1": {
+      "title": "Structured Issue List",
+      "description": "High-density view designed for power users to triage, search, and bulk audit issues efficiently across your projects.",
+      "h1": "Keyboard-friendly interface",
+      "h2": "Multi-column sorting and filtering",
+      "h3": "Quick issue detail modal access"
+    },
+    "feature2": {
+      "title": "Subtasks & Detail Views",
+      "description": "Break down complex epics into manageable subtasks, track completion progress, and manage issue relationships.",
+      "h1": "Subtask completion progress bars",
+      "h2": "Linked issue relationships (Blocks, Relates to)",
+      "h3": "Rich activity log and discussion threads"
+    },
+    "feature3": {
+      "title": "Multi-tenant Permissions",
+      "description": "Organize your projects inside secure organizations with strict role-based access control and member invitations.",
+      "h1": "Organization & Project level access boundaries",
+      "h2": "Role-based authorization (ADMIN, MEMBER, VIEWER)",
+      "h3": "Email invitation management flow"
+    }
+  },
+  "workflow": {
+    "title": "A clear workflow from planning to completion",
+    "subtitle": "Every issue moves predictably through four standardized status stages.",
+    "step1Desc": "Backlog items awaiting prioritization and assignment.",
+    "step2Desc": "Active tasks currently being engineered and implemented.",
+    "step3Desc": "Pull requests deployed to staging environment for QA review.",
+    "step4Desc": "Merged and verified features shipped to production."
+  },
+  "cta": {
+    "title": "Bring your team's work into focus.",
+    "subtitle": "Explore FlowBoard and organize your next project.",
+    "getStarted": "Get started",
+    "signIn": "Sign in to workspace",
+    "freeNote": "Free to get started. No credit card required."
+  },
+  "footer": {
+    "subtitle": "Organized project management for structured engineering teams.",
+    "allSystems": "All systems operational",
+    "product": "Product",
+    "resources": "Resources",
+    "account": "Account",
+    "features": "Features",
+    "workflow": "Workflow",
+    "highlights": "Highlights",
+    "documentation": "Documentation",
+    "changelog": "Changelog",
+    "soon": "Soon",
+    "comingSoon": "Coming soon",
+    "signIn": "Sign in",
+    "getStarted": "Get started",
+    "copyright": "© 2026 FlowBoard. All rights reserved."
+  }
+}

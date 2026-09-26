@@ -9,6 +9,8 @@
     "disconnected": "Disconnected",
     "listView": "List View",
     "boardView": "Board View",
+    "calendarView": "Calendar",
+    "showingIssues": "Showing {{start}} - {{end}} of {{total}} issues",
     "searchPlaceholder": "Search issues by key or title...",
     "filterByAssignee": "Filter by Assignee",
     "filterByPriority": "Filter by Priority",

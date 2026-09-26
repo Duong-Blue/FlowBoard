@@ -22,7 +22,8 @@
     "accept": "Accept",
     "reject": "Reject",
     "revoke": "Revoke",
-    "remove": "Remove"
+    "remove": "Remove",
+    "retry": "Retry"
   },
   "switcher": {
     "selectLanguage": "Select language"
