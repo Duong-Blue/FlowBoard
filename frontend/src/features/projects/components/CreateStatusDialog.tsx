@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -20,13 +21,6 @@ import {
 import type { IssueStatus } from '@/store/types';
 import type { WorkflowStatus, CreateStatusPayload, UpdateStatusPayload } from '@/store/api/workflowsApi';
 import { AlertCircle, Trash2 } from 'lucide-react';
-
-const CATEGORY_OPTIONS: { label: string; value: IssueStatus }[] = [
-  { label: 'To Do (Backlog / Open)', value: 'TODO' },
-  { label: 'In Progress (Active Work)', value: 'IN_PROGRESS' },
-  { label: 'In Preview (Review / QA)', value: 'IN_PREVIEW' },
-  { label: 'Done (Completed)', value: 'DONE' },
-];
 
 const PRESET_COLORS = [
   '#64748b', // Slate
@@ -56,12 +50,20 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
   onSubmitUpdate,
   nextOrder = 0,
 }) => {
+  const { t } = useTranslation(['workspace', 'common']);
   const [name, setName] = useState('');
   const [category, setCategory] = useState<IssueStatus>('TODO');
   const [color, setColor] = useState('#3b82f6');
   const [order, setOrder] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const categoryOptions: { label: string; value: IssueStatus }[] = [
+    { label: t('workflow.dialog.categoryTodo'), value: 'TODO' },
+    { label: t('workflow.dialog.categoryInProgress'), value: 'IN_PROGRESS' },
+    { label: t('workflow.dialog.categoryInPreview'), value: 'IN_PREVIEW' },
+    { label: t('workflow.dialog.categoryDone'), value: 'DONE' },
+  ];
 
   useEffect(() => {
     if (editingStatus) {
@@ -81,7 +83,7 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Status name is required');
+      setError(t('workflow.dialog.nameRequired'));
       return;
     }
 
@@ -105,7 +107,7 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
       }
       onOpenChange(false);
     } catch (err: any) {
-      setError(err?.message || err?.data?.message || 'Failed to save status');
+      setError(err?.message || err?.data?.message || t('workflow.dialog.saveFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -115,11 +117,11 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{editingStatus ? 'Edit Status' : 'Create Custom Status'}</DialogTitle>
+          <DialogTitle>
+            {editingStatus ? t('workflow.dialog.editTitle') : t('workflow.dialog.createTitle')}
+          </DialogTitle>
           <DialogDescription>
-            {editingStatus
-              ? 'Update the status properties for your project workflow.'
-              : 'Add a new workflow status step for tracking issues.'}
+            {editingStatus ? t('workflow.dialog.editDesc') : t('workflow.dialog.createDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -133,21 +135,22 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="status-name" className="text-xs font-semibold text-slate-700">
-              Status Name <span className="text-red-500">*</span>
+              {t('workflow.dialog.nameLabel')} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="status-name"
-              placeholder="e.g. In Code Review"
+              placeholder={t('workflow.dialog.namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isSubmitting}
+              autoFocus
             />
           </div>
 
           {!editingStatus && (
             <div className="space-y-2">
               <Label htmlFor="status-category" className="text-xs font-semibold text-slate-700">
-                Category Group <span className="text-red-500">*</span>
+                {t('workflow.dialog.categoryLabel')} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={category}
@@ -155,10 +158,10 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
                 disabled={isSubmitting}
               >
                 <SelectTrigger id="status-category">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t('workflow.dialog.selectCategory')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORY_OPTIONS.map((opt) => (
+                  {categoryOptions.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
@@ -171,7 +174,7 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status-order" className="text-xs font-semibold text-slate-700">
-                Display Order
+                {t('workflow.dialog.orderLabel')}
               </Label>
               <Input
                 id="status-order"
@@ -184,7 +187,7 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="status-color" className="text-xs font-semibold text-slate-700">
-                Color Tag
+                {t('workflow.dialog.colorLabel')}
               </Label>
               <div className="flex items-center gap-2">
                 <input
@@ -194,19 +197,21 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
                   onChange={(e) => setColor(e.target.value)}
                   className="h-9 w-10 p-1 rounded border border-slate-200 cursor-pointer bg-white"
                   disabled={isSubmitting}
+                  aria-label={t('workflow.dialog.colorLabel')}
                 />
                 <Input
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
                   className="font-mono text-xs uppercase"
                   disabled={isSubmitting}
+                  aria-label={`${t('workflow.dialog.colorLabel')} Hex`}
                 />
               </div>
             </div>
           </div>
 
           <div className="space-y-1.5 pt-1">
-            <Label className="text-xs text-slate-500">Color Presets</Label>
+            <Label className="text-xs text-slate-500">{t('workflow.dialog.presetsLabel')}</Label>
             <div className="flex flex-wrap gap-2">
               {PRESET_COLORS.map((c) => (
                 <button
@@ -217,6 +222,7 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
                     color === c ? 'border-slate-900 ring-2 ring-indigo-500 ring-offset-1' : 'border-transparent'
                   }`}
                   style={{ backgroundColor: c }}
+                  aria-label={`Color preset ${c}`}
                 />
               ))}
             </div>
@@ -229,10 +235,14 @@ export const CreateStatusDialog: React.FC<CreateStatusDialogProps> = ({
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('projects.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : editingStatus ? 'Update Status' : 'Create Status'}
+              {isSubmitting
+                ? t('workflow.dialog.saving')
+                : editingStatus
+                  ? t('workflow.dialog.updateButton')
+                  : t('workflow.dialog.createButton')}
             </Button>
           </DialogFooter>
         </form>
@@ -256,24 +266,25 @@ export const DeleteStatusDialog: React.FC<DeleteStatusDialogProps> = ({
   availableStatuses,
   onConfirmDelete,
 }) => {
+  const { t } = useTranslation(['workspace', 'common']);
   const [fallbackStatusId, setFallbackStatusId] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const validFallbacks = availableStatuses.filter((s) => s.id !== statusToDelete?.id);
 
+  const firstFallbackId = validFallbacks[0]?.id || '';
+
   useEffect(() => {
-    if (validFallbacks.length > 0) {
-      setFallbackStatusId(validFallbacks[0].id);
-    } else {
-      setFallbackStatusId('');
+    if (open) {
+      setFallbackStatusId(firstFallbackId);
+      setError(null);
     }
-    setError(null);
-  }, [statusToDelete, open]);
+  }, [open, statusToDelete?.id, firstFallbackId]);
 
   const handleDelete = async () => {
     if (!statusToDelete || !fallbackStatusId) {
-      setError('Please select a valid fallback status.');
+      setError(t('workflow.deleteDialog.validFallbackRequired'));
       return;
     }
 
@@ -284,7 +295,7 @@ export const DeleteStatusDialog: React.FC<DeleteStatusDialogProps> = ({
       await onConfirmDelete(statusToDelete.id, fallbackStatusId);
       onOpenChange(false);
     } catch (err: any) {
-      setError(err?.message || err?.data?.message || 'Failed to delete status');
+      setError(err?.message || err?.data?.message || t('workflow.deleteDialog.deleteFailed'));
     } finally {
       setIsDeleting(false);
     }
@@ -296,11 +307,10 @@ export const DeleteStatusDialog: React.FC<DeleteStatusDialogProps> = ({
         <DialogHeader>
           <div className="flex items-center gap-2 text-red-600">
             <Trash2 className="h-5 w-5" />
-            <DialogTitle className="text-red-950">Delete Status</DialogTitle>
+            <DialogTitle className="text-red-950">{t('workflow.deleteDialog.title')}</DialogTitle>
           </div>
           <DialogDescription className="pt-1">
-            Are you sure you want to delete status{' '}
-            <span className="font-semibold text-slate-900">"{statusToDelete?.name}"</span>?
+            {t('workflow.deleteDialog.description', { name: statusToDelete?.name })}
           </DialogDescription>
         </DialogHeader>
 
@@ -313,15 +323,15 @@ export const DeleteStatusDialog: React.FC<DeleteStatusDialogProps> = ({
           )}
 
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs leading-relaxed space-y-1">
-            <p className="font-semibold">Reassignment Required</p>
+            <p className="font-semibold">{t('workflow.deleteDialog.reassignTitle')}</p>
             <p className="text-amber-800">
-              Any issues currently assigned to this status must be reassigned to a replacement fallback status.
+              {t('workflow.deleteDialog.reassignDesc')}
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="fallback-status" className="text-xs font-semibold text-slate-700">
-              Select Fallback Status <span className="text-red-500">*</span>
+              {t('workflow.deleteDialog.fallbackLabel')} <span className="text-red-500">*</span>
             </Label>
             <Select
               value={fallbackStatusId}
@@ -329,7 +339,7 @@ export const DeleteStatusDialog: React.FC<DeleteStatusDialogProps> = ({
               disabled={isDeleting || validFallbacks.length === 0}
             >
               <SelectTrigger id="fallback-status">
-                <SelectValue placeholder="Select fallback status" />
+                <SelectValue placeholder={t('workflow.deleteDialog.selectFallback')} />
               </SelectTrigger>
               <SelectContent>
                 {validFallbacks.map((status) => (
@@ -349,7 +359,7 @@ export const DeleteStatusDialog: React.FC<DeleteStatusDialogProps> = ({
             onClick={() => onOpenChange(false)}
             disabled={isDeleting}
           >
-            Cancel
+            {t('projects.cancel')}
           </Button>
           <Button
             type="button"
@@ -357,7 +367,7 @@ export const DeleteStatusDialog: React.FC<DeleteStatusDialogProps> = ({
             onClick={handleDelete}
             disabled={isDeleting || !fallbackStatusId}
           >
-            {isDeleting ? 'Deleting...' : 'Delete & Reassign Issues'}
+            {isDeleting ? t('workflow.deleteDialog.deleting') : t('workflow.deleteDialog.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

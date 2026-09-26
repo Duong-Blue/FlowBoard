@@ -45,6 +45,7 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
   const [saving, setSaving] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -52,6 +53,18 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
     setDescription(project.description || '');
     setStatus(project.status || 'ACTIVE');
   }, [project]);
+
+  const handleOpenDeleteModal = () => {
+    setDeleteConfirmName('');
+    setShowDeleteModal(true);
+  };
+
+  const handleCloseDeleteModal = (open: boolean) => {
+    if (!open) {
+      setDeleteConfirmName('');
+    }
+    setShowDeleteModal(open);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,46 +81,48 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
       if (onProjectUpdated) {
         onProjectUpdated(updated);
       }
-      toast.success(t('common:status.success', 'Project settings updated successfully'));
+      toast.success(t('projects.updateSuccess'));
     } catch (error) {
       console.error('Failed to update project:', error);
-      toast.error(t('common:status.error', 'Failed to update project settings'));
+      toast.error(t('projects.updateFailed'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!isAdmin || deleting) return;
+    if (!isAdmin || deleting || deleteConfirmName !== project.name) return;
 
     try {
       setDeleting(true);
       await deleteProjectApi(currentOrgId, project.id);
       dispatch(removeProject(project.id));
-      toast.success(t('common:status.success', 'Project deleted successfully'));
+      toast.success(t('projects.deleteSuccess'));
       navigate(`/workspace/orgs/${currentOrgId}/projects`);
     } catch (error) {
       console.error('Failed to delete project:', error);
-      toast.error(t('common:status.error', 'Failed to delete project'));
+      toast.error(t('projects.deleteFailed'));
       setDeleting(false);
       setShowDeleteModal(false);
     }
   };
+
+  const isDeleteEnabled = deleteConfirmName === project.name && !deleting;
 
   return (
     <div className="space-y-6">
       {!isAdmin && (
         <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-600 text-sm">
           <Lock className="h-4 w-4 shrink-0" />
-          <span>You have view-only access to project settings. Only project or organization administrators can make changes.</span>
+          <span>{t('projects.viewOnlyNotice')}</span>
         </div>
       )}
 
       <Card className="border border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-slate-900">General Information</CardTitle>
+          <CardTitle className="text-xl font-semibold text-slate-900">{t('projects.generalInfo')}</CardTitle>
           <CardDescription className="text-slate-500">
-            Update your project details and status.
+            {t('projects.generalDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -115,14 +130,14 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="projectName" className="text-sm font-medium text-slate-700">
-                  Project Name
+                  {t('projects.projectName')}
                 </Label>
                 <Input
                   id="projectName"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={!isAdmin || saving}
-                  placeholder="e.g. Frontend Redesign"
+                  placeholder={t('projects.projectNamePlaceholder')}
                   required
                 />
               </div>
@@ -130,10 +145,10 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="projectKey" className="text-sm font-medium text-slate-700">
-                    Project Key
+                    {t('projects.keyLabel')}
                   </Label>
                   <span className="text-xs text-slate-400 flex items-center gap-1">
-                    <Info className="h-3 w-3" /> Read-only
+                    <Info className="h-3 w-3" /> {t('projects.readOnly')}
                   </span>
                 </div>
                 <Input
@@ -147,7 +162,7 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="projectDescription" className="text-sm font-medium text-slate-700">
-                Description
+                {t('projects.descriptionLabel')}
               </Label>
               <textarea
                 id="projectDescription"
@@ -155,14 +170,14 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={!isAdmin || saving}
-                placeholder="Brief summary of what this project covers..."
+                placeholder={t('projects.descriptionPlaceholder')}
                 className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
               />
             </div>
 
             <div className="space-y-2 max-w-xs">
               <Label htmlFor="projectStatus" className="text-sm font-medium text-slate-700">
-                Status
+                {t('projects.statusLabel', { defaultValue: 'Status' })}
               </Label>
               <Select
                 value={status}
@@ -170,11 +185,11 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
                 disabled={!isAdmin || saving}
               >
                 <SelectTrigger id="projectStatus" className="w-full">
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t('projects.selectStatus')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="ARCHIVED">Archived</SelectItem>
+                  <SelectItem value="ACTIVE">{t('projects.statusActive')}</SelectItem>
+                  <SelectItem value="ARCHIVED">{t('projects.statusArchived')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -189,7 +204,7 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
               className="flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? t('projects.saving') : t('projects.saveChanges')}
             </Button>
           </CardFooter>
         )}
@@ -200,29 +215,29 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
           <CardHeader>
             <div className="flex items-center gap-2 text-red-600">
               <AlertTriangle className="h-5 w-5" />
-              <CardTitle className="text-lg font-semibold text-red-700">Danger Zone</CardTitle>
+              <CardTitle className="text-lg font-semibold text-red-700">{t('projects.dangerZone')}</CardTitle>
             </div>
             <CardDescription className="text-red-600/80">
-              Irreversible actions for this project. Please proceed with caution.
+              {t('projects.dangerZoneDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Separator className="bg-red-200/60" />
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h4 className="font-medium text-slate-900">Delete Project</h4>
+                <h4 className="font-medium text-slate-900">{t('projects.deleteProject')}</h4>
                 <p className="text-xs text-slate-500">
-                  Permanently remove this project and all associated issues, tasks, and data.
+                  {t('projects.deleteProjectDesc')}
                 </p>
               </div>
               <Button
                 variant="destructive"
-                onClick={() => setShowDeleteModal(true)}
+                onClick={handleOpenDeleteModal}
                 disabled={deleting}
                 className="shrink-0 flex items-center gap-2"
               >
                 <Trash2 className="h-4 w-4" />
-                Delete Project
+                {t('projects.deleteProjectButton')}
               </Button>
             </div>
           </CardContent>
@@ -230,33 +245,48 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
       )}
 
       {/* Delete Confirmation Modal */}
-      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+      <Dialog open={showDeleteModal} onOpenChange={handleCloseDeleteModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertTriangle className="h-5 w-5" />
-              Delete Project
+              {t('projects.deleteProjectTitle')}
             </DialogTitle>
             <DialogDescription className="pt-2 text-slate-600">
-              Are you sure you want to delete <span className="font-semibold text-slate-900">{project.name}</span>? This action is permanent and cannot be undone. All issues and project data will be lost.
+              {t('projects.deleteConfirmDesc', { name: project.name })}
             </DialogDescription>
           </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <Label htmlFor="confirm-project-name" className="text-xs font-semibold text-slate-700">
+              {t('projects.typeToConfirm', { name: project.name })}
+            </Label>
+            <Input
+              id="confirm-project-name"
+              value={deleteConfirmName}
+              onChange={(e) => setDeleteConfirmName(e.target.value)}
+              placeholder={t('projects.typeProjectNamePlaceholder')}
+              disabled={deleting}
+              autoComplete="off"
+            />
+          </div>
+
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
-              onClick={() => setShowDeleteModal(false)}
+              onClick={() => handleCloseDeleteModal(false)}
               disabled={deleting}
             >
-              Cancel
+              {t('projects.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={!isDeleteEnabled}
               className="flex items-center gap-2"
             >
               <Trash2 className="h-4 w-4" />
-              {deleting ? 'Deleting...' : 'Confirm Delete'}
+              {deleting ? t('projects.deleting') : t('projects.confirmDelete')}
             </Button>
           </DialogFooter>
         </DialogContent>
