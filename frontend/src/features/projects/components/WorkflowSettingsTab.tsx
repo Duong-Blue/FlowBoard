@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Workflow, Plus, Edit2, Trash2, ListTodo, Clock, Eye, CheckCircle2, AlertCircle, Layers } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Workflow, Plus, Edit2, Trash2, ListTodo, Clock, Eye, CheckCircle2, AlertCircle, Layers, Lock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
   projectId: propProjectId,
   isAdmin = true,
 }) => {
+  const { t } = useTranslation(['workspace', 'common']);
   const { projectId: resolvedProjectId, loading: projectLoading } = useResolvedProject();
   const projectId = propProjectId || resolvedProjectId;
 
@@ -66,7 +68,7 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
   const [statusToDelete, setStatusToDelete] = useState<WorkflowStatus | null>(null);
 
   if (projectLoading || (projectId && isWorkflowLoading)) {
-    return <PageLoader text="Loading workflow configuration..." />;
+    return <PageLoader text={t('workflow.loading')} />;
   }
 
   if (!projectId || workflowError) {
@@ -74,10 +76,10 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
       <div className="p-6 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center justify-between">
         <div className="flex items-center gap-2">
           <AlertCircle className="h-5 w-5 text-red-600" />
-          <span>Failed to load workflow configuration. Please try again.</span>
+          <span>{t('workflow.loadFailed')}</span>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
-          Retry
+          {t('workflow.retry')}
         </Button>
       </div>
     );
@@ -118,6 +120,13 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
 
   return (
     <div className="space-y-6">
+      {!isAdmin && (
+        <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-600 text-sm">
+          <Lock className="h-4 w-4 shrink-0" />
+          <span>{t('workflow.readOnlyNotice')}</span>
+        </div>
+      )}
+
       {/* Header & Statuses Section */}
       <Card className="border border-slate-200 shadow-sm">
         <CardHeader>
@@ -126,11 +135,11 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
               <div className="flex items-center gap-2">
                 <Workflow className="h-5 w-5 text-slate-700" />
                 <CardTitle className="text-xl font-semibold text-slate-900">
-                  Workflow Statuses
+                  {t('workflow.statusesTitle')}
                 </CardTitle>
               </div>
               <CardDescription className="text-slate-500 mt-1">
-                Manage issue lifecycle statuses, categories, and colors for this project.
+                {t('workflow.statusesDesc')}
               </CardDescription>
             </div>
 
@@ -140,10 +149,10 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
                   setEditingStatus(null);
                   setCreateDialogOpen(true);
                 }}
-                className="gap-2 self-start sm:self-auto"
+                className="gap-2 self-start sm:self-auto cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
-                Add Custom Status
+                {t('workflow.addStatus')}
               </Button>
             )}
           </div>
@@ -164,6 +173,7 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
                       <span
                         className="h-3 w-3 rounded-full shrink-0 border border-slate-200 shadow-xs"
                         style={{ backgroundColor: statusItem.color || '#3b82f6' }}
+                        aria-label={`Color ${statusItem.color || '#3b82f6'}`}
                       />
                       <div className="p-1.5 rounded-md bg-slate-100 text-slate-700">
                         <IconComponent className="h-4 w-4" />
@@ -179,7 +189,9 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-mono text-[11px]">Order: #{statusItem.order}</span>
+                    <span className="font-mono text-[11px]">
+                      {t('workflow.order', { order: statusItem.order })}
+                    </span>
 
                     {isAdmin && (
                       <div className="flex items-center gap-1">
@@ -188,7 +200,8 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
                           size="icon"
                           className="h-7 w-7 text-slate-500 hover:text-slate-900"
                           onClick={() => handleOpenEdit(statusItem)}
-                          title="Edit Status"
+                          title={t('workflow.editStatus')}
+                          aria-label={`${t('workflow.editStatus')} ${statusItem.name}`}
                         >
                           <Edit2 className="h-3.5 w-3.5" />
                         </Button>
@@ -198,7 +211,12 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
                           className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
                           onClick={() => handleOpenDelete(statusItem)}
                           disabled={statuses.length <= 1}
-                          title={statuses.length <= 1 ? 'Cannot delete last remaining status' : 'Delete Status'}
+                          title={
+                            statuses.length <= 1
+                              ? t('workflow.cannotDeleteLast')
+                              : t('workflow.deleteStatus')
+                          }
+                          aria-label={`${t('workflow.deleteStatus')} ${statusItem.name}`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -218,6 +236,7 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
         initialTransitions={transitions}
         onSave={handleSaveMatrix}
         isSaving={isSavingMatrix}
+        isAdmin={isAdmin}
       />
 
       {/* Dialog Modals */}
