@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
+import { OAuthButtons } from '../../components/shared/OAuthButtons';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
@@ -101,7 +102,8 @@ export default function RegisterPage() {
           <Button className="w-full" type="submit" disabled={isLoading}>
             {isLoading ? t('register.submittingButton') : t('register.submitButton')}
           </Button>
-          <div className="text-center text-sm text-slate-500">
+          <OAuthButtons disabled={isLoading} />
+          <div className="text-center text-sm text-slate-500 pt-2">
             {t('register.hasAccount')}{' '}
             <Link to="/login" className="font-semibold text-primary hover:underline">
               {t('register.loginLink')}
