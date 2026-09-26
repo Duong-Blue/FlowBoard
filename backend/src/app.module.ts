@@ -18,6 +18,7 @@ import { AttachmentsModule } from './modules/attachments/attachments.module';
 import { RelationsModule } from './modules/relations/relations.module';
 import { SavedViewsModule } from './modules/saved-views/saved-views.module';
 import { WorkflowsModule } from './modules/workflows/workflows.module';
+import { SearchModule } from './modules/search/search.module';
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RealtimeModule } from './modules/realtime/realtime.module';
@@ -45,6 +46,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
     WorkflowsModule,
     NotificationsModule,
     RealtimeModule,
+    SearchModule,
   ],
   controllers: [],
   providers: [
