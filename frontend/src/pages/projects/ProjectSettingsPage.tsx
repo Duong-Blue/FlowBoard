@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Sliders, Workflow, ArrowLeft } from 'lucide-react';
 import { useAppSelector } from '../../store';
 import { getOrgMembers, getProjectMembers } from '../../services/memberService';
 import { Button } from '../../components/ui/button';
 import { PageLoader } from '../../components/shared/PageLoader';
+import { ProjectPageShell } from '@/components/shared/ProjectPageShell';
 import NotFound from '../NotFound';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { GeneralSettingsTab } from '@/features/projects/components/GeneralSettingsTab';
@@ -15,23 +16,25 @@ import type { Member, Project } from '../../store/types';
 export default function ProjectSettingsPage() {
   const { t } = useTranslation(['workspace', 'common']);
   const { orgId, projectKey } = useParams<{ orgId: string; projectKey: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
 
-  const [activeTab, setActiveTab] = useState<'general' | 'workflow'>('general');
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const tabParam = searchParams.get('tab');
+  const activeTab: 'general' | 'workflow' = tabParam === 'workflow' ? 'workflow' : 'general';
+
+  const [localProject, setLocalProject] = useState<Project | null>(null);
+  const currentProject = localProject || project;
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const currentOrgId = orgId || activeOrgId || project?.organizationId || project?.orgId;
 
-  useEffect(() => {
-    if (project) {
-      setCurrentProject(project);
-    }
-  }, [project]);
+  const handleTabChange = (tab: 'general' | 'workflow') => {
+    setSearchParams({ tab }, { replace: true });
+  };
 
   useEffect(() => {
     async function checkUserRole() {
@@ -69,72 +72,69 @@ export default function ProjectSettingsPage() {
   const displayKey = currentProject.key || projectKey;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <Sliders className="h-6 w-6 text-slate-700" />
-            Project Settings
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Manage configuration, details, and workflow settings for <span className="font-semibold text-slate-700">{currentProject.name}</span>.
-          </p>
-        </div>
-
+    <ProjectPageShell
+      project={currentProject || project}
+      title={t('projects.settingsTitle')}
+      subtitle={t('projects.settingsSubtitle', { name: currentProject.name })}
+      activeView="settings"
+      actions={
         <Button
           variant="outline"
           size="sm"
           onClick={() => navigate(`/workspace/orgs/${currentOrgId}/projects/${displayKey}/board`)}
-          className="self-start sm:self-auto flex items-center gap-2"
+          className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Project
+          {t('projects.backToProject')}
         </Button>
+      }
+    >
+      <div className="space-y-6">
+        {/* Tabs Switcher Navigation */}
+        <nav className="flex items-center border-b border-slate-200 gap-2" aria-label={t('projects.settingsTabs', { defaultValue: 'Settings Tabs' })}>
+          <button
+            type="button"
+            aria-current={activeTab === 'general' ? 'page' : undefined}
+            onClick={() => handleTabChange('general')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
+              activeTab === 'general'
+                ? 'border-blue-600 text-blue-600 font-semibold'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <Sliders className="h-4 w-4" aria-hidden="true" />
+            {t('projects.generalTab')}
+          </button>
+
+          <button
+            type="button"
+            aria-current={activeTab === 'workflow' ? 'page' : undefined}
+            onClick={() => handleTabChange('workflow')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
+              activeTab === 'workflow'
+                ? 'border-blue-600 text-blue-600 font-semibold'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <Workflow className="h-4 w-4" aria-hidden="true" />
+            {t('projects.workflowTab')}
+          </button>
+        </nav>
+
+        {/* Tab Panels */}
+        <div className="pt-2">
+          {activeTab === 'general' && (
+            <GeneralSettingsTab
+              project={currentProject}
+              currentOrgId={currentOrgId || ''}
+              isAdmin={isAdmin}
+              onProjectUpdated={(updated) => setLocalProject(updated)}
+            />
+          )}
+
+          {activeTab === 'workflow' && <WorkflowSettingsTab projectId={projectId} isAdmin={isAdmin} />}
+        </div>
       </div>
-
-      {/* Tabs Switcher Navigation */}
-      <div className="flex items-center border-b border-slate-200 gap-2">
-        <button
-          type="button"
-          onClick={() => setActiveTab('general')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer outline-none ${
-            activeTab === 'general'
-              ? 'border-blue-600 text-blue-600 font-semibold'
-              : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-          }`}
-        >
-          <Sliders className="h-4 w-4" />
-          General Settings
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('workflow')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer outline-none ${
-            activeTab === 'workflow'
-              ? 'border-blue-600 text-blue-600 font-semibold'
-              : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-          }`}
-        >
-          <Workflow className="h-4 w-4" />
-          Workflow Settings
-        </button>
-      </div>
-
-      {/* Tab Panels */}
-      <div className="pt-2">
-        {activeTab === 'general' && (
-          <GeneralSettingsTab
-            project={currentProject}
-            currentOrgId={currentOrgId || ''}
-            isAdmin={isAdmin}
-            onProjectUpdated={(updated) => setCurrentProject(updated)}
-          />
-        )}
-
-        {activeTab === 'workflow' && <WorkflowSettingsTab projectId={projectId} isAdmin={isAdmin} />}
-      </div>
-    </div>
+    </ProjectPageShell>
   );
 }
