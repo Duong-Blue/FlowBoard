@@ -22,7 +22,8 @@
     "accept": "Chấp nhận",
     "reject": "Từ chối",
     "revoke": "Thu hồi",
-    "remove": "Xóa khỏi danh sách"
+    "remove": "Xóa khỏi danh sách",
+    "retry": "Thử lại"
   },
   "switcher": {
     "selectLanguage": "Chọn ngôn ngữ"

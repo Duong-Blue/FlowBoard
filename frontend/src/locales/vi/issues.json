@@ -9,6 +9,8 @@
     "disconnected": "Mất kết nối",
     "listView": "Xem dạng danh sách",
     "boardView": "Xem dạng bảng",
+    "calendarView": "Lịch",
+    "showingIssues": "Hiển thị {{start}} - {{end}} trong tổng số {{total}} thẻ",
     "searchPlaceholder": "Tìm thẻ theo mã hoặc tiêu đề...",
     "filterByAssignee": "Lọc theo người thực hiện",
     "filterByPriority": "Lọc theo độ ưu tiên",

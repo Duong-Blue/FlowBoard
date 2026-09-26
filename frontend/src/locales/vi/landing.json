@@ -1,0 +1,101 @@
+{
+  "header": {
+    "home": "Trang chủ",
+    "features": "Tính năng",
+    "workflow": "Quy trình",
+    "highlights": "Điểm nổi bật",
+    "goToWorkspace": "Đến trang làm việc",
+    "signIn": "Đăng nhập",
+    "getStarted": "Bắt đầu ngay",
+    "openMenu": "Mở menu"
+  },
+  "hero": {
+    "badge": "Quản lý dự án cho đội ngũ kỹ thuật",
+    "titlePrefix": "Quản lý dự án rõ ràng cho",
+    "titleHighlight": "quy trình làm việc nhóm chuẩn hóa",
+    "subtitle": "Tổ chức dự án, quản lý thẻ công việc và giữ cho đội ngũ luôn đồng bộ trong một không gian làm việc tập trung.",
+    "getStarted": "Bắt đầu ngay",
+    "exploreFeatures": "Khám phá tính năng",
+    "noCard": "Không cần thẻ tín dụng • Thiết lập trong vài phút",
+    "searchPlaceholder": "Tìm kiếm công việc...",
+    "updatedAgo": "Cập nhật 2 phút trước"
+  },
+  "highlights": {
+    "title": "Thực thi dự án hiệu quả không lo quá tải",
+    "subtitle": "Được thiết kế riêng cho các đội ngũ kỹ thuật cần sự rõ ràng, quản lý trạng thái dự đoán được và cập nhật nhiệm vụ nhanh chóng.",
+    "item1Title": "Quản lý công việc cấu trúc",
+    "item1Desc": "Theo dõi lỗi, nhiệm vụ và yêu cầu tính năng với mức độ ưu tiên rõ ràng, nhiệm vụ phụ tùy chỉnh và nhật ký hoạt động phong phú.",
+    "item2Title": "Không gian làm việc đa tổ chức",
+    "item2Desc": "Phân lập các dự án tổ chức, quản lý lời mời thành viên và kiểm soát quyền hạn vai trò chi tiết.",
+    "item3Title": "Minh bạch quy trình",
+    "item3Desc": "Giữ cho các bước quy trình rõ ràng qua bốn trạng thái cốt lõi với phản hồi kéo thả tức thì và theo dõi liên kết."
+  },
+  "features": {
+    "badge": "Chi tiết tính năng",
+    "title": "Xây dựng cho kỷ luật kỹ thuật",
+    "subtitle": "Khám phá các khả năng cốt lõi vận hành quy trình FlowBoard.",
+    "keyHighlights": "Điểm nổi bật",
+    "interactivePreview": "Xem trước tương tác",
+    "stepOf": "Bước {{step}} / {{total}}",
+    "feature0": {
+      "title": "Giao diện Bảng Kanban",
+      "description": "Trực quan hóa quy trình làm việc của đội ngũ kỹ thuật với các cột trạng thái động, sắp xếp kéo thả mượt mà và cập nhật bảng thời gian thực.",
+      "h1": "Thuật toán Fractional indexing giúp sắp xếp thẻ mượt mà",
+      "h2": "Gom nhóm trạng thái cột (CẦN LÀM, ĐANG LÀM, ĐANG DUYỆT, HOÀN THÀNH)",
+      "h3": "Lọc theo người thực hiện, độ ưu tiên hoặc từ khóa"
+    },
+    "feature1": {
+      "title": "Danh sách công việc cấu trúc",
+      "description": "Giao diện mật độ cao dành cho người dùng chuyên sâu để phân loại, tìm kiếm và kiểm tra hàng loạt thẻ công việc hiệu quả.",
+      "h1": "Giao diện thân thiện với bàn phím",
+      "h2": "Sắp xếp và lọc đa cột",
+      "h3": "Truy cập nhanh chi tiết thẻ công việc"
+    },
+    "feature2": {
+      "title": "Nhiệm vụ phụ & Chi tiết",
+      "description": "Chia nhỏ các epic phức tạp thành các nhiệm vụ phụ dễ quản lý, theo dõi tiến độ hoàn thành và quản lý mối quan hệ giữa các thẻ.",
+      "h1": "Thanh tiến độ hoàn thành nhiệm vụ phụ",
+      "h2": "Liên kết mối quan hệ giữa các thẻ (Chặn, Liên quan)",
+      "h3": "Nhật ký hoạt động phong phú và luồng thảo luận"
+    },
+    "feature3": {
+      "title": "Phân quyền đa tổ chức",
+      "description": "Tổ chức dự án của bạn bên trong các tổ chức an toàn với kiểm soát truy cập dựa trên vai trò nghiêm ngặt.",
+      "h1": "Ranh giới truy cập cấp Tổ chức & Dự án",
+      "h2": "Ủy quyền dựa trên vai trò (QUẢN TRỊ VIÊN, THÀNH VIÊN, NGƯỜI XEM)",
+      "h3": "Quy trình quản lý lời mời qua email"
+    }
+  },
+  "workflow": {
+    "title": "Quy trình rõ ràng từ kế hoạch đến hoàn thành",
+    "subtitle": "Mỗi thẻ công việc di chuyển có dự đoán qua bốn giai đoạn trạng thái chuẩn hóa.",
+    "step1Desc": "Các mục backlog chờ ưu tiên và phân công.",
+    "step2Desc": "Nhiệm vụ đang tích cực được lập trình và thực hiện.",
+    "step3Desc": "Pull request đã deploy lên môi trường staging để QA kiểm thử.",
+    "step4Desc": "Tính năng đã merge, xác minh và phát hành lên production."
+  },
+  "cta": {
+    "title": "Tập trung công việc của đội ngũ bạn.",
+    "subtitle": "Khám phá FlowBoard và tổ chức dự án tiếp theo của bạn.",
+    "getStarted": "Bắt đầu ngay",
+    "signIn": "Đăng nhập không gian làm việc",
+    "freeNote": "Bắt đầu miễn phí. Không cần thẻ tín dụng."
+  },
+  "footer": {
+    "subtitle": "Quản lý dự án ngăn nắp cho các đội ngũ kỹ thuật.",
+    "allSystems": "Tất cả hệ thống hoạt động bình thường",
+    "product": "Sản phẩm",
+    "resources": "Tài nguyên",
+    "account": "Tài khoản",
+    "features": "Tính năng",
+    "workflow": "Quy trình",
+    "highlights": "Điểm nổi bật",
+    "documentation": "Tài liệu",
+    "changelog": "Nhật ký thay đổi",
+    "soon": "Sắp có",
+    "comingSoon": "Sắp ra mắt",
+    "signIn": "Đăng nhập",
+    "getStarted": "Bắt đầu ngay",
+    "copyright": "© 2026 FlowBoard. Bảo lưu mọi quyền."
+  }
+}
