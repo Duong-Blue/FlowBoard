@@ -8,10 +8,8 @@ export default function AuthLayout() {
 
   // If the user is authenticated and tries to access auth routes, redirect them to /workspace
   // or to the location they were trying to reach if it's available.
-  if (isAuthenticated) {
-    const fromPath = location.state?.from?.pathname;
-    const fromSearch = location.state?.from?.search;
-    const from = fromPath + fromSearch || '/workspace';
+  if (isAuthenticated && location.pathname !== '/oauth/callback') {
+    const from = location.state?.from || '/workspace';
 
     return <Navigate to={from} replace />;
   }

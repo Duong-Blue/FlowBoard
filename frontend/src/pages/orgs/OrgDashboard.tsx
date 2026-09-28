@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { setOrgs, setActiveOrg } from '../../store/slices/orgSlice';
+import { fetchOrgActivities } from '../../store/slices/issueSlice';
+import { ActivityItem } from '../../features/issues/components/ActivityItem';
 import * as orgService from '../../services/orgService';
 import * as projectService from '../../services/projectService';
 import * as memberService from '../../services/memberService';
@@ -17,10 +19,10 @@ import {
   Plus,
   ArrowRight,
   Activity,
-  Clock,
   ExternalLink,
   Shield,
   Layers,
+  Loader2,
 } from 'lucide-react';
 import type { Organization, Project, Member } from '../../store/types';
 
@@ -30,6 +32,9 @@ export default function OrgDashboard() {
   const navigate = useNavigate();
   const { orgId: paramOrgId } = useParams<{ orgId?: string }>();
   const { list: orgs, activeOrgId, loading: orgsLoading } = useAppSelector((state) => state.org);
+  const { items: orgActivityItems, loading: orgActivityLoading } = useAppSelector(
+    (state) => state.issue.orgActivities
+  );
 
   const [activeOrg, setActiveOrgState] = useState<Organization | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -108,6 +113,12 @@ export default function OrgDashboard() {
       isMounted = false;
     };
   }, [activeOrg?.id, t]);
+
+  useEffect(() => {
+    if (activeOrg?.id) {
+      dispatch(fetchOrgActivities({ orgId: activeOrg.id }));
+    }
+  }, [dispatch, activeOrg?.id]);
 
   if (orgsLoading || (dataLoading && !activeOrg)) {
     return <PageLoader text={t('common:status.loading')} className="min-h-[400px]" />;
@@ -350,29 +361,19 @@ export default function OrgDashboard() {
           </div>
 
           <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            {dataLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex gap-3 animate-pulse">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 shrink-0" />
-                    <div className="flex-1 space-y-1.5">
-                      <div className="h-3 bg-slate-100 rounded w-3/4" />
-                      <div className="h-3 bg-slate-100 rounded w-1/2" />
-                    </div>
-                  </div>
-                ))}
+            {orgActivityLoading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              </div>
+            ) : !orgActivityItems || orgActivityItems.length === 0 ? (
+              <div className="py-6 text-center text-sm text-slate-500">
+                {t('common:status.noActivity', 'No activity yet')}
               </div>
             ) : (
-              <div className="relative pl-6 space-y-5 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
-                <div className="relative group">
-                  <span className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-white" />
-                  <div>
-                    <p className="text-xs font-medium text-slate-900">{activeOrg?.name}</p>
-                    <span className="text-[10px] text-slate-400 flex items-center mt-1">
-                      <Clock className="w-3 h-3 mr-1 inline" /> {t('common:status.active')}
-                    </span>
-                  </div>
-                </div>
+              <div className="space-y-4">
+                {orgActivityItems.map((activity) => (
+                  <ActivityItem key={activity.id} activity={activity} />
+                ))}
               </div>
             )}
           </div>

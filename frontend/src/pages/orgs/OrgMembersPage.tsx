@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Users } from 'lucide-react';
+import { Users, UserPlus } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { PageLoader } from '../../components/shared/PageLoader';
@@ -15,6 +15,7 @@ import { useAppSelector } from '../../store';
 export default function OrgMembersPage() {
   const { t } = useTranslation(['workspace', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +83,13 @@ export default function OrgMembersPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">{t('orgMembers.title')}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">{t('orgMembers.title')}</h1>
+        <Button onClick={() => navigate(`/workspace/orgs/${orgId}/invitations`)} className="flex items-center gap-2">
+          <UserPlus className="h-4 w-4" />
+          {t('orgMembers.inviteMember')}
+        </Button>
+      </div>
       <div className="border border-slate-200 rounded-md divide-y divide-slate-200 bg-white">
         {members.length === 0 ? (
           <div className="p-8">
