@@ -5,9 +5,10 @@ import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../../database/database.module';
 import { OrgMembersModule } from '../org-members/org-members.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
-  imports: [DatabaseModule, OrgMembersModule, AuthModule, NotificationsModule],
+  imports: [DatabaseModule, OrgMembersModule, AuthModule, NotificationsModule, ActivityModule],
   controllers: [ProjectMembersController],
   providers: [ProjectMembersService],
 })

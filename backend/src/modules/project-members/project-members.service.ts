@@ -8,6 +8,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { ProjectRole } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationsService } from '../notifications/notifications.service';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class ProjectMembersService {
@@ -15,6 +16,7 @@ export class ProjectMembersService {
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
     private readonly notificationsService: NotificationsService,
+    private readonly activityService: ActivityService,
   ) {}
 
   private async checkOrgAdminPermission(orgId: string, userId: string) {
@@ -66,6 +68,14 @@ export class ProjectMembersService {
         userId: dto.userId,
         role: dto.role,
       },
+    });
+
+    await this.activityService.createActivity({
+      type: 'PROJECT_MEMBER_ADDED',
+      actorId: requesterId,
+      projectId,
+      entityType: 'PROJECT',
+      metadata: { memberId: dto.userId, role: dto.role },
     });
 
     try {
@@ -132,6 +142,14 @@ export class ProjectMembersService {
 
     const deletedMember = await this.prisma.projectMember.delete({
       where: { projectId_userId: { projectId, userId: targetUserId } },
+    });
+
+    await this.activityService.createActivity({
+      type: 'PROJECT_MEMBER_REMOVED',
+      actorId: requesterId,
+      projectId,
+      entityType: 'PROJECT',
+      metadata: { memberId: targetUserId, role: deletedMember.role },
     });
 
     try {
