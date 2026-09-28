@@ -1,22 +1,99 @@
 {
+  "home": {
+    "welcome": {
+      "title": "Trang chủ Không gian làm việc",
+      "greeting": "Chào mừng trở lại, {{name}}",
+      "subtitle": "Tổng quan về các tổ chức, dự án và công việc đang hoạt động của bạn"
+    },
+    "actions": {
+      "createOrg": "Tạo tổ chức",
+      "joinOrg": "Tham gia tổ chức",
+      "createProject": "Tạo dự án",
+      "selectOrg": "Chọn tổ chức"
+    },
+    "organizations": {
+      "title": "Tổ chức của bạn",
+      "description": "Các tổ chức và không gian làm việc mà bạn tham gia",
+      "roleOwner": "Chủ sở hữu",
+      "roleAdmin": "Quản trị viên",
+      "roleMember": "Thành viên",
+      "viewOrg": "Xem tổ chức",
+      "project": "dự án",
+      "projects": "dự án"
+    },
+    "projects": {
+      "title": "Dự án gần đây",
+      "description": "Các dự án bạn đã truy cập hoặc đóng góp gần đây",
+      "key": "Mã dự án",
+      "org": "Tổ chức",
+      "viewProject": "Xem dự án"
+    },
+    "myWork": {
+      "title": "Công việc được giao",
+      "description": "Các thẻ công việc và nhiệm vụ được giao cho bạn trên tất cả dự án",
+      "issue": "Thẻ công việc",
+      "status": "Trạng thái",
+      "priority": "Độ ưu tiên",
+      "dueDate": "Hạn chót",
+      "noDueDate": "Không có hạn chót"
+    },
+    "activity": {
+      "title": "Hoạt động gần đây",
+      "description": "Các cập nhật và hoạt động mới nhất trong không gian làm việc của bạn"
+    },
+    "roles": {
+      "owner": "Chủ sở hữu",
+      "admin": "Quản trị viên",
+      "member": "Thành viên",
+      "viewer": "Người xem"
+    },
+    "emptyStates": {
+      "noOrgsTitle": "Chưa có tổ chức nào",
+      "noOrgsDesc": "Tạo hoặc tham gia một tổ chức để bắt đầu làm việc cùng đội ngũ của bạn.",
+      "noProjectsTitle": "Không tìm thấy dự án nào",
+      "noProjectsDesc": "Bạn chưa có dự án hoạt động nào trong không gian làm việc.",
+      "noWorkTitle": "Đã hoàn tất công việc!",
+      "noWorkDesc": "Hiện tại bạn không có nhiệm vụ hoặc thẻ công việc nào được giao.",
+      "noActivityTitle": "Chưa có hoạt động gần đây",
+      "noActivityDesc": "Nhật ký hoạt động sẽ xuất hiện tại đây khi các thành viên thực hiện thao tác."
+    },
+    "errors": {
+      "loadFailed": "Tải dữ liệu không gian làm việc thất bại. Vui lòng thử lại.",
+      "retry": "Thử lại"
+    },
+    "loading": {
+      "loadingWorkspace": "Đang tải không gian làm việc..."
+    }
+  },
   "sidebar": {
-    "organizationSection": "Tổ chức",
+    "workspaceSection": "Không gian làm việc",
+    "workspaceHome": "Trang chủ Workspace",
+    "organizationSection": "TỔ CHỨC",
     "organizations": "Danh sách tổ chức",
     "selectOrganization": "Chọn tổ chức",
     "noOrgSelected": "Chưa chọn tổ chức",
     "noOrganizations": "Không tìm thấy tổ chức nào",
     "createOrganization": "Tạo tổ chức mới",
     "overview": "Tổng quan",
+    "allProjects": "Tất cả dự án",
     "projects": "Dự án",
     "myWork": "Công việc của tôi",
+    "membersAndInvitations": "Thành viên & Lời mời",
     "members": "Thành viên",
+    "invitations": "Lời mời",
     "activity": "Hoạt động",
-    "settings": "Cài đặt",
+    "orgSettings": "Cài đặt tổ chức",
+    "projectSection": "DỰ ÁN",
+    "selectProject": "Chọn dự án",
     "currentProject": "Dự án hiện tại",
     "selectProjectHint": "Chọn một dự án để xem điều hướng",
     "projectOverview": "Tổng quan dự án",
+    "issuesList": "Danh sách công việc",
     "issues": "Thẻ công việc",
     "board": "Bảng Kanban",
+    "calendar": "Lịch",
+    "projectSettings": "Cài đặt dự án",
+    "settings": "Cài đặt",
     "expandSidebar": "Mở rộng thanh bên",
     "collapseSidebar": "Thu gọn thanh bên"
   },

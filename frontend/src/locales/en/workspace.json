@@ -1,22 +1,99 @@
 {
+  "home": {
+    "welcome": {
+      "title": "Workspace Home",
+      "greeting": "Welcome back, {{name}}",
+      "subtitle": "Overview of your organizations, projects, and active tasks"
+    },
+    "actions": {
+      "createOrg": "Create Organization",
+      "joinOrg": "Join Organization",
+      "createProject": "Create Project",
+      "selectOrg": "Select Organization"
+    },
+    "organizations": {
+      "title": "Your Organizations",
+      "description": "Organizations and workspaces you belong to",
+      "roleOwner": "Owner",
+      "roleAdmin": "Admin",
+      "roleMember": "Member",
+      "viewOrg": "View Organization",
+      "project": "project",
+      "projects": "projects"
+    },
+    "projects": {
+      "title": "Recent Projects",
+      "description": "Projects you have accessed or contributed to recently",
+      "key": "Key",
+      "org": "Organization",
+      "viewProject": "View Project"
+    },
+    "myWork": {
+      "title": "My Assigned Work",
+      "description": "Issues and tasks assigned to you across all projects",
+      "issue": "Issue",
+      "status": "Status",
+      "priority": "Priority",
+      "dueDate": "Due Date",
+      "noDueDate": "No due date"
+    },
+    "activity": {
+      "title": "Recent Activity",
+      "description": "Latest updates and actions across your workspace"
+    },
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member",
+      "viewer": "Viewer"
+    },
+    "emptyStates": {
+      "noOrgsTitle": "No Organizations Yet",
+      "noOrgsDesc": "Create or join an organization to start collaborating with your team.",
+      "noProjectsTitle": "No Projects Found",
+      "noProjectsDesc": "You don't have any active projects in your workspace yet.",
+      "noWorkTitle": "All Caught Up!",
+      "noWorkDesc": "You have no assigned tasks or pending issues at the moment.",
+      "noActivityTitle": "No Recent Activity",
+      "noActivityDesc": "Workspace activity log will appear here as team members perform actions."
+    },
+    "errors": {
+      "loadFailed": "Failed to load workspace data. Please try again.",
+      "retry": "Retry"
+    },
+    "loading": {
+      "loadingWorkspace": "Loading workspace..."
+    }
+  },
   "sidebar": {
-    "organizationSection": "Organization",
+    "workspaceSection": "Workspace",
+    "workspaceHome": "Workspace Home",
+    "organizationSection": "ORGANIZATION",
     "organizations": "Organizations",
     "selectOrganization": "Select Organization",
     "noOrgSelected": "No org selected",
     "noOrganizations": "No organizations found",
     "createOrganization": "Create Organization",
     "overview": "Overview",
+    "allProjects": "All Projects",
     "projects": "Projects",
     "myWork": "My Work",
+    "membersAndInvitations": "Members & Invitations",
     "members": "Members",
+    "invitations": "Invitations",
     "activity": "Activity",
-    "settings": "Settings",
+    "orgSettings": "Organization Settings",
+    "projectSection": "PROJECT",
+    "selectProject": "Select Project",
     "currentProject": "Current Project",
     "selectProjectHint": "Select a project to view navigation",
     "projectOverview": "Project Overview",
+    "issuesList": "Issues List",
     "issues": "Issues",
-    "board": "Board",
+    "board": "Kanban Board",
+    "calendar": "Calendar",
+    "projectSettings": "Project Settings",
+    "settings": "Settings",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar"
   },

@@ -3,7 +3,6 @@ import PublicLayout from './layouts/PublicLayout';
 import AuthLayout from './layouts/AuthLayout';
 import WorkspaceLayout from './layouts/WorkspaceLayout';
 import { RequireAuth } from './components/shared/RequireAuth';
-import WorkspaceIndexRedirect from './components/shared/WorkspaceIndexRedirect';
 import { RouteErrorPage } from './pages/RouteErrorPage';
 import NotFound from './pages/NotFound';
 import OrgMembersPage from './pages/orgs/OrgMembersPage';
@@ -26,6 +25,7 @@ import AcceptInvitationPage from './pages/invitations/AcceptInvitationPage';
 import DocumentTitleHelper from './components/DocumentTitleHelper';
 import OrgSettingsPage from './pages/orgs/OrgSettingsPage';
 import FullSearchPage from './pages/search/FullSearchPage';
+import WorkspaceHome from './pages/workspace/WorkspaceHome';
 import { Toaster } from './components/ui/sonner';
 import { SocketProvider } from './providers/SocketProvider';
 
@@ -83,7 +83,8 @@ const router = createBrowserRouter([
           {
             element: <WorkspaceLayout />,
             children: [
-              { index: true, element: <WorkspaceIndexRedirect /> },
+              { index: true, element: <WorkspaceHome /> },
+              { path: 'home', element: <WorkspaceHome /> },
               { path: 'search', element: <FullSearchPage /> },
               { path: 'orgs/new', element: <CreateOrgPage /> },
               { path: 'orgs/:orgId/overview', element: <OrgDashboard /> },
