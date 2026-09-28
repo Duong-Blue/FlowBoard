@@ -1,24 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector, useAppDispatch } from '../store';
 import { setActiveOrg } from '../store/slices/orgSlice';
+import { setActiveProject } from '../store/slices/projectSlice';
 import {
   Kanban,
   LayoutDashboard,
   FolderKanban,
-  CheckSquare,
   Users,
-  Activity,
   Settings,
-  ListTodo,
-  Sliders,
   ChevronDown,
-  ChevronRight,
   Plus,
   X,
   Briefcase,
-  Info,
+  Home,
+  ListTodo,
+  Sliders,
   Calendar as CalendarIcon,
 } from 'lucide-react';
 import {
@@ -79,8 +77,6 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
   const location = useLocation();
   const { orgId, projectKey } = useParams<{ orgId?: string; projectKey?: string }>();
 
-  const [isProjectSectionOpen, setIsProjectSectionOpen] = useState(true);
-
   const activeOrg = orgs.find((o) => o.id === activeOrgId || o.slug === orgId || o.id === orgId) || orgs[0];
   const orgSlug = activeOrg?.slug || activeOrg?.id || orgId || 'default';
 
@@ -90,7 +86,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
   const currentProjectKey = activeProject?.key || projectKey;
 
   const getInitials = (name?: string) => {
-    if (!name) return 'U';
+    if (!name) return 'FB';
     return name.substring(0, 2).toUpperCase();
   };
 
@@ -139,237 +135,279 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
 
       {/* Navigation Scroll Area */}
       <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-4 space-y-5 text-sm font-medium">
-        {/* Organization Switcher Capsule */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="w-full text-left outline-none">
-            {isCollapsed ? (
-              <div
-                className="w-10 h-10 mx-auto rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors flex items-center justify-center text-blue-400 font-bold text-xs border-blue-500/20"
-                title={activeOrg?.name || 'Organization'}
-              >
-                {getInitials(activeOrg?.name || 'FB')}
-              </div>
-            ) : (
-              <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors flex items-center justify-between">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0 border border-blue-500/20">
-                    {getInitials(activeOrg?.name || 'FB')}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-sm text-slate-200 truncate">
-                    {activeOrg?.name || t('sidebar.selectOrganization')}
-                  </div>
-                  <div className="text-[11px] text-slate-500 truncate">
-                    {activeOrg?.slug ? `@${activeOrg.slug}` : t('sidebar.organizationSection')}
-                  </div>
+        
+        {/* SECTION 1: GLOBAL SCOPE (Workspace Home) */}
+        <div className="space-y-1">
+          <SidebarNavItem
+            to="/workspace"
+            icon={Home}
+            label={t('sidebar.workspaceHome')}
+            isActive={
+              location.pathname === '/workspace' ||
+              location.pathname === '/workspace/' ||
+              location.pathname === '/workspace/home'
+            }
+            onClick={closeMobileMenu}
+            isCollapsed={isCollapsed}
+          />
+        </div>
 
-                  </div>
-                </div>
-                <ChevronDown className="h-4 w-4 text-slate-500 shrink-0 ml-1" />
-              </div>
-            )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56 bg-slate-900 border-slate-800 text-slate-200">
-            <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              {t('sidebar.organizations')}
+        {/* Divider */}
+        <div className="h-px bg-slate-800/80" />
+
+        {/* SECTION 2: ORGANIZATION SCOPE */}
+        <div className="space-y-2">
+          {!isCollapsed && (
+            <div className="px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              {t('sidebar.organizationSection', { defaultValue: 'ORGANIZATION' })}
             </div>
-            {orgs.map((org) => (
+          )}
+
+          {/* Organization Switcher Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="w-full text-left outline-none">
+              {isCollapsed ? (
+                <div
+                  className="w-10 h-10 mx-auto rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors flex items-center justify-center text-blue-400 font-bold text-xs border-blue-500/20"
+                  title={activeOrg?.name || 'Organization'}
+                >
+                  {getInitials(activeOrg?.name)}
+                </div>
+              ) : (
+                <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0 border border-blue-500/20">
+                      {getInitials(activeOrg?.name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-sm text-slate-200 truncate">
+                        {activeOrg?.name || t('sidebar.selectOrganization')}
+                      </div>
+                      <div className="text-[11px] text-slate-500 truncate">
+                        {activeOrg?.slug ? `@${activeOrg.slug}` : t('sidebar.organizationSection')}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-slate-500 shrink-0 ml-1" />
+                </div>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 bg-slate-900 border-slate-800 text-slate-200">
+              <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                {t('sidebar.organizations')}
+              </div>
+              {orgs.map((org) => (
+                <DropdownMenuItem
+                  key={org.id}
+                  onClick={() => {
+                    dispatch(setActiveOrg(org.id));
+                    navigate(`/workspace/orgs/${org.slug || org.id}`);
+                    closeMobileMenu?.();
+                  }}
+                  className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 focus:text-white flex items-center justify-between"
+                >
+                  <span className="truncate">{org.name}</span>
+                  {org.id === activeOrgId && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+              {orgs.length === 0 && (
+                <div className="px-2 py-1 text-xs text-slate-500">{t('sidebar.noOrganizations')}</div>
+              )}
+              <DropdownMenuSeparator className="bg-slate-800" />
               <DropdownMenuItem
-                key={org.id}
                 onClick={() => {
-                  dispatch(setActiveOrg(org.id));
-                  navigate(`/workspace/orgs/${org.slug || org.id}`);
+                  navigate('/workspace/orgs/new');
                   closeMobileMenu?.();
                 }}
-                className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 focus:text-white flex items-center justify-between"
+                className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 text-blue-400 focus:text-blue-300"
               >
-                <span className="truncate">{org.name}</span>
-                {org.id === activeOrgId && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                )}
+                <Plus className="mr-2 h-4 w-4" />
+                {t('sidebar.createOrganization')}
               </DropdownMenuItem>
-            ))}
-            {orgs.length === 0 && (
-              <div className="px-2 py-1 text-xs text-slate-500">{t('sidebar.noOrganizations')}</div>
-            )}
-            <DropdownMenuSeparator className="bg-slate-800" />
-            <DropdownMenuItem
-              onClick={() => {
-                navigate('/workspace/orgs/new');
-                closeMobileMenu?.();
-              }}
-              className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 text-blue-400 focus:text-blue-300"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {t('sidebar.createOrganization')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        {/* Section 1: Organization Navigation */}
-        <div className="space-y-1">
-          {!isCollapsed ? (
-            <div className="px-2 pb-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              {t('sidebar.organizationSection')}
-            </div>
-          ) : (
-            <div className="h-px bg-slate-800/80 my-2" />
-          )}
-          <SidebarNavItem
-            to={`/workspace/orgs/${orgSlug}`}
-            icon={LayoutDashboard}
-            label={t('sidebar.overview')}
-            isActive={
-              location.pathname === `/workspace/orgs/${orgSlug}` ||
-              location.pathname === `/workspace` ||
-              location.pathname === `/workspace/`
-            }
-            onClick={closeMobileMenu}
-            isCollapsed={isCollapsed}
-          />
-          <SidebarNavItem
-            to={`/workspace/orgs/${orgSlug}/projects`}
-            icon={FolderKanban}
-            label={t('sidebar.projects')}
-            isActive={
-              location.pathname === `/workspace/orgs/${orgSlug}/projects` ||
-              location.pathname === `/workspace/orgs/${orgSlug}/projects/new`
-            }
-            onClick={closeMobileMenu}
-            isCollapsed={isCollapsed}
-          />
-          <SidebarNavItem
-            to={`/workspace/orgs/${orgSlug}`}
-            icon={CheckSquare}
-            label={t('sidebar.myWork')}
-            onClick={closeMobileMenu}
-            isCollapsed={isCollapsed}
-          />
-          <SidebarNavItem
-            to={`/workspace/orgs/${orgSlug}/members`}
-            icon={Users}
-            label={t('sidebar.members')}
-            isActive={location.pathname === `/workspace/orgs/${orgSlug}/members`}
-            onClick={closeMobileMenu}
-            isCollapsed={isCollapsed}
-          />
-          <SidebarNavItem
-            to={`/workspace/orgs/${orgSlug}/invitations`}
-            icon={Activity}
-            label={t('sidebar.activity')}
-            isActive={location.pathname === `/workspace/orgs/${orgSlug}/invitations`}
-            onClick={closeMobileMenu}
-            isCollapsed={isCollapsed}
-          />
-          <SidebarNavItem
-            to={`/workspace/orgs/${orgSlug}/settings`}
-            icon={Settings}
-            label={t('sidebar.settings')}
-            isActive={location.pathname === `/workspace/orgs/${orgSlug}/settings`}
-            onClick={closeMobileMenu}
-            isCollapsed={isCollapsed}
-          />
+          {/* Org Navigation Items */}
+          <div className="space-y-1">
+            <SidebarNavItem
+              to={`/workspace/orgs/${orgSlug}`}
+              icon={LayoutDashboard}
+              label={t('sidebar.overview')}
+              isActive={
+                location.pathname === `/workspace/orgs/${orgSlug}` ||
+                location.pathname === `/workspace/orgs/${orgSlug}/` ||
+                location.pathname === `/workspace/orgs/${orgSlug}/overview`
+              }
+              onClick={closeMobileMenu}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarNavItem
+              to={`/workspace/orgs/${orgSlug}/projects`}
+              icon={FolderKanban}
+              label={t('sidebar.allProjects')}
+              isActive={
+                location.pathname === `/workspace/orgs/${orgSlug}/projects` ||
+                location.pathname === `/workspace/orgs/${orgSlug}/projects/new`
+              }
+              onClick={closeMobileMenu}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarNavItem
+              to={`/workspace/orgs/${orgSlug}/members`}
+              icon={Users}
+              label={t('sidebar.membersAndInvitations')}
+              isActive={
+                location.pathname === `/workspace/orgs/${orgSlug}/members` ||
+                location.pathname === `/workspace/orgs/${orgSlug}/invitations`
+              }
+              onClick={closeMobileMenu}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarNavItem
+              to={`/workspace/orgs/${orgSlug}/settings`}
+              icon={Settings}
+              label={t('sidebar.orgSettings')}
+              isActive={location.pathname === `/workspace/orgs/${orgSlug}/settings`}
+              onClick={closeMobileMenu}
+              isCollapsed={isCollapsed}
+            />
+          </div>
         </div>
 
-        {/* Section 2: Current Project Navigation */}
-        <div className="pt-2 space-y-1">
-          {!isCollapsed ? (
-            <button
-              type="button"
-              onClick={() => setIsProjectSectionOpen(!isProjectSectionOpen)}
-              className="w-full flex items-center justify-between px-2 pb-1 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-300 transition-colors select-none text-left"
-            >
-                <div className="flex items-center gap-1.5 truncate">
-                  <Briefcase className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                  <span className="truncate">{activeProject ? activeProject.name : t('sidebar.currentProject')}</span>
+        {/* Divider */}
+        <div className="h-px bg-slate-800/80" />
+
+        {/* SECTION 3: PROJECT SCOPE */}
+        <div className="space-y-2">
+          {!isCollapsed && (
+            <div className="px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              {t('sidebar.projectSection', { defaultValue: 'PROJECT' })}
+            </div>
+          )}
+
+          {/* Project Switcher Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="w-full text-left outline-none">
+              {isCollapsed ? (
+                <div
+                  className="w-10 h-10 mx-auto rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors flex items-center justify-center text-emerald-400 font-bold text-xs border-emerald-500/20"
+                  title={activeProject?.name || 'Project'}
+                >
+                  <Briefcase className="h-4 w-4" />
                 </div>
-
-              {isProjectSectionOpen ? (
-                <ChevronDown className="h-3.5 w-3.5 text-slate-500 shrink-0 ml-1" />
               ) : (
-                <ChevronRight className="h-3.5 w-3.5 text-slate-500 shrink-0 ml-1" />
-              )}
-            </button>
-          ) : (
-            <div className="h-px bg-slate-800/80 my-2" />
-          )}
-          {(isProjectSectionOpen || isCollapsed) && (
-            <div className="space-y-1">
-              {currentProjectKey ? (
-                <>
-                  <SidebarNavItem
-                    to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}`}
-                    icon={Info}
-                    label={t('sidebar.projectOverview')}
-                    isActive={
-                      location.pathname === `/workspace/orgs/${orgSlug}/projects/${currentProjectKey}`
-                    }
-                    onClick={closeMobileMenu}
-                    isCollapsed={isCollapsed}
-                  />
-                  <SidebarNavItem
-                    to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/issues?view=list`}
-                    icon={ListTodo}
-                    label={t('sidebar.issues')}
-                    isActive={
-                      location.pathname.includes(`/projects/${currentProjectKey}`) &&
-                      location.search.includes('view=list')
-                    }
-                    onClick={closeMobileMenu}
-                    isCollapsed={isCollapsed}
-                  />
-                  <SidebarNavItem
-                    to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/issues`}
-                    icon={Kanban}
-                    label={t('sidebar.board')}
-                    isActive={
-                      (location.pathname.includes(`/projects/${currentProjectKey}/issues`) ||
-                        location.pathname.includes(`/projects/${currentProjectKey}/board`)) &&
-                      !location.search.includes('view=list') &&
-                      !location.search.includes('view=calendar') &&
-                      !location.pathname.includes(`/projects/${currentProjectKey}/calendar`)
-                    }
-                    onClick={closeMobileMenu}
-                    isCollapsed={isCollapsed}
-                  />
-                  <SidebarNavItem
-                    to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/calendar`}
-                    icon={CalendarIcon}
-                    label={t('sidebar.calendar', { defaultValue: 'Calendar' })}
-                    isActive={
-                      location.pathname.includes(`/projects/${currentProjectKey}/calendar`) ||
-                      location.search.includes('view=calendar')
-                    }
-                    onClick={closeMobileMenu}
-                    isCollapsed={isCollapsed}
-                  />
-                  <SidebarNavItem
-                    to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/members`}
-                    icon={Users}
-                    label={t('sidebar.members')}
-                    isActive={location.pathname.includes(`/projects/${currentProjectKey}/members`)}
-                    onClick={closeMobileMenu}
-                    isCollapsed={isCollapsed}
-                  />
-                  <SidebarNavItem
-                    to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/settings`}
-                    icon={Sliders}
-                    label={t('sidebar.settings')}
-                    isActive={location.pathname.includes(`/projects/${currentProjectKey}/settings`)}
-                    onClick={closeMobileMenu}
-                    isCollapsed={isCollapsed}
-                  />
-                </>
-              ) : (
-                !isCollapsed && (
-                  <div className="px-3 py-2 text-xs text-slate-500 italic">
-                    {t('sidebar.selectProjectHint')}
+                <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20">
+                      <Briefcase className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-sm text-slate-200 truncate">
+                        {activeProject?.name || t('sidebar.selectProject')}
+                      </div>
+                      <div className="text-[11px] text-slate-500 truncate">
+                        {activeProject?.key ? `KEY: ${activeProject.key}` : t('sidebar.currentProject')}
+                      </div>
+                    </div>
                   </div>
-                )
+                  <ChevronDown className="h-4 w-4 text-slate-500 shrink-0 ml-1" />
+                </div>
               )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 bg-slate-900 border-slate-800 text-slate-200">
+              <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                {t('sidebar.projects')}
+              </div>
+              {projects.map((proj) => (
+                <DropdownMenuItem
+                  key={proj.id}
+                  onClick={() => {
+                    dispatch(setActiveProject(proj.id));
+                    navigate(`/workspace/orgs/${orgSlug}/projects/${proj.key}`);
+                    closeMobileMenu?.();
+                  }}
+                  className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 focus:text-white flex items-center justify-between"
+                >
+                  <span className="truncate">{proj.name}</span>
+                  <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">{proj.key}</span>
+                </DropdownMenuItem>
+              ))}
+              {projects.length === 0 && (
+                <div className="px-2 py-1 text-xs text-slate-500">{t('sidebar.selectProjectHint')}</div>
+              )}
+              <DropdownMenuSeparator className="bg-slate-800" />
+              <DropdownMenuItem
+                onClick={() => {
+                  navigate(`/workspace/orgs/${orgSlug}/projects/new`);
+                  closeMobileMenu?.();
+                }}
+                className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 text-blue-400 focus:text-blue-300"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {t('home.actions.createProject', { defaultValue: 'Tạo dự án mới' })}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Project Navigation Items */}
+          {currentProjectKey ? (
+            <div className="space-y-1">
+              <SidebarNavItem
+                to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/issues?view=list`}
+                icon={ListTodo}
+                label={t('sidebar.issuesList')}
+                isActive={
+                  location.pathname.includes(`/projects/${currentProjectKey}`) &&
+                  location.search.includes('view=list')
+                }
+                onClick={closeMobileMenu}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/issues`}
+                icon={Kanban}
+                label={t('sidebar.board')}
+                isActive={
+                  (location.pathname.includes(`/projects/${currentProjectKey}/issues`) ||
+                    location.pathname.includes(`/projects/${currentProjectKey}/board`)) &&
+                  !location.search.includes('view=list') &&
+                  !location.search.includes('view=calendar') &&
+                  !location.pathname.includes(`/projects/${currentProjectKey}/calendar`)
+                }
+                onClick={closeMobileMenu}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/calendar`}
+                icon={CalendarIcon}
+                label={t('sidebar.calendar')}
+                isActive={
+                  location.pathname.includes(`/projects/${currentProjectKey}/calendar`) ||
+                  location.search.includes('view=calendar')
+                }
+                onClick={closeMobileMenu}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/settings`}
+                icon={Sliders}
+                label={t('sidebar.projectSettings')}
+                isActive={location.pathname.includes(`/projects/${currentProjectKey}/settings`)}
+                onClick={closeMobileMenu}
+                isCollapsed={isCollapsed}
+              />
             </div>
+          ) : (
+            !isCollapsed && (
+              <div className="px-3 py-2 text-xs text-slate-500 italic">
+                {t('sidebar.selectProjectHint')}
+              </div>
+            )
           )}
         </div>
+
       </div>
     </aside>
   );
