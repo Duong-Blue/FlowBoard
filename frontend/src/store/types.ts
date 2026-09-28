@@ -6,8 +6,18 @@ export type AppDispatch = typeof store.dispatch;
 export interface User {
   id: string;
   email: string;
-  name: string;
-  avatarUrl?: string;
+  name?: string;
+  firstName: string;
+  lastName: string;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  theme?: string;
+  language?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  hasPassword?: boolean;
+  oauthProviders?: string[];
 }
 
 export interface Organization {
@@ -143,7 +153,7 @@ export interface Issue {
   type?: IssueType | string;
   priority: string;
   assigneeId?: string;
-  reporterId: string;
+  reporterId?: string;
   startDate?: string;
   dueDate?: string;
   completedAt?: string | null;
