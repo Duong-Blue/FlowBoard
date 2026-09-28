@@ -81,7 +81,7 @@ export class SubtasksService {
         },
       });
 
-      await tx.issueActivity.create({
+      await tx.activity.create({
         data: {
           issueId: issueId,
           actorId: actorId,

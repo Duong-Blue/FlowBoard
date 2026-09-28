@@ -10,7 +10,7 @@ describe('SubtasksService', () => {
   const mockPrisma = {
     issue: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), findMany: vi.fn() },
     project: { update: vi.fn() },
-    issueActivity: { create: vi.fn() },
+    activity: { create: vi.fn() },
     workflowStatus: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn() },
     $transaction: vi.fn((cb) => cb(mockPrisma)),
   };
@@ -53,7 +53,7 @@ describe('SubtasksService', () => {
       key: null,
       title: 'T',
     });
-    mockPrisma.issueActivity.create.mockResolvedValue({});
+    mockPrisma.activity.create.mockResolvedValue({});
 
     const result = await service.create('proj1', 'issue1', 'u1', {
       title: 'T',
