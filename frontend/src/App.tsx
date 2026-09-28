@@ -28,6 +28,14 @@ import FullSearchPage from './pages/search/FullSearchPage';
 import WorkspaceHome from './pages/workspace/WorkspaceHome';
 import { Toaster } from './components/ui/sonner';
 import { SocketProvider } from './providers/SocketProvider';
+import { ThemeProvider } from './providers/ThemeProvider';
+import {
+  SettingsLayout,
+  ProfileSettings,
+  AccountSettings,
+  SecuritySettings,
+  AppearanceSettings,
+} from './features/settings';
 
 function ProjectIssuesLayout({ defaultView }: { defaultView?: 'board' | 'list' | 'calendar' }) {
   const [searchParams] = useSearchParams();
@@ -128,7 +136,17 @@ const router = createBrowserRouter([
               { path: 'orgs/:orgId/members', element: <OrgMembersPage /> },
               { path: 'orgs/:orgId/invitations', element: <InvitationsPage /> },
               { path: 'orgs/:orgId/settings', element: <OrgSettingsPage /> },
-              { path: 'settings', element: <div>TODO Settings Page</div> },
+              {
+                path: 'settings',
+                element: <SettingsLayout />,
+                children: [
+                  { index: true, element: <Navigate to="profile" replace /> },
+                  { path: 'profile', element: <ProfileSettings /> },
+                  { path: 'account', element: <AccountSettings /> },
+                  { path: 'security', element: <SecuritySettings /> },
+                  { path: 'appearance', element: <AppearanceSettings /> },
+                ],
+              },
             ],
           },
         ],
@@ -140,9 +158,11 @@ const router = createBrowserRouter([
 
 export default function App() {
   return (
-    <SocketProvider>
-      <RouterProvider router={router} />
-      <Toaster position="top-right" />
-    </SocketProvider>
+    <ThemeProvider>
+      <SocketProvider>
+        <RouterProvider router={router} />
+        <Toaster position="top-right" />
+      </SocketProvider>
+    </ThemeProvider>
   );
 }
