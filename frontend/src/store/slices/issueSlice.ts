@@ -14,6 +14,11 @@ import {
   type IssueActivity,
   type PaginationMeta,
 } from '../../services/issueService';
+import {
+  getProjectActivities,
+  getOrgActivities,
+} from '../../services/activityService';
+import { type Activity } from '../../services/issueService';
 
 interface BoardColumns {
   TODO: Issue[];
@@ -43,6 +48,18 @@ interface IssueState {
   };
   activities: {
     items: IssueActivity[];
+    meta: PaginationMeta;
+    loading: boolean;
+    error: string | null;
+  };
+  projectActivities: {
+    items: Activity[];
+    meta: PaginationMeta;
+    loading: boolean;
+    error: string | null;
+  };
+  orgActivities: {
+    items: Activity[];
     meta: PaginationMeta;
     loading: boolean;
     error: string | null;
@@ -81,6 +98,18 @@ const initialState: IssueState = {
     error: null,
   },
   activities: {
+    items: [],
+    meta: { total: 0, page: 1, limit: 20, totalPages: 0 },
+    loading: false,
+    error: null,
+  },
+  projectActivities: {
+    items: [],
+    meta: { total: 0, page: 1, limit: 20, totalPages: 0 },
+    loading: false,
+    error: null,
+  },
+  orgActivities: {
     items: [],
     meta: { total: 0, page: 1, limit: 20, totalPages: 0 },
     loading: false,
@@ -132,6 +161,18 @@ export const fetchActivities = createAsyncThunk(
   async ({ projectId, issueId, page, limit }: { projectId: string; issueId: string; page?: number; limit?: number }) => {
     return await getActivities(projectId, issueId, page, limit);
   }
+);
+
+export const fetchProjectActivities = createAsyncThunk(
+  'issue/fetchProjectActivities',
+  async ({ projectId, page, limit }: { projectId: string; page?: number; limit?: number }) =>
+    getProjectActivities(projectId, page, limit),
+);
+
+export const fetchOrgActivities = createAsyncThunk(
+  'issue/fetchOrgActivities',
+  async ({ orgId, page, limit }: { orgId: string; page?: number; limit?: number }) =>
+    getOrgActivities(orgId, page, limit),
 );
 
 export const fetchSubtasks = createAsyncThunk(
@@ -430,6 +471,32 @@ const issueSlice = createSlice({
       .addCase(fetchActivities.rejected, (state, action) => {
         state.activities.loading = false;
         state.activities.error = action.error.message || 'Failed to fetch activities';
+      })
+      .addCase(fetchProjectActivities.pending, (state) => {
+        state.projectActivities.loading = true;
+        state.projectActivities.error = null;
+      })
+      .addCase(fetchProjectActivities.fulfilled, (state, action) => {
+        state.projectActivities.loading = false;
+        state.projectActivities.items = action.payload.items;
+        state.projectActivities.meta = action.payload.meta;
+      })
+      .addCase(fetchProjectActivities.rejected, (state, action) => {
+        state.projectActivities.loading = false;
+        state.projectActivities.error = action.error.message || 'Failed to fetch project activities';
+      })
+      .addCase(fetchOrgActivities.pending, (state) => {
+        state.orgActivities.loading = true;
+        state.orgActivities.error = null;
+      })
+      .addCase(fetchOrgActivities.fulfilled, (state, action) => {
+        state.orgActivities.loading = false;
+        state.orgActivities.items = action.payload.items;
+        state.orgActivities.meta = action.payload.meta;
+      })
+      .addCase(fetchOrgActivities.rejected, (state, action) => {
+        state.orgActivities.loading = false;
+        state.orgActivities.error = action.error.message || 'Failed to fetch org activities';
       })
       .addCase(fetchSubtasks.pending, (state) => { state.isSubtasksLoading = true; })
       .addCase(fetchSubtasks.fulfilled, (state, action) => {

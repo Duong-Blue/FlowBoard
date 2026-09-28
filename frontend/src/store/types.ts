@@ -16,6 +16,13 @@ export interface Organization {
   slug?: string;
   description?: string;
   logoUrl?: string;
+  role?: string;
+  projectCount?: number;
+  memberCount?: number;
+  _count?: {
+    projects?: number;
+    members?: number;
+  };
 }
 
 export interface Project {
@@ -32,6 +39,13 @@ export interface Project {
     issues?: number;
     members?: number;
   };
+  organizationName?: string;
+  organization?: {
+    id: string;
+    name: string;
+    slug?: string;
+  };
+  lastAccessedAt?: string;
 }
 
 export interface Member {
@@ -143,6 +157,16 @@ export interface Issue {
   subtaskMetrics?: SubtaskProgress | null;
   relations?: IssueRelation[];
   attachments?: Attachment[];
+  orgId?: string;
+  projectKey?: string;
+  projectName?: string;
+  project?: {
+    id?: string;
+    key?: string;
+    name?: string;
+    organizationId?: string;
+    orgId?: string;
+  };
 }
 
 export interface MoveIssuePayload {
@@ -275,6 +299,12 @@ export interface SearchIssueItem {
   } | null;
   type?: string;
   priority?: string;
+  assignee?: {
+    id: string;
+    displayName: string;
+    email: string;
+    avatarUrl?: string | null;
+  } | null;
   createdAt: string;
   updatedAt: string;
   dueDate?: string | null;
