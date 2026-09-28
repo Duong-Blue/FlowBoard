@@ -6,6 +6,9 @@ model User {
   lastName           String
   displayName        String?
   avatarUrl          String?
+  bio                String?
+  theme              String               @default("system")
+  language           String               @default("en")
   isActive           Boolean              @default(true)
   emailVerifiedAt    DateTime?
   lastLoginAt        DateTime?
