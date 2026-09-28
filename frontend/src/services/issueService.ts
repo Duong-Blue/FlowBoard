@@ -64,7 +64,12 @@ export type ActivityType =
   | 'ASSIGNEE_CHANGED'
   | 'COMMENT_CREATED'
   | 'COMMENT_UPDATED'
-  | 'COMMENT_DELETED';
+  | 'COMMENT_DELETED'
+  | 'PROJECT_CREATED'
+  | 'PROJECT_MEMBER_ADDED'
+  | 'PROJECT_MEMBER_REMOVED'
+  | 'ORG_MEMBER_ADDED'
+  | 'ORG_MEMBER_REMOVED';
 
 export interface IssueActivity {
   id: string;
@@ -74,6 +79,12 @@ export interface IssueActivity {
   type: ActivityType;
   metadata: Record<string, any>;
   createdAt: string;
+}
+
+export interface Activity extends IssueActivity {
+  entityType?: 'ISSUE' | 'PROJECT' | 'ORGANIZATION';
+  projectId?: string;
+  organizationId?: string;
 }
 
 export interface PaginationMeta {
