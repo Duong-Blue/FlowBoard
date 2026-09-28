@@ -110,27 +110,38 @@ export class OAuthService {
 
         if (user) {
           // Exists but no OAuth account for this provider
-          return { error: 'account_conflict', email: profile.email };
-        }
-
-        // Create new user
-        user = await tx.user.create({
-          data: {
-            email: profile.email,
-            firstName: profile.firstName || '',
-            lastName: profile.lastName || '',
-            displayName: profile.displayName,
-            avatarUrl: profile.avatarUrl,
-            emailVerifiedAt: new Date(),
-            oauthAccounts: {
-              create: {
-                provider: flow.provider,
-                providerAccountId: profile.id,
-                providerEmail: profile.email,
+          await tx.user.update({
+            where: { id: user.id },
+            data: {
+              oauthAccounts: {
+                create: {
+                  provider: flow.provider,
+                  providerAccountId: profile.id,
+                  providerEmail: profile.email,
+                },
               },
             },
-          },
-        });
+          });
+        } else {
+          // Create new user
+          user = await tx.user.create({
+            data: {
+              email: profile.email,
+              firstName: profile.firstName || '',
+              lastName: profile.lastName || '',
+              displayName: profile.displayName,
+              avatarUrl: profile.avatarUrl,
+              emailVerifiedAt: new Date(),
+              oauthAccounts: {
+                create: {
+                  provider: flow.provider,
+                  providerAccountId: profile.id,
+                  providerEmail: profile.email,
+                },
+              },
+            },
+          });
+        }
       }
 
       const rawCode = randomBytes(32).toString('hex');
