@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { QueryActivityDto } from './dto/query-activity.dto';
-import { ActivityType } from '@prisma/client';
+import { ActivityType, ActivityScope } from '@prisma/client';
 
 const USER_SELECT = {
   id: true,
@@ -17,19 +17,98 @@ export class ActivityService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createActivity(
-    issueId: string,
-    actorId: string | null,
-    type: ActivityType,
+    paramsOrIssueId:
+      | string
+      | {
+          type: ActivityType;
+          actorId: string | null;
+          metadata?: Record<string, any>;
+          issueId?: string;
+          projectId?: string;
+          organizationId?: string;
+          entityType?: ActivityScope;
+        },
+    actorId?: string | null,
+    type?: ActivityType,
     metadata: Record<string, any> = {},
   ) {
-    return this.prisma.issueActivity.create({
+    if (typeof paramsOrIssueId === 'object') {
+      return this.prisma.activity.create({
+        data: {
+          type: paramsOrIssueId.type,
+          actorId: paramsOrIssueId.actorId,
+          metadata: paramsOrIssueId.metadata ?? {},
+          issueId: paramsOrIssueId.issueId,
+          projectId: paramsOrIssueId.projectId,
+          organizationId: paramsOrIssueId.organizationId,
+          entityType: paramsOrIssueId.entityType ?? 'ISSUE',
+        },
+      });
+    }
+
+    return this.prisma.activity.create({
       data: {
-        issueId,
-        actorId,
-        type,
+        issueId: paramsOrIssueId,
+        actorId: actorId ?? null,
+        type: type!,
         metadata,
+        entityType: 'ISSUE',
       },
     });
+  }
+
+  async findProjectActivities(projectId: string, queryDto: QueryActivityDto) {
+    const page = queryDto.page || 1;
+    const limit = queryDto.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.activity.findMany({
+        where: { projectId, entityType: 'PROJECT' },
+        skip,
+        take: limit,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        include: { actor: { select: USER_SELECT } },
+      }),
+      this.prisma.activity.count({ where: { projectId, entityType: 'PROJECT' } }),
+    ]);
+
+    return {
+      items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async findOrgActivities(orgId: string, queryDto: QueryActivityDto) {
+    const page = queryDto.page || 1;
+    const limit = queryDto.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.activity.findMany({
+        where: { organizationId: orgId, entityType: 'ORGANIZATION' },
+        skip,
+        take: limit,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        include: { actor: { select: USER_SELECT } },
+      }),
+      this.prisma.activity.count({ where: { organizationId: orgId, entityType: 'ORGANIZATION' } }),
+    ]);
+
+    return {
+      items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   private async resolveProjectId(projectParam: string): Promise<string> {
@@ -85,14 +164,14 @@ export class ActivityService {
     const skip = (page - 1) * limit;
 
     const [items, total] = await Promise.all([
-      this.prisma.issueActivity.findMany({
+      this.prisma.activity.findMany({
         where: { issueId },
         skip,
         take: limit,
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         include: { actor: { select: USER_SELECT } },
       }),
-      this.prisma.issueActivity.count({ where: { issueId } }),
+      this.prisma.activity.count({ where: { issueId } }),
     ]);
 
     return {
