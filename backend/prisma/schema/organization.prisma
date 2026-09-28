@@ -10,5 +10,6 @@ model Organization {
   members       OrganizationMember[]
   invitations   Invitation[]
   projects      Project[]
+  activities     Activity[] @relation("OrganizationActivities")
   notifications Notification[]
 }

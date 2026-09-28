@@ -24,7 +24,7 @@ model User {
 
   invitations Invitation[]
   comments    Comment[]       @relation("CommentAuthor")
-  activities  IssueActivity[] @relation("ActivityActor")
+  activities  Activity[] @relation("ActivityActor")
   attachments Attachment[]    @relation("AttachmentUploader")
   savedViews  SavedView[]
 }
