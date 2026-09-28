@@ -30,7 +30,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      const response = await apiPost<{ user: { id: string; email: string; name: string }; accessToken: string; refreshToken: string }>('/auth/login', { email, password });
+      const response = await apiPost<{ user: { id: string; email: string; name?: string; firstName: string; lastName: string }; accessToken: string; refreshToken: string }>('/auth/login', { email, password });
       dispatch(setCredentials({
         user: response.user,
         accessToken: response.accessToken
