@@ -4,7 +4,7 @@ import { type Issue, type IssueUser, type IssueType, type DeadlineState } from '
 import { SemanticBadge } from '@/components/shared/SemanticBadge';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatDate, getDeadlineState } from '@/lib/dateUtils';
+import { formatDateTime, calculateDurationInDays, getDeadlineState } from '@/lib/dateUtils';
 import { useProjectWorkflow } from '@/hooks/useProjectWorkflow';
 
 interface IssueMetadataSidebarProps {
@@ -234,12 +234,19 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
 
       {/* Dates Section */}
       <div className="space-y-4 pt-4 border-t border-slate-200">
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('detail.dates', 'Dates')}</h4>
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('detail.dates', 'Dates')}</h4>
+          {calculateDurationInDays(issue.startDate, issue.dueDate) !== null && (
+            <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+              {calculateDurationInDays(issue.startDate, issue.dueDate)} ngày
+            </span>
+          )}
+        </div>
         
         {/* Start Date */}
         <div>
           <label className="text-xs font-medium text-muted-foreground block mb-1">{t('detail.startDate', 'Start Date')}</label>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             <input
               type="date"
               value={toInputDate(issue.startDate)}
@@ -250,8 +257,8 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
               className="text-xs border border-input rounded px-2 py-1 bg-background hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-ring"
             />
             {issue.startDate && (
-              <span className="text-xs text-muted-foreground">
-                {formatDate(issue.startDate)}
+              <span className="text-xs text-slate-600 font-medium">
+                {formatDateTime(issue.startDate)}
               </span>
             )}
           </div>
@@ -271,9 +278,9 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
               className="text-xs border border-input rounded px-2 py-1 bg-background hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-ring"
             />
             {issue.dueDate && (
-              <div className="flex items-center space-x-1.5">
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(issue.dueDate)}
+              <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                <span className="text-xs text-slate-600 font-medium">
+                  {formatDateTime(issue.dueDate)}
                 </span>
                 <SemanticBadge status={getDeadlineBadgeStatus(deadlineState)}>
                   {deadlineState}
@@ -287,19 +294,25 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
         {issue.completedAt && (
           <div>
             <label className="text-xs font-medium text-muted-foreground block mb-1">{t('detail.completedAt', 'Completed At')}</label>
-            <div className="text-xs text-foreground px-2 py-1 bg-slate-50 rounded border border-slate-100">
-              {formatDate(issue.completedAt)}
+            <div className="text-xs text-foreground px-2 py-1 bg-slate-50 rounded border border-slate-100 font-medium">
+              {formatDateTime(issue.completedAt)}
             </div>
           </div>
         )}
       </div>
 
-      {/* Created At */}
-      <div>
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t('common:labels.created')}</h4>
-        <div className="px-2 text-sm text-foreground">
-          {new Date(issue.createdAt).toLocaleDateString()}
+      {/* Timestamps Section */}
+      <div className="space-y-2 pt-4 border-t border-slate-200 text-xs">
+        <div>
+          <span className="font-semibold text-muted-foreground">{t('common:labels.created', 'Tạo lúc')}: </span>
+          <span className="text-foreground">{formatDateTime(issue.createdAt)}</span>
         </div>
+        {issue.updatedAt && (
+          <div>
+            <span className="font-semibold text-muted-foreground">Cập nhật lần cuối: </span>
+            <span className="text-foreground">{formatDateTime(issue.updatedAt)}</span>
+          </div>
+        )}
       </div>
     </div>
   );

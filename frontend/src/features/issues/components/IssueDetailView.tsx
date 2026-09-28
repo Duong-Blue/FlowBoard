@@ -80,6 +80,10 @@ export function IssueDetailView({ issue, members, canDelete, onUpdate, onDelete 
     <div className="flex flex-col h-full">
       <IssueDetailHeader 
         issueKey={issue.key} 
+        startDate={issue.startDate}
+        dueDate={issue.dueDate}
+        createdAt={issue.createdAt}
+        updatedAt={issue.updatedAt}
         canDelete={canDelete} 
         onDelete={onDelete} 
       />
