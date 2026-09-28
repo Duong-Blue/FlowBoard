@@ -367,7 +367,7 @@ export class IssuesService {
           userId: createdIssue.assigneeId,
           type: 'ISSUE_ASSIGNED',
           title: 'You have been assigned to an issue',
-          message: `${createdIssue.reporter.displayName || createdIssue.reporter.firstName} assigned you to ${createdIssue.key}`,
+          message: `${createdIssue.reporter?.displayName || createdIssue.reporter?.firstName || 'Someone'} assigned you to ${createdIssue.key}`,
           metadata: {
             projectId,
             issueId: createdIssue.id,
