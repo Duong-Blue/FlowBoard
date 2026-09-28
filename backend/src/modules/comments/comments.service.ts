@@ -134,7 +134,7 @@ export class CommentsService {
         include: { author: { select: USER_SELECT } },
       });
 
-      await tx.issueActivity.create({
+      await tx.activity.create({
         data: {
           issueId,
           actorId: authorId,
@@ -237,7 +237,7 @@ export class CommentsService {
         include: { author: { select: USER_SELECT } },
       });
 
-      await tx.issueActivity.create({
+      await tx.activity.create({
         data: {
           issueId,
           actorId: userId,
@@ -279,7 +279,7 @@ export class CommentsService {
         where: { id: commentId },
       });
 
-      await tx.issueActivity.create({
+      await tx.activity.create({
         data: {
           issueId,
           actorId: userId,

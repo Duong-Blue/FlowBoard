@@ -27,7 +27,7 @@ describe('CommentsService', () => {
       delete: vi.fn(),
     },
     $transaction: vi.fn((cb) => cb(mockPrisma)),
-    issueActivity: {
+    activity: {
       create: vi.fn(),
     },
   };
@@ -105,7 +105,7 @@ describe('CommentsService', () => {
       expect(mockPrisma.comment.create).toHaveBeenCalledWith(
         expect.any(Object),
       );
-      expect(mockPrisma.issueActivity.create).toHaveBeenCalledWith({
+      expect(mockPrisma.activity.create).toHaveBeenCalledWith({
         data: {
           issueId: 'issue1',
           actorId: 'user1',
@@ -152,7 +152,7 @@ describe('CommentsService', () => {
       );
       expect(result).toEqual({ id: 'c1', content: 'new' });
       expect(mockPrisma.comment.update).toHaveBeenCalled();
-      expect(mockPrisma.issueActivity.create).toHaveBeenCalledWith(
+      expect(mockPrisma.activity.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ type: 'COMMENT_UPDATED' }),
         }),
@@ -188,7 +188,7 @@ describe('CommentsService', () => {
       expect(mockPrisma.comment.delete).toHaveBeenCalledWith({
         where: { id: 'c1' },
       });
-      expect(mockPrisma.issueActivity.create).toHaveBeenCalledWith(
+      expect(mockPrisma.activity.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ type: 'COMMENT_DELETED' }),
         }),

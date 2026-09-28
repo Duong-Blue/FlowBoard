@@ -50,15 +50,16 @@ export class RelationsService {
       data: { sourceIssueId, targetIssueId: dto.targetIssueId, type: dto.type },
     });
 
-    await this.activityService.createActivity(
-      sourceIssueId,
+    await this.activityService.createActivity({
+      issueId: sourceIssueId,
       actorId,
-      'RELATION_CREATED',
-      {
+      type: 'RELATION_CREATED',
+      metadata: {
         targetIssueId: dto.targetIssueId,
         type: dto.type,
       },
-    );
+      entityType: 'ISSUE',
+    });
 
     return relation;
   }
@@ -82,15 +83,16 @@ export class RelationsService {
 
     await this.prisma.issueRelation.delete({ where: { id: relationId } });
 
-    await this.activityService.createActivity(
-      issueId,
+    await this.activityService.createActivity({
+      issueId: issueId,
       actorId,
-      'RELATION_DELETED',
-      {
+      type: 'RELATION_DELETED',
+      metadata: {
         targetIssueId: relation.targetIssueId,
         type: relation.type,
       },
-    );
+      entityType: 'ISSUE',
+    });
 
     return { success: true };
   }

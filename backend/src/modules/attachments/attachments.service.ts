@@ -58,12 +58,13 @@ export class AttachmentsService {
       },
     });
 
-    await this.activity.createActivity(
+    await this.activity.createActivity({
       issueId,
       actorId,
-      ActivityType.ATTACHMENT_UPLOADED,
-      { attachmentId: attachment.id },
-    );
+      type: ActivityType.ATTACHMENT_UPLOADED,
+      metadata: { attachmentId: attachment.id },
+      entityType: 'ISSUE',
+    });
 
     return attachment;
   }
@@ -109,12 +110,13 @@ export class AttachmentsService {
     await this.storage.deleteFile(attachment.storagePath);
     await this.prisma.attachment.delete({ where: { id: attachmentId } });
 
-    await this.activity.createActivity(
+    await this.activity.createActivity({
       issueId,
       actorId,
-      ActivityType.ATTACHMENT_DELETED,
-      { attachmentId },
-    );
+      type: ActivityType.ATTACHMENT_DELETED,
+      metadata: { attachmentId },
+      entityType: 'ISSUE',
+    });
     return true;
   }
 }
