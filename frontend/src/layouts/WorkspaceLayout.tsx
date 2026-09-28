@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Outlet, useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppSelector, useAppDispatch } from '../store';
 import { getOrgs } from '../services/orgService';
 import { getProjects } from '../services/projectService';
+import { getUserProfile } from '../services/userService';
 import { setOrgs, setActiveOrg, setLoading as setOrgLoading } from '../store/slices/orgSlice';
 import { setProjects, setActiveProject, setLoading as setProjectLoading } from '../store/slices/projectSlice';
-import { logout } from '../store/slices/authSlice';
+import { logout, updateUserLocally } from '../store/slices/authSlice';
 import { setModalOpen } from '../store/slices/searchSlice';
 import { WorkspaceSidebar } from './WorkspaceSidebar';
 import { Menu, Settings, LogOut, Search } from 'lucide-react';
@@ -26,7 +27,7 @@ import {
 export default function WorkspaceLayout() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { list: orgs, activeOrgId } = useAppSelector((state) => state.org);
   const { list: projects, activeProjectId } = useAppSelector((state) => state.project);
 
@@ -34,10 +35,15 @@ export default function WorkspaceLayout() {
   const [isInit, setIsInit] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const isHydratedRef = useRef(false);
 
-  const displayName = user?.name || user?.email || 'User';
+  const displayName = user?.displayName || user?.name || (user?.firstName ? `${user.firstName} ${user.lastName}`.trim() : user?.email) || 'User';
   const getInitials = (name?: string) => {
     if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
     return name.substring(0, 2).toUpperCase();
   };
 
@@ -45,6 +51,30 @@ export default function WorkspaceLayout() {
     dispatch(logout());
     navigate('/login');
   };
+
+  // 0. Single profile hydration when authenticated
+  useEffect(() => {
+    if (!isAuthenticated || isHydratedRef.current) return;
+    isHydratedRef.current = true;
+
+    let isMounted = true;
+    const hydrate = async () => {
+      try {
+        const userData = await getUserProfile();
+        if (isMounted && userData) {
+          dispatch(updateUserLocally(userData));
+        }
+      } catch {
+        // Hydration failure silently falls back to stored Redux state
+      }
+    };
+
+    hydrate();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, dispatch]);
 
   // 1. Safely fetch organizations on mount
   useEffect(() => {
@@ -130,7 +160,7 @@ export default function WorkspaceLayout() {
   }, [projectKey, projects, activeProjectId, dispatch]);
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       {/* Mobile menu overlay */}
       {isMobileMenuOpen && (
         <div
@@ -155,10 +185,10 @@ export default function WorkspaceLayout() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="h-14 bg-white border-b border-slate-200 flex items-center px-4 lg:px-6 shrink-0 justify-between">
+        <header className="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 lg:px-6 shrink-0 justify-between">
           <div className="flex items-center gap-3">
             <button
-              className="lg:hidden p-2 -ml-2 rounded-md text-slate-500 hover:bg-slate-100 transition-colors"
+              className="lg:hidden p-2 -ml-2 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label="Open menu"
             >
@@ -170,12 +200,12 @@ export default function WorkspaceLayout() {
             <button
               type="button"
               onClick={() => dispatch(setModalOpen(true))}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-slate-100 hover:bg-slate-200/80 rounded-lg border border-slate-200/80 transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 rounded-lg border border-slate-200/80 dark:border-slate-700/80 transition-colors cursor-pointer"
               aria-label="Open search modal"
             >
               <Search size={14} className="text-slate-400" />
               <span>Search...</span>
-              <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white border border-slate-200 rounded text-slate-500 shadow-2xs">
+              <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-slate-500 dark:text-slate-400 shadow-2xs">
                 Ctrl K
               </kbd>
             </button>
@@ -188,7 +218,7 @@ export default function WorkspaceLayout() {
                   className="outline-none cursor-pointer rounded-full p-0.5 hover:ring-2 hover:ring-blue-500/20 transition-all"
                   aria-label="User menu"
                 >
-                  <Avatar className="h-8 w-8 border border-slate-200">
+                  <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700">
                     {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={displayName} />}
                     <AvatarFallback className="bg-blue-600 text-white font-semibold text-xs">
                       {getInitials(displayName)}
@@ -196,23 +226,23 @@ export default function WorkspaceLayout() {
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white border-slate-200 text-slate-900 shadow-lg">
-                <div className="px-3 py-2 border-b border-slate-100">
-                  <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Signed in as</p>
-                  <p className="text-sm font-semibold text-slate-900 truncate mt-0.5">{displayName}</p>
-                  {user?.email && <p className="text-xs text-slate-500 truncate">{user.email}</p>}
+              <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-lg">
+                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+                  <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Signed in as</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate mt-0.5">{displayName}</p>
+                  {user?.email && <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>}
                 </div>
                 <DropdownMenuItem
-                  onClick={() => navigate('/workspace/settings')}
-                  className="cursor-pointer focus:bg-slate-100 flex items-center py-2"
+                  onClick={() => navigate('/workspace/settings/profile')}
+                  className="cursor-pointer focus:bg-slate-100 dark:focus:bg-slate-800 flex items-center py-2 text-slate-700 dark:text-slate-200"
                 >
                   <Settings className="mr-2 h-4 w-4 text-slate-500" />
                   Account Settings
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-1 bg-slate-100" />
+                <DropdownMenuSeparator className="my-1 bg-slate-100 dark:bg-slate-800" />
                 <DropdownMenuItem
                   onClick={handleLogout}
-                  className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700 flex items-center py-2"
+                  className="cursor-pointer text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-950/50 focus:text-red-700 dark:focus:text-red-300 flex items-center py-2"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
@@ -222,7 +252,7 @@ export default function WorkspaceLayout() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-white">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-white dark:bg-slate-950">
           <Outlet context={{ isInit }} />
         </div>
       </main>
