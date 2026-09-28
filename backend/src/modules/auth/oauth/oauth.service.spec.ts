@@ -10,6 +10,7 @@ describe('OAuthService', () => {
   let service: OAuthService;
   let prismaService: any;
   let authService: any;
+  let githubAdapter: any;
 
   beforeEach(async () => {
     prismaService = {
@@ -35,6 +36,11 @@ describe('OAuthService', () => {
       issueSessionTokens: vi.fn(),
     };
 
+    githubAdapter = {
+      getAuthorizationUrl: vi.fn().mockReturnValue('http://github'),
+      exchangeCode: vi.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OAuthService,
@@ -42,10 +48,7 @@ describe('OAuthService', () => {
         { provide: AuthService, useValue: authService },
         {
           provide: GitHubAdapter,
-          useValue: {
-            getAuthorizationUrl: vi.fn().mockReturnValue('http://github'),
-            exchangeCode: vi.fn(),
-          },
+          useValue: githubAdapter, // Use the outer githubAdapter
         },
         {
           provide: GoogleAdapter,
@@ -82,5 +85,43 @@ describe('OAuthService', () => {
       const res = await service.handleCallback('github', 'code', 'state');
       expect(res.error).toBe('invalid_state');
     });
+
+  it('should auto-link OAuth provider to existing user with same email', async () => {
+    prismaService.oAuthFlow.findUnique.mockResolvedValue({
+      id: 'flow-1',
+      provider: 'GITHUB',
+      codeVerifier: 'verifier',
+      returnTo: '/workspace',
+      expiresAt: new Date(Date.now() + 60000),
+      consumedAt: null,
+    });
+    prismaService.oAuthFlow.update.mockResolvedValue({ id: 'flow-1' });
+
+    githubAdapter.exchangeCode = vi.fn().mockResolvedValue({
+      id: 'github-123',
+      email: 'existing@example.com',
+    });
+
+    prismaService.user.findFirst.mockResolvedValue(null);
+    prismaService.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'existing@example.com' });
+    prismaService.user.update.mockResolvedValue({ id: 'user-1' });
+    prismaService.oAuthExchangeCode.create.mockResolvedValue({});
+
+    const res = await service.handleCallback('github', 'code', 'state');
+    expect(res.code).toBeDefined();
+    expect(prismaService.user.update).toHaveBeenCalledWith({
+      where: { id: 'user-1' },
+      data: {
+        oauthAccounts: {
+          create: {
+            provider: 'GITHUB',
+            providerAccountId: 'github-123',
+            providerEmail: 'existing@example.com',
+          },
+        },
+      },
+    });
+  });
+
   });
 });

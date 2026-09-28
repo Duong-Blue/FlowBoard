@@ -134,7 +134,7 @@ describe('OAuth Flow (e2e)', () => {
       expect(response.header.location).toMatch(/http:\/\/localhost:5173\/oauth\/callback\?error=exchange_failed/);
     });
 
-    it('handles account conflict (password user logging in with OAuth)', async () => {
+    it('auto-links account (password user logging in with OAuth)', async () => {
       await prisma.user.deleteMany({ where: { email: 'conflict@example.com' } });
 
       await prisma.user.create({
@@ -158,7 +158,15 @@ describe('OAuth Flow (e2e)', () => {
         .get(`/auth/oauth/github/callback?code=mock-github-code&state=${testState}`)
         .expect(302);
 
-      expect(response.header.location).toMatch(/http:\/\/localhost:5173\/oauth\/callback\?error=account_conflict/);
+      expect(response.header.location).toMatch(/http:\/\/localhost:5173\/oauth\/callback\?code=.+/);
+
+      const user = await prisma.user.findUnique({
+        where: { email: 'conflict@example.com' },
+        include: { oauthAccounts: true },
+      });
+      expect(user).toBeDefined();
+      expect(user?.oauthAccounts[0].provider).toBe('GITHUB');
+      expect(user?.oauthAccounts[0].providerAccountId).toBe('github-789');
     });
 
     it('sanitizes open redirect (returnTo=https://evil.com) to /workspace on exchange', async () => {
