@@ -28,7 +28,8 @@ describe('IssuesService', () => {
       delete: vi.fn(),
       count: vi.fn(),
     },
-    issueActivity: { create: vi.fn() },
+    activity: { create: vi.fn() },
+
     issueRelation: { findMany: vi.fn() },
     workflow: { findUnique: vi.fn(), create: vi.fn(), findUniqueOrThrow: vi.fn() },
     workflowStatus: { create: vi.fn(), findMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn() },
@@ -84,6 +85,38 @@ describe('IssuesService', () => {
       expect(mockPrisma.issue.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ key: 'PROJ-5' }),
+        }),
+      );
+    });
+
+    it('should save startDate and dueDate when provided', async () => {
+      mockPrisma.project.update.mockResolvedValue({
+        key: 'PROJ',
+        issueSequence: 6,
+      });
+      mockPrisma.issue.create.mockResolvedValue({
+        key: 'PROJ-6',
+        startDate: new Date('2026-09-01'),
+        dueDate: new Date('2026-09-05'),
+      });
+
+      await service.create(
+        'p1',
+        'u1',
+        {
+          title: 'Test with dates',
+          startDate: '2026-09-01T00:00:00.000Z',
+          dueDate: '2026-09-05T00:00:00.000Z',
+        },
+        ProjectRole.ADMIN,
+      );
+
+      expect(mockPrisma.issue.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            startDate: new Date('2026-09-01T00:00:00.000Z'),
+            dueDate: new Date('2026-09-05T00:00:00.000Z'),
+          }),
         }),
       );
     });

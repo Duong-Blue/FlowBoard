@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../database/prisma.service';
 import { IssuesService } from './issues.service';
 import { AppModule } from '../../app.module';
+import { ActivityModule } from '../activity/activity.module';
 import { ProjectRole, IssueStatus } from '@prisma/client';
 import {
   ForbiddenException,
@@ -20,7 +21,7 @@ describe('IssuesService (Integration)', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppModule, ActivityModule],
     }).compile();
 
     service = module.get<IssuesService>(IssuesService);
@@ -35,7 +36,7 @@ describe('IssuesService (Integration)', () => {
     // Clean up
     try {
       await prisma.comment.deleteMany({});
-      await prisma.issueActivity.deleteMany({});
+      // await prisma.activity.deleteMany({});
       await prisma.notification.deleteMany({});
       await prisma.issueRelation.deleteMany({});
       await prisma.attachment.deleteMany({});

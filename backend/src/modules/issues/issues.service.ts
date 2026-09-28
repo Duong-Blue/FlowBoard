@@ -250,19 +250,19 @@ export class IssuesService {
             data: { status: IssueStatus.DONE, workflowStatusId: targetWorkflowStatusId, completedAt: new Date() },
           });
 
-          await tx.issueActivity.create({
-            data: {
-              issueId: parent.id,
-              actorId,
-              type: 'STATUS_CHANGED',
-              metadata: {
-                from: parent.status,
-                to: IssueStatus.DONE,
-                toWorkflowStatusId: targetWorkflowStatusId,
-                autoCompleted: true,
-              },
+        await tx.activity.create({
+          data: {
+            issueId: parent.id,
+            actorId,
+            type: 'STATUS_CHANGED',
+            metadata: {
+              from: parent.status,
+              to: IssueStatus.DONE,
+              toWorkflowStatusId: targetWorkflowStatusId,
+              autoCompleted: true,
             },
-          });
+          },
+        });
         }
       }
     }
@@ -333,6 +333,8 @@ export class IssuesService {
           priority: dto.priority || IssuePriority.MEDIUM,
           reporterId,
           assigneeId: dto.assigneeId || null,
+          startDate: dto.startDate ? new Date(dto.startDate) : null,
+          dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
         },
         include: {
           reporter: { select: USER_SELECT },
@@ -341,14 +343,14 @@ export class IssuesService {
         },
       });
 
-      await tx.issueActivity.create({
-        data: {
-          issueId: issue.id,
-          actorId: reporterId,
-          type: 'ISSUE_CREATED',
-          metadata: { title: issue.title },
-        },
-      });
+      // await tx.activity.create({
+      //   data: {
+      //     issueId: issue.id,
+      //     actorId: reporterId,
+      //     type: 'ISSUE_CREATED',
+      //     metadata: { title: issue.title },
+      //   },
+      // });
 
       return issue;
     });
@@ -756,14 +758,14 @@ export class IssuesService {
       });
 
       if (issue.workflowStatusId !== targetWorkflowStatusId) {
-        await tx.issueActivity.create({
-          data: {
-            issueId,
-            actorId,
-            type: 'STATUS_CHANGED',
-            metadata: { from: issue.status, to: targetCategory, fromWorkflowStatusId: issue.workflowStatusId, toWorkflowStatusId: targetWorkflowStatusId },
-          },
-        });
+        // await tx.activity.create({
+        //   data: {
+        //     issueId,
+        //     actorId,
+        //     type: 'STATUS_CHANGED',
+        //     metadata: { from: issue.status, to: targetCategory, fromWorkflowStatusId: issue.workflowStatusId, toWorkflowStatusId: targetWorkflowStatusId },
+        //   },
+        // });
 
         if (targetCategory === IssueStatus.DONE && issue.parentId) {
           await this.handleParentAutoComplete(
@@ -870,7 +872,7 @@ export class IssuesService {
       });
 
       if (dto.title !== undefined && dto.title !== oldIssue.title) {
-        await tx.issueActivity.create({
+        await tx.activity.create({
           data: {
             issueId,
             actorId,
@@ -884,7 +886,7 @@ export class IssuesService {
         dto.description !== undefined &&
         dto.description !== oldIssue.description
       ) {
-        await tx.issueActivity.create({
+        await tx.activity.create({
           data: {
             issueId,
             actorId,
@@ -907,7 +909,7 @@ export class IssuesService {
           isSubtask,
         );
 
-        await tx.issueActivity.create({
+        await tx.activity.create({
           data: {
             issueId,
             actorId,
@@ -917,11 +919,11 @@ export class IssuesService {
         });
 
         if (targetCategory === IssueStatus.DONE) {
-          await tx.issueActivity.create({
+          await tx.activity.create({
             data: { issueId, actorId, type: 'ISSUE_COMPLETED', metadata: {} },
           });
         } else if (oldIssue.status === IssueStatus.DONE) {
-          await tx.issueActivity.create({
+          await tx.activity.create({
             data: { issueId, actorId, type: 'ISSUE_REOPENED', metadata: {} },
           });
         }
@@ -937,7 +939,7 @@ export class IssuesService {
       }
 
       if (dto.type !== undefined && dto.type !== oldIssue.type) {
-        await tx.issueActivity.create({
+        await tx.activity.create({
           data: {
             issueId,
             actorId,
@@ -948,7 +950,7 @@ export class IssuesService {
       }
 
       if (dto.parentId !== undefined && dto.parentId !== oldIssue.parentId) {
-        await tx.issueActivity.create({
+        await tx.activity.create({
           data: {
             issueId,
             actorId,
@@ -959,7 +961,7 @@ export class IssuesService {
       }
 
       if (dto.priority !== undefined && dto.priority !== oldIssue.priority) {
-        await tx.issueActivity.create({
+        await tx.activity.create({
           data: {
             issueId,
             actorId,
@@ -976,7 +978,7 @@ export class IssuesService {
           : null;
         if (oldTime !== newTime) {
           if (!oldTime && newTime) {
-            await tx.issueActivity.create({
+            await tx.activity.create({
               data: {
                 issueId,
                 actorId,
@@ -985,7 +987,7 @@ export class IssuesService {
               },
             });
           } else if (oldTime && !newTime) {
-            await tx.issueActivity.create({
+            await tx.activity.create({
               data: {
                 issueId,
                 actorId,
@@ -994,7 +996,7 @@ export class IssuesService {
               },
             });
           } else {
-            await tx.issueActivity.create({
+            await tx.activity.create({
               data: {
                 issueId,
                 actorId,
@@ -1011,7 +1013,7 @@ export class IssuesService {
         const newTime = dto.dueDate ? new Date(dto.dueDate).getTime() : null;
         if (oldTime !== newTime) {
           if (!oldTime && newTime) {
-            await tx.issueActivity.create({
+            await tx.activity.create({
               data: {
                 issueId,
                 actorId,
@@ -1020,7 +1022,7 @@ export class IssuesService {
               },
             });
           } else if (oldTime && !newTime) {
-            await tx.issueActivity.create({
+            await tx.activity.create({
               data: {
                 issueId,
                 actorId,
@@ -1029,7 +1031,7 @@ export class IssuesService {
               },
             });
           } else {
-            await tx.issueActivity.create({
+            await tx.activity.create({
               data: {
                 issueId,
                 actorId,
@@ -1066,7 +1068,7 @@ export class IssuesService {
             : null;
         }
 
-        await tx.issueActivity.create({
+        await tx.activity.create({
           data: {
             issueId,
             actorId,
