@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { getIssues } from '@/services/issueService';
 import type { Issue } from '@/store/types';
 import { useProjectWorkflow } from '@/hooks/useProjectWorkflow';
+import { formatDate } from '@/lib/dateUtils';
 
 interface CalendarBoardProps {
   projectId: string;
@@ -191,6 +192,21 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
         </div>
       </div>
 
+      {statuses.length > 0 && (
+        <div className="flex items-center gap-2 sm:gap-3 px-4 py-2 bg-slate-50/80 border-b border-slate-200 overflow-x-auto text-xs no-scrollbar">
+          <span className="font-semibold text-slate-500 text-[11px] uppercase tracking-wider shrink-0">Trạng thái:</span>
+          {statuses.map((st) => {
+            const color = st.color || getStatusColor(st.id);
+            return (
+              <div key={st.id} className="flex items-center gap-1.5 shrink-0 bg-white px-2 py-0.5 rounded border border-slate-200 shadow-2xs">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                <span className="text-slate-700 font-medium text-[11px]">{st.name}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {error && (
         <div className="p-3 bg-rose-50 text-rose-700 text-xs border-b border-rose-200 flex items-center justify-between">
           <span>{error}</span>
@@ -258,28 +274,55 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
                     const statusName = statusMeta?.name || issue.workflowStatus?.name || issue.status;
                     const statusColor = statusMeta?.color || getStatusColor(issue.workflowStatusId || issue.status);
 
+                    const startStr = issue.startDate ? formatDate(issue.startDate, { month: 'numeric', day: 'numeric' }) : null;
+                    const dueStr = issue.dueDate ? formatDate(issue.dueDate, { month: 'numeric', day: 'numeric' }) : null;
+                    const hasDateRange = startStr && dueStr;
+                    const dateDisplay = hasDateRange
+                      ? `${startStr} → ${dueStr}`
+                      : startStr
+                      ? `Từ ${startStr}`
+                      : dueStr
+                      ? `Đến ${dueStr}`
+                      : null;
+
+                    const startParsed = parseLocalDate(issue.startDate);
+                    const dueParsed = parseLocalDate(issue.dueDate);
+                    const isStartDay = startParsed && formatDateKey(startParsed) === dateKey;
+                    const isDueDay = dueParsed && formatDateKey(dueParsed) === dateKey;
+
                     return (
                       <button
                         key={`${dateKey}-${issue.id}`}
                         type="button"
                         onClick={() => handleIssueClick(issue)}
-                        className="w-full text-left p-1.5 rounded border text-xs shadow-2xs transition-all hover:scale-[1.01] bg-white border-slate-200 flex flex-col gap-1"
+                        title={`${issue.key}: ${issue.title}\nTrạng thái: ${statusName}\nThời gian: ${issue.startDate ? formatDate(issue.startDate) : 'N/A'} - ${issue.dueDate ? formatDate(issue.dueDate) : 'N/A'}`}
+                        className="w-full text-left p-1.5 rounded border text-xs shadow-2xs transition-all hover:scale-[1.01] flex flex-col gap-1 overflow-hidden"
                         style={{
-                          borderLeftWidth: '3px',
+                          backgroundColor: `${statusColor}18`,
+                          borderColor: `${statusColor}40`,
+                          borderLeftWidth: '4px',
                           borderLeftColor: statusColor,
                         }}
                       >
-                        <div className="font-medium truncate flex items-center gap-1">
-                          <span className="font-mono text-[10px] opacity-75 shrink-0">{issue.key}</span>
-                          <span className="truncate">{issue.title}</span>
+                        <div className="font-medium truncate flex items-center justify-between gap-1">
+                          <div className="flex items-center gap-1 truncate">
+                            <span className="font-mono text-[10px] opacity-80 shrink-0 font-bold">{issue.key}</span>
+                            <span className="truncate font-semibold text-slate-900">{issue.title}</span>
+                          </div>
+                          {isStartDay && (
+                            <span className="text-[9px] font-bold px-1 rounded bg-blue-600 text-white shrink-0">Bắt đầu</span>
+                          )}
+                          {isDueDay && !isStartDay && (
+                            <span className="text-[9px] font-bold px-1 rounded bg-rose-600 text-white shrink-0">Hạn chót</span>
+                          )}
                         </div>
-                        <div className="flex items-center">
+
+                        <div className="flex items-center justify-between gap-1 text-[10px] text-slate-600">
                           <span
-                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0"
+                            className="inline-flex items-center gap-1 px-1 py-0.5 rounded font-medium shrink-0"
                             style={{
-                              backgroundColor: `${statusColor}18`,
+                              backgroundColor: `${statusColor}30`,
                               color: statusColor,
-                              borderColor: `${statusColor}40`,
                             }}
                           >
                             <span
@@ -288,6 +331,13 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
                             />
                             {statusName}
                           </span>
+
+                          {dateDisplay && (
+                            <span className="font-mono text-[9px] text-slate-600 shrink-0 flex items-center gap-0.5 font-medium bg-white/60 px-1 py-0.5 rounded border border-slate-200">
+                              <Clock className="w-2.5 h-2.5 text-slate-400" />
+                              {dateDisplay}
+                            </span>
+                          )}
                         </div>
                       </button>
                     );

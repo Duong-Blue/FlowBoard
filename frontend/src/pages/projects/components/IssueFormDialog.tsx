@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../../../components/ui/dialog';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
+import { Textarea } from '../../../components/ui/textarea';
 import { Label } from '../../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { type Issue } from '../../../store/types';
@@ -92,137 +93,156 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
-          <DialogHeader>
+          <DialogHeader className="pb-2">
             <DialogTitle>{issue ? t('form.editTitle') : t('form.createTitle')}</DialogTitle>
             <DialogDescription>
               {issue ? t('form.editTitle') : t('form.createTitle')}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">{t('form.titleLabel')}</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t('form.titlePlaceholder')}
-                required
-              />
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 py-4">
+            {/* Main Content Column */}
+            <div className="md:col-span-7 space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">{t('form.titleLabel')}</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t('form.titlePlaceholder')}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">{t('form.descriptionLabel')}</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={t('form.descriptionPlaceholder')}
+                  className="min-h-[180px] resize-y"
+                />
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description">{t('form.descriptionLabel')}</Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t('form.descriptionPlaceholder')}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="type">{t('form.typeLabel')}</Label>
-              <Select value={type} onValueChange={setType}>
-                <SelectTrigger id="type">
-                  <SelectValue placeholder={t('form.typeLabel')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="TASK">{t('types.task')}</SelectItem>
-                  <SelectItem value="BUG">{t('types.bug')}</SelectItem>
-                  <SelectItem value="FEATURE">{t('types.story')}</SelectItem>
-                  <SelectItem value="IMPROVEMENT">{t('types.epic')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="status">{t('form.statusLabel')}</Label>
-              <Select value={workflowStatusId} onValueChange={setWorkflowStatusId}>
-                <SelectTrigger id="status">
-                  <SelectValue placeholder={t('form.statusLabel')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {statuses.length > 0 ? (
-                    statuses.map((st) => (
-                      <SelectItem key={st.id} value={st.id}>
-                        <div className="flex items-center gap-2">
-                          {st.color && (
-                            <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
-                              style={{ backgroundColor: st.color }}
-                            />
-                          )}
-                          <span>{st.name}</span>
-                        </div>
+
+            {/* Sidebar / Metadata Column */}
+            <div className="md:col-span-5 grid grid-cols-1 gap-4 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-100 dark:border-slate-800 self-start">
+              <div className="grid gap-2">
+                <Label htmlFor="type">{t('form.typeLabel')}</Label>
+                <Select value={type} onValueChange={setType}>
+                  <SelectTrigger id="type" className="bg-white dark:bg-slate-950">
+                    <SelectValue placeholder={t('form.typeLabel')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TASK">{t('types.task')}</SelectItem>
+                    <SelectItem value="BUG">{t('types.bug')}</SelectItem>
+                    <SelectItem value="FEATURE">{t('types.story')}</SelectItem>
+                    <SelectItem value="IMPROVEMENT">{t('types.epic')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="status">{t('form.statusLabel')}</Label>
+                <Select value={workflowStatusId} onValueChange={setWorkflowStatusId}>
+                  <SelectTrigger id="status" className="bg-white dark:bg-slate-950">
+                    <SelectValue placeholder={t('form.statusLabel')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statuses.length > 0 ? (
+                      statuses.map((st) => (
+                        <SelectItem key={st.id} value={st.id}>
+                          <div className="flex items-center gap-2">
+                            {st.color && (
+                              <span
+                                className="w-2.5 h-2.5 rounded-full shrink-0"
+                                style={{ backgroundColor: st.color }}
+                              />
+                            )}
+                            <span>{st.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="TODO">{t('columns.todo')}</SelectItem>
+                        <SelectItem value="IN_PROGRESS">{t('columns.inProgress')}</SelectItem>
+                        <SelectItem value="DONE">{t('columns.done')}</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="priority">{t('form.priorityLabel')}</Label>
+                <Select value={priority} onValueChange={setPriority}>
+                  <SelectTrigger id="priority" className="bg-white dark:bg-slate-950">
+                    <SelectValue placeholder={t('form.priorityLabel')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="LOW">{t('priorities.low')}</SelectItem>
+                    <SelectItem value="MEDIUM">{t('priorities.medium')}</SelectItem>
+                    <SelectItem value="HIGH">{t('priorities.high')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="assignee">{t('form.assigneeLabel')}</Label>
+                <Select value={assigneeId} onValueChange={setAssigneeId}>
+                  <SelectTrigger id="assignee" className="bg-white dark:bg-slate-950">
+                    <SelectValue placeholder={t('form.assigneeLabel')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">{t('form.unassigned')}</SelectItem>
+                    {members.map(member => (
+                      <SelectItem key={member.userId} value={member.userId}>
+                        {member.name}
                       </SelectItem>
-                    ))
-                  ) : (
-                    <>
-                      <SelectItem value="TODO">{t('columns.todo')}</SelectItem>
-                      <SelectItem value="IN_PROGRESS">{t('columns.inProgress')}</SelectItem>
-                      <SelectItem value="DONE">{t('columns.done')}</SelectItem>
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="startDate">{t('form.startDateLabel', 'Start Date')}</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setDateError(null);
+                    }}
+                    className="bg-white dark:bg-slate-950"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="dueDate">{t('form.dueDateLabel', 'Due Date')}</Label>
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => {
+                      setDueDate(e.target.value);
+                      setDateError(null);
+                    }}
+                    className="bg-white dark:bg-slate-950"
+                  />
+                </div>
+              </div>
+
+              {dateError && (
+                <p className="text-xs font-medium text-destructive">{dateError}</p>
+              )}
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="priority">{t('form.priorityLabel')}</Label>
-              <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger id="priority">
-                  <SelectValue placeholder={t('form.priorityLabel')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="LOW">{t('priorities.low')}</SelectItem>
-                  <SelectItem value="MEDIUM">{t('priorities.medium')}</SelectItem>
-                  <SelectItem value="HIGH">{t('priorities.high')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="assignee">{t('form.assigneeLabel')}</Label>
-              <Select value={assigneeId} onValueChange={setAssigneeId}>
-                <SelectTrigger id="assignee">
-                  <SelectValue placeholder={t('form.assigneeLabel')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">{t('form.unassigned')}</SelectItem>
-                  {members.map(member => (
-                    <SelectItem key={member.userId} value={member.userId}>
-                      {member.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="startDate">{t('form.startDateLabel', 'Start Date')}</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  setDateError(null);
-                }}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="dueDate">{t('form.dueDateLabel', 'Due Date')}</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={dueDate}
-                onChange={(e) => {
-                  setDueDate(e.target.value);
-                  setDateError(null);
-                }}
-              />
-            </div>
-            {dateError && (
-              <p className="text-xs font-medium text-destructive">{dateError}</p>
-            )}
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="mt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
               {t('common:buttons.cancel')}
             </Button>

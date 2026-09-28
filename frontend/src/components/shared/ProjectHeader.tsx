@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LayoutDashboard, LayoutList, Calendar as CalendarIcon, Users, Settings } from 'lucide-react';
-import { AppBreadcrumb } from './AppBreadcrumb';
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
@@ -65,11 +64,9 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
   return (
     <header className={`flex flex-col gap-4 pb-4 border-b border-slate-200 ${className}`}>
-      {/* Top Bar: Breadcrumb + Navigation (Members, Settings) */}
-      <div className="flex items-center justify-between gap-4">
-        <AppBreadcrumb />
-        {viewLinks && (
-          <div className="flex items-center gap-1.5 shrink-0">
+      {/* Top Bar: Navigation (Members, Settings) */}
+      {viewLinks && (
+        <div className="flex items-center justify-end gap-1.5 shrink-0">
             <Button
               variant={derivedActiveView === 'members' ? 'secondary' : 'ghost'}
               size="sm"
@@ -106,7 +103,6 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
             </Button>
           </div>
         )}
-      </div>
 
       {/* Main Header Row: Identity, Realtime Indicator, View Switcher & Custom Actions */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
