@@ -8,7 +8,10 @@ import {
   User, 
   MessageSquare,
   Edit2,
-  Trash2
+  Trash2,
+  FolderPlus,
+  UserPlus,
+  UserMinus
 } from 'lucide-react';
 
 interface ActivityItemProps {
@@ -26,6 +29,11 @@ const getActivityIcon = (type: string) => {
     case 'COMMENT_CREATED': return <MessageSquare className="h-4 w-4 text-slate-500" />;
     case 'COMMENT_UPDATED': return <Edit2 className="h-4 w-4 text-slate-500" />;
     case 'COMMENT_DELETED': return <Trash2 className="h-4 w-4 text-rose-500" />;
+    case 'PROJECT_CREATED': return <FolderPlus className="h-4 w-4 text-indigo-500" />;
+    case 'PROJECT_MEMBER_ADDED':
+    case 'ORG_MEMBER_ADDED': return <UserPlus className="h-4 w-4 text-emerald-500" />;
+    case 'PROJECT_MEMBER_REMOVED':
+    case 'ORG_MEMBER_REMOVED': return <UserMinus className="h-4 w-4 text-rose-500" />;
     default: return <AlertCircle className="h-4 w-4 text-slate-400" />;
   }
 };
@@ -57,6 +65,11 @@ export function ActivityItem({ activity }: ActivityItemProps) {
         return <span>edited a comment</span>;
       case 'COMMENT_DELETED':
         return <span>deleted a comment</span>;
+      case 'PROJECT_CREATED': return <span>created project <strong>{activity.metadata?.projectName}</strong></span>;
+      case 'PROJECT_MEMBER_ADDED': return <span>added member to project</span>;
+      case 'PROJECT_MEMBER_REMOVED': return <span>removed member from project</span>;
+      case 'ORG_MEMBER_ADDED': return <span>added member to organization</span>;
+      case 'ORG_MEMBER_REMOVED': return <span>removed member from organization</span>;
       default:
         return <span>performed an action</span>;
     }
