@@ -1,12 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrgMembersService } from './org-members.service';
 import { PrismaService } from '../../database/prisma.service';
+import { ActivityModule } from '../activity/activity.module';
 
 describe('OrgMembersService', () => {
   let service: OrgMembersService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [ActivityModule],
       providers: [
         OrgMembersService,
         {

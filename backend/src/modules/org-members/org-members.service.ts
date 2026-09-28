@@ -4,11 +4,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { ActivityService } from '../activity/activity.service';
 import { OrgRole } from '@prisma/client';
 
 @Injectable()
 export class OrgMembersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private activityService: ActivityService,
+  ) {}
 
   async findAll(orgId: string) {
     return this.prisma.organizationMember.findMany({
@@ -68,11 +72,19 @@ export class OrgMembersService {
     if (member.role === 'OWNER')
       throw new ForbiddenException('Cannot remove OWNER');
 
-    return this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
       await tx.projectMember.deleteMany({
         where: { userId: targetUserId, project: { organizationId: orgId } },
       });
-      return tx.organizationMember.delete({ where: { id: member.id } });
+      await tx.organizationMember.delete({ where: { id: member.id } });
+    });
+
+    await this.activityService.createActivity({
+      type: 'ORG_MEMBER_REMOVED',
+      actorId: requesterId,
+      organizationId: orgId,
+      entityType: 'ORGANIZATION',
+      metadata: { memberId: targetUserId, role: member.role },
     });
   }
 }
