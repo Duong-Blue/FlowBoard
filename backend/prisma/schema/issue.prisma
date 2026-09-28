@@ -45,7 +45,7 @@ model Issue {
   assignee User?   @relation("IssueAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
 
   comments      Comment[]
-  activities    IssueActivity[]
+  activities     Activity[]
   notifications Notification[]
 
   parentId          String?         @map("parent_id")

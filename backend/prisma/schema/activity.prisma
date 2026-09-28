@@ -1,3 +1,9 @@
+enum ActivityScope {
+  ISSUE
+  PROJECT
+  ORGANIZATION
+}
+
 enum ActivityType {
   ISSUE_CREATED
   TITLE_CHANGED
@@ -24,20 +30,31 @@ enum ActivityType {
   ISSUE_REOPENED
   TYPE_CHANGED
   SUBTASK_PARENT_CHANGED
+  PROJECT_CREATED
+  PROJECT_MEMBER_ADDED
+  PROJECT_MEMBER_REMOVED
+  ORG_MEMBER_ADDED
+  ORG_MEMBER_REMOVED
 }
 
-model IssueActivity {
+model Activity {
   id        String       @id @default(uuid())
-  issueId   String
+  issueId   String?
   actorId   String?
   type      ActivityType
+  entityType ActivityScope @default(ISSUE)
+  projectId String?
+  organizationId String?
   metadata  Json         @default("{}")
   createdAt DateTime     @default(now())
 
-  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  issue Issue? @relation(fields: [issueId], references: [id], onDelete: Cascade)
   actor User? @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+  project Project? @relation("ProjectActivities", fields: [projectId], references: [id], onDelete: Cascade)
+  organization Organization? @relation("OrganizationActivities", fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@index([issueId, createdAt, id])
+  @@index([projectId, createdAt, id])
+  @@index([organizationId, createdAt, id])
   @@index([actorId])
-  @@map("issue_activities")
+  @@map("activities")
 }
