@@ -1,3 +1,4 @@
+import { ActivityService } from '../activity/activity.service';
 import {
   Injectable,
   ConflictException,
@@ -14,6 +15,7 @@ export class ProjectsService {
   constructor(
     private prisma: PrismaService,
     private workflowsService: WorkflowsService,
+    private activityService: ActivityService,
   ) {}
 
   async create(orgParam: string, userId: string, dto: CreateProjectDto) {
@@ -28,8 +30,8 @@ export class ProjectsService {
     });
     if (existing) throw new ConflictException('Project key must be unique');
 
-    return this.prisma.$transaction(async (tx) => {
-      const project = await tx.project.create({
+    const project = await this.prisma.$transaction(async (tx) => {
+      const p = await tx.project.create({
         data: {
           name: dto.name,
           key: dto.key,
@@ -39,13 +41,25 @@ export class ProjectsService {
         },
       });
       await tx.projectMember.create({
-        data: { projectId: project.id, userId, role: 'ADMIN' },
+        data: { projectId: p.id, userId, role: 'ADMIN' },
       });
       
-      await this.workflowsService.createDefaultWorkflow(project.id, tx);
+      await this.workflowsService.createDefaultWorkflow(p.id, tx);
       
-      return project;
+      return p;
     });
+
+    // ponytail: fire-and-forget, failure logged
+    this.activityService.createActivity({
+      type: 'PROJECT_CREATED',
+      actorId: userId,
+      organizationId: project.organizationId,
+      projectId: project.id,
+      entityType: 'PROJECT',
+      metadata: { projectName: project.name, projectKey: project.key },
+    }).catch(err => console.error('Activity logging failed', err));
+
+    return project;
   }
 
   async findAll(orgParam: string, userId: string) {

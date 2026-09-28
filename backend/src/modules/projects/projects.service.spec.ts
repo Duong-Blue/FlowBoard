@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectsService } from './projects.service';
 import { PrismaService } from '../../database/prisma.service';
 import { WorkflowsService } from '../workflows/workflows.service';
+import { ActivityModule } from '../activity/activity.module';
 import { ForbiddenException } from '@nestjs/common';
 import { vi } from 'vitest';
 
@@ -13,6 +14,7 @@ describe('ProjectsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [ActivityModule],
       providers: [
         ProjectsService,
         {
