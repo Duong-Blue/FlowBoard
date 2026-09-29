@@ -32,8 +32,11 @@ describe('OAuthController', () => {
       const res = { redirect: vi.fn() } as any;
 
       await controller.beginFlow('github', '/workspace', res);
-      
-      expect(oauthService.beginFlow).toHaveBeenCalledWith('github', '/workspace');
+
+      expect(oauthService.beginFlow).toHaveBeenCalledWith(
+        'github',
+        '/workspace',
+      );
       expect(res.redirect).toHaveBeenCalledWith('http://auth.url');
     });
   });
@@ -41,14 +44,25 @@ describe('OAuthController', () => {
   describe('handleCallback', () => {
     it('should redirect to error if error present', async () => {
       const res = { redirect: vi.fn() } as any;
-      await controller.handleCallback('github', '', '', 'access_denied', '', res);
-      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error=access_denied'));
+      await controller.handleCallback(
+        'github',
+        '',
+        '',
+        'access_denied',
+        '',
+        res,
+      );
+      expect(res.redirect).toHaveBeenCalledWith(
+        expect.stringContaining('error=access_denied'),
+      );
     });
 
     it('should redirect to invalid_request if code or state missing', async () => {
       const res = { redirect: vi.fn() } as any;
       await controller.handleCallback('github', '', 'state1', '', '', res);
-      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error=invalid_request'));
+      expect(res.redirect).toHaveBeenCalledWith(
+        expect.stringContaining('error=invalid_request'),
+      );
     });
 
     it('should call handleCallback and redirect with code', async () => {
@@ -57,24 +71,42 @@ describe('OAuthController', () => {
 
       await controller.handleCallback('github', 'code1', 'state1', '', '', res);
 
-      expect(oauthService.handleCallback).toHaveBeenCalledWith('github', 'code1', 'state1');
-      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('code=code123'));
+      expect(oauthService.handleCallback).toHaveBeenCalledWith(
+        'github',
+        'code1',
+        'state1',
+      );
+      expect(res.redirect).toHaveBeenCalledWith(
+        expect.stringContaining('code=code123'),
+      );
     });
 
     it('should redirect to account_conflict if returned', async () => {
-      oauthService.handleCallback.mockResolvedValue({ error: 'account_conflict', email: 'test@test.com' });
+      oauthService.handleCallback.mockResolvedValue({
+        error: 'account_conflict',
+        email: 'test@test.com',
+      });
       const res = { redirect: vi.fn() } as any;
 
       await controller.handleCallback('github', 'code1', 'state1', '', '', res);
 
-      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('error=account_conflict'));
-      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('email=test%40test.com'));
+      expect(res.redirect).toHaveBeenCalledWith(
+        expect.stringContaining('error=account_conflict'),
+      );
+      expect(res.redirect).toHaveBeenCalledWith(
+        expect.stringContaining('email=test%40test.com'),
+      );
     });
   });
 
   describe('exchangeCode', () => {
     it('should return tokens', async () => {
-      const mockResult = { accessToken: 'a', refreshToken: 'r', user: {} as any, returnTo: '/workspace' };
+      const mockResult = {
+        accessToken: 'a',
+        refreshToken: 'r',
+        user: {} as any,
+        returnTo: '/workspace',
+      };
       oauthService.exchangeCode.mockResolvedValue(mockResult);
 
       const result = await controller.exchangeCode({ code: 'c' });

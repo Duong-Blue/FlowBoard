@@ -75,7 +75,9 @@ describe('OAuthService', () => {
     });
 
     it('should reject invalid providers', async () => {
-      await expect(service.beginFlow('invalid')).rejects.toThrow('Unsupported OAuth provider');
+      await expect(service.beginFlow('invalid')).rejects.toThrow(
+        'Unsupported OAuth provider',
+      );
     });
   });
 
@@ -86,42 +88,44 @@ describe('OAuthService', () => {
       expect(res.error).toBe('invalid_state');
     });
 
-  it('should auto-link OAuth provider to existing user with same email', async () => {
-    prismaService.oAuthFlow.findUnique.mockResolvedValue({
-      id: 'flow-1',
-      provider: 'GITHUB',
-      codeVerifier: 'verifier',
-      returnTo: '/workspace',
-      expiresAt: new Date(Date.now() + 60000),
-      consumedAt: null,
-    });
-    prismaService.oAuthFlow.update.mockResolvedValue({ id: 'flow-1' });
+    it('should auto-link OAuth provider to existing user with same email', async () => {
+      prismaService.oAuthFlow.findUnique.mockResolvedValue({
+        id: 'flow-1',
+        provider: 'GITHUB',
+        codeVerifier: 'verifier',
+        returnTo: '/workspace',
+        expiresAt: new Date(Date.now() + 60000),
+        consumedAt: null,
+      });
+      prismaService.oAuthFlow.update.mockResolvedValue({ id: 'flow-1' });
 
-    githubAdapter.exchangeCode = vi.fn().mockResolvedValue({
-      id: 'github-123',
-      email: 'existing@example.com',
-    });
+      githubAdapter.exchangeCode = vi.fn().mockResolvedValue({
+        id: 'github-123',
+        email: 'existing@example.com',
+      });
 
-    prismaService.user.findFirst.mockResolvedValue(null);
-    prismaService.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'existing@example.com' });
-    prismaService.user.update.mockResolvedValue({ id: 'user-1' });
-    prismaService.oAuthExchangeCode.create.mockResolvedValue({});
+      prismaService.user.findFirst.mockResolvedValue(null);
+      prismaService.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 'existing@example.com',
+      });
+      prismaService.user.update.mockResolvedValue({ id: 'user-1' });
+      prismaService.oAuthExchangeCode.create.mockResolvedValue({});
 
-    const res = await service.handleCallback('github', 'code', 'state');
-    expect(res.code).toBeDefined();
-    expect(prismaService.user.update).toHaveBeenCalledWith({
-      where: { id: 'user-1' },
-      data: {
-        oauthAccounts: {
-          create: {
-            provider: 'GITHUB',
-            providerAccountId: 'github-123',
-            providerEmail: 'existing@example.com',
+      const res = await service.handleCallback('github', 'code', 'state');
+      expect(res.code).toBeDefined();
+      expect(prismaService.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: {
+          oauthAccounts: {
+            create: {
+              provider: 'GITHUB',
+              providerAccountId: 'github-123',
+              providerEmail: 'existing@example.com',
+            },
           },
         },
-      },
+      });
     });
-  });
-
   });
 });

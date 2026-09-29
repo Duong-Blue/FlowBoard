@@ -39,7 +39,7 @@ export class OAuthService {
 
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = generateCodeChallenge(codeVerifier);
-    
+
     const state = generateState();
     const stateHash = hashToken(state);
 
@@ -57,7 +57,11 @@ export class OAuthService {
     return { url };
   }
 
-  async handleCallback(providerName: string, code: string, state: string): Promise<{ error?: string; email?: string; code?: string }> {
+  async handleCallback(
+    providerName: string,
+    code: string,
+    state: string,
+  ): Promise<{ error?: string; email?: string; code?: string }> {
     const stateHash = hashToken(state);
 
     const flow = await this.prisma.oAuthFlow.findUnique({
@@ -69,10 +73,12 @@ export class OAuthService {
     }
 
     // Atomically consume
-    const consumedFlow = await this.prisma.oAuthFlow.update({
-      where: { id: flow.id, consumedAt: null },
-      data: { consumedAt: new Date() },
-    }).catch(() => null);
+    const consumedFlow = await this.prisma.oAuthFlow
+      .update({
+        where: { id: flow.id, consumedAt: null },
+        data: { consumedAt: new Date() },
+      })
+      .catch(() => null);
 
     if (!consumedFlow) {
       return { error: 'invalid_state' };
@@ -163,10 +169,12 @@ export class OAuthService {
   async exchangeCode(code: string) {
     const codeHash = hashToken(code);
 
-    const exchangeData = await this.prisma.oAuthExchangeCode.update({
-      where: { codeHash, consumedAt: null },
-      data: { consumedAt: new Date() },
-    }).catch(() => null);
+    const exchangeData = await this.prisma.oAuthExchangeCode
+      .update({
+        where: { codeHash, consumedAt: null },
+        data: { consumedAt: new Date() },
+      })
+      .catch(() => null);
 
     if (!exchangeData || exchangeData.expiresAt < new Date()) {
       throw new BadRequestException('Invalid or expired exchange code');
@@ -177,7 +185,9 @@ export class OAuthService {
       data: { lastLoginAt: new Date() },
     });
 
-    const tokens = await this.authService.issueSessionTokens(exchangeData.userId);
+    const tokens = await this.authService.issueSessionTokens(
+      exchangeData.userId,
+    );
     return {
       ...tokens,
       returnTo: exchangeData.returnTo,
