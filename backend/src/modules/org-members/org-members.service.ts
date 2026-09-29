@@ -2,6 +2,7 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { ActivityService } from '../activity/activity.service';
@@ -14,18 +15,47 @@ export class OrgMembersService {
     private activityService: ActivityService,
   ) {}
 
-  async findAll(orgId: string) {
+  private async resolveOrgId(orgIdOrSlug: string): Promise<string> {
+    if (!this.prisma.organization?.findFirst) {
+      return orgIdOrSlug;
+    }
+    const org = await this.prisma.organization.findFirst({
+      where: { OR: [{ id: orgIdOrSlug }, { slug: orgIdOrSlug }] },
+      select: { id: true },
+    });
+    return org?.id || orgIdOrSlug;
+  }
+
+  async findAll(orgIdOrSlug: string) {
+    const orgId = await this.resolveOrgId(orgIdOrSlug);
     return this.prisma.organizationMember.findMany({
       where: { organizationId: orgId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            displayName: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+      },
     });
   }
 
   async updateRole(
-    orgId: string,
+    orgIdOrSlug: string,
     targetUserId: string,
     requesterId: string,
     role: OrgRole,
   ) {
+    if (targetUserId === requesterId) {
+      throw new ForbiddenException('Cannot modify your own role');
+    }
+
+    const orgId = await this.resolveOrgId(orgIdOrSlug);
     const requester = await this.prisma.organizationMember.findUnique({
       where: {
         organizationId_userId: { organizationId: orgId, userId: requesterId },
@@ -52,7 +82,8 @@ export class OrgMembersService {
     });
   }
 
-  async remove(orgId: string, targetUserId: string, requesterId: string) {
+  async remove(orgIdOrSlug: string, targetUserId: string, requesterId: string) {
+    const orgId = await this.resolveOrgId(orgIdOrSlug);
     const requester = await this.prisma.organizationMember.findUnique({
       where: {
         organizationId_userId: { organizationId: orgId, userId: requesterId },
@@ -69,8 +100,15 @@ export class OrgMembersService {
       where: { organizationId: orgId, userId: targetUserId },
     });
     if (!member) throw new NotFoundException('Member not found');
-    if (member.role === 'OWNER')
-      throw new ForbiddenException('Cannot remove OWNER');
+
+    if (member.role === 'OWNER') {
+      const ownerCount = await this.prisma.organizationMember.count({
+        where: { organizationId: orgId, role: 'OWNER' },
+      });
+      if (ownerCount <= 1) {
+        throw new BadRequestException('Cannot remove the only owner of the organization');
+      }
+    }
 
     await this.prisma.$transaction(async (tx) => {
       await tx.projectMember.deleteMany({
