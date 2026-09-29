@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -69,6 +71,13 @@ export class OrganizationsService {
 
   async update(orgId: string, userId: string, dto: UpdateOrganizationDto) {
     const org = await this.findOne(orgId, userId);
+    const member = await this.prisma.organizationMember.findUnique({
+      where: { organizationId_userId: { organizationId: org.id, userId } },
+    });
+    if (!member || (member.role !== 'OWNER' && member.role !== 'ADMIN')) {
+      throw new ForbiddenException('Insufficient permissions to update organization');
+    }
+
     return this.prisma.organization.update({
       where: { id: org.id },
       data: dto,
@@ -77,12 +86,19 @@ export class OrganizationsService {
 
   async delete(orgId: string, userId: string) {
     const targetOrg = await this.findOne(orgId, userId);
+    const member = await this.prisma.organizationMember.findUnique({
+      where: { organizationId_userId: { organizationId: targetOrg.id, userId } },
+    });
+    if (!member || member.role !== 'OWNER') {
+      throw new ForbiddenException('Only the organization owner can delete it');
+    }
+
     const org = await this.prisma.organization.findUnique({
       where: { id: targetOrg.id },
       include: { projects: true },
     });
     if (org?.projects.length)
-      throw new Error('Cannot delete org with projects');
+      throw new BadRequestException('Cannot delete org with projects');
     return this.prisma.organization.delete({ where: { id: targetOrg.id } });
   }
 }
