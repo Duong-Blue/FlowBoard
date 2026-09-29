@@ -1,7 +1,12 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { SearchSuggestionsQueryDto } from './dto/search-suggestions-query.dto';
-import { SearchQueryDto, SearchEntityType, SearchSortBy, SearchSortOrder } from './dto/search-query.dto';
+import {
+  SearchQueryDto,
+  SearchEntityType,
+  SearchSortBy,
+  SearchSortOrder,
+} from './dto/search-query.dto';
 import { Prisma } from '@prisma/client';
 
 const ISSUE_SELECT = {
@@ -15,21 +20,24 @@ const ISSUE_SELECT = {
   updatedAt: true,
   dueDate: true,
   project: {
-    select: { id: true, key: true, name: true, organizationId: true }
+    select: { id: true, key: true, name: true, organizationId: true },
   },
   workflowStatus: {
-    select: { id: true, name: true, category: true, color: true }
+    select: { id: true, name: true, category: true, color: true },
   },
   assignee: {
-    select: { id: true, displayName: true, email: true, avatarUrl: true }
-  }
+    select: { id: true, displayName: true, email: true, avatarUrl: true },
+  },
 };
 
 @Injectable()
 export class SearchService {
   constructor(private prisma: PrismaService) {}
 
-  async getAccessibleProjectIds(userId: string, orgId?: string): Promise<string[]> {
+  async getAccessibleProjectIds(
+    userId: string,
+    orgId?: string,
+  ): Promise<string[]> {
     const members = await this.prisma.projectMember.findMany({
       where: {
         userId,
@@ -41,10 +49,15 @@ export class SearchService {
   }
 
   async getSuggestions(userId: string, dto: SearchSuggestionsQueryDto) {
-    let accessibleProjectIds = await this.getAccessibleProjectIds(userId, dto.orgId);
-    
+    let accessibleProjectIds = await this.getAccessibleProjectIds(
+      userId,
+      dto.orgId,
+    );
+
     if (dto.projectId) {
-      accessibleProjectIds = accessibleProjectIds.filter(id => id === dto.projectId);
+      accessibleProjectIds = accessibleProjectIds.filter(
+        (id) => id === dto.projectId,
+      );
     }
 
     if (accessibleProjectIds.length === 0) {
@@ -65,7 +78,7 @@ export class SearchService {
     } else if (isShorthand && dto.projectId) {
       const project = await this.prisma.project.findUnique({
         where: { id: dto.projectId },
-        select: { key: true }
+        select: { key: true },
       });
       if (project) {
         parsedKey = `${project.key}-${q.slice(1)}`;
@@ -77,11 +90,11 @@ export class SearchService {
       const issue = await this.prisma.issue.findFirst({
         where: {
           key: parsedKey,
-          projectId: { in: accessibleProjectIds }
+          projectId: { in: accessibleProjectIds },
         },
-        select: ISSUE_SELECT
+        select: ISSUE_SELECT,
       });
-      
+
       if (issue) {
         exactMatch = this.mapIssue(issue);
       }
@@ -92,11 +105,11 @@ export class SearchService {
         projectId: { in: accessibleProjectIds },
         OR: [
           { title: { contains: q, mode: 'insensitive' } },
-          { description: { contains: q, mode: 'insensitive' } }
-        ]
+          { description: { contains: q, mode: 'insensitive' } },
+        ],
       },
       select: ISSUE_SELECT,
-      take: dto.limit
+      take: dto.limit,
     });
 
     const projects = await this.prisma.project.findMany({
@@ -104,44 +117,52 @@ export class SearchService {
         id: { in: accessibleProjectIds },
         OR: [
           { name: { contains: q, mode: 'insensitive' } },
-          { key: { contains: q, mode: 'insensitive' } }
-        ]
+          { key: { contains: q, mode: 'insensitive' } },
+        ],
       },
       select: { id: true, name: true, key: true, organizationId: true },
-      take: dto.limit
+      take: dto.limit,
     });
 
     const users = await this.prisma.user.findMany({
       where: {
         projectMemberships: {
-          some: { projectId: { in: accessibleProjectIds } }
+          some: { projectId: { in: accessibleProjectIds } },
         },
         OR: [
           { displayName: { contains: q, mode: 'insensitive' } },
-          { email: { contains: q, mode: 'insensitive' } }
-        ]
+          { email: { contains: q, mode: 'insensitive' } },
+        ],
       },
       select: { id: true, displayName: true, email: true, avatarUrl: true },
-      take: dto.limit
+      take: dto.limit,
     });
 
     return {
       exactMatch,
-      issues: issues.map(i => this.mapIssue(i)),
+      issues: issues.map((i) => this.mapIssue(i)),
       projects,
-      users
+      users,
     };
   }
 
   async fullSearch(userId: string, dto: SearchQueryDto) {
-    let accessibleProjectIds = await this.getAccessibleProjectIds(userId, dto.orgId);
-    
+    let accessibleProjectIds = await this.getAccessibleProjectIds(
+      userId,
+      dto.orgId,
+    );
+
     if (dto.projectId) {
-      accessibleProjectIds = accessibleProjectIds.filter(id => id === dto.projectId);
+      accessibleProjectIds = accessibleProjectIds.filter(
+        (id) => id === dto.projectId,
+      );
     }
 
     if (accessibleProjectIds.length === 0) {
-      return { items: [], meta: { limit: dto.limit || 20, nextCursor: null, hasNextPage: false } };
+      return {
+        items: [],
+        meta: { limit: dto.limit || 20, nextCursor: null, hasNextPage: false },
+      };
     }
 
     if (dto.type === SearchEntityType.PROJECT) {
@@ -168,19 +189,31 @@ export class SearchService {
   private async searchIssues(projectIds: string[], dto: SearchQueryDto) {
     const q = dto.q?.trim();
     const limit = dto.limit || 20;
-    
+
     const conditions: Prisma.Sql[] = [
-      Prisma.sql`i."projectId" IN (${Prisma.join(projectIds)})`
+      Prisma.sql`i."projectId" IN (${Prisma.join(projectIds)})`,
     ];
 
-    if (dto.workflowStatusId) conditions.push(Prisma.sql`i."workflowStatusId" = ${dto.workflowStatusId}::uuid`);
-    if (dto.statusCategory) conditions.push(Prisma.sql`(ws."category"::text = ${dto.statusCategory} OR i."status"::text = ${dto.statusCategory})`);
-    if (dto.priority) conditions.push(Prisma.sql`i."priority"::text = ${dto.priority}`);
-    if (dto.issueType) conditions.push(Prisma.sql`i."type"::text = ${dto.issueType}`);
-    if (dto.assigneeId) conditions.push(Prisma.sql`i."assigneeId" = ${dto.assigneeId}::uuid`);
-    if (dto.reporterId) conditions.push(Prisma.sql`i."reporterId" = ${dto.reporterId}::uuid`);
-    if (dto.dueDateFrom) conditions.push(Prisma.sql`i."due_date" >= ${new Date(dto.dueDateFrom)}`);
-    if (dto.dueDateTo) conditions.push(Prisma.sql`i."due_date" <= ${new Date(dto.dueDateTo)}`);
+    if (dto.workflowStatusId)
+      conditions.push(
+        Prisma.sql`i."workflowStatusId" = ${dto.workflowStatusId}::uuid`,
+      );
+    if (dto.statusCategory)
+      conditions.push(
+        Prisma.sql`(ws."category"::text = ${dto.statusCategory} OR i."status"::text = ${dto.statusCategory})`,
+      );
+    if (dto.priority)
+      conditions.push(Prisma.sql`i."priority"::text = ${dto.priority}`);
+    if (dto.issueType)
+      conditions.push(Prisma.sql`i."type"::text = ${dto.issueType}`);
+    if (dto.assigneeId)
+      conditions.push(Prisma.sql`i."assigneeId" = ${dto.assigneeId}::uuid`);
+    if (dto.reporterId)
+      conditions.push(Prisma.sql`i."reporterId" = ${dto.reporterId}::uuid`);
+    if (dto.dueDateFrom)
+      conditions.push(Prisma.sql`i."due_date" >= ${new Date(dto.dueDateFrom)}`);
+    if (dto.dueDateTo)
+      conditions.push(Prisma.sql`i."due_date" <= ${new Date(dto.dueDateTo)}`);
 
     let scoreSelect = Prisma.sql`0`;
     if (q) {
@@ -207,8 +240,11 @@ export class SearchService {
 
     const isRelevance = dto.sortBy === SearchSortBy.RELEVANCE && !!q;
     let sortByField = Prisma.sql`i."updatedAt"`;
-    let sortDir = dto.sortOrder === SearchSortOrder.ASC ? Prisma.sql`ASC` : Prisma.sql`DESC`;
-    
+    let sortDir =
+      dto.sortOrder === SearchSortOrder.ASC
+        ? Prisma.sql`ASC`
+        : Prisma.sql`DESC`;
+
     if (isRelevance) {
       sortByField = Prisma.sql`score`;
       sortDir = Prisma.sql`DESC`;
@@ -226,14 +262,25 @@ export class SearchService {
       const uDate = new Date(u);
 
       const comp = sortDir.text === 'ASC' ? Prisma.sql`>` : Prisma.sql`<`;
-      
+
       let vSql;
       if (isRelevance) vSql = Prisma.sql`${v}::int`;
-      else if (dto.sortBy === SearchSortBy.PRIORITY) vSql = Prisma.sql`${v}::text`;
-      else if (dto.sortBy === SearchSortBy.CREATED_AT || dto.sortBy === SearchSortBy.DUE_DATE) vSql = Prisma.sql`${new Date(v)}`;
+      else if (dto.sortBy === SearchSortBy.PRIORITY)
+        vSql = Prisma.sql`${v}::text`;
+      else if (
+        dto.sortBy === SearchSortBy.CREATED_AT ||
+        dto.sortBy === SearchSortBy.DUE_DATE
+      )
+        vSql = Prisma.sql`${new Date(v)}`;
       else vSql = Prisma.sql`${uDate}`;
 
-      if (isRelevance || !dto.sortBy || dto.sortBy === SearchSortBy.UPDATED_AT || dto.sortBy === SearchSortBy.CREATED_AT || dto.sortBy === SearchSortBy.DUE_DATE) {
+      if (
+        isRelevance ||
+        !dto.sortBy ||
+        dto.sortBy === SearchSortBy.UPDATED_AT ||
+        dto.sortBy === SearchSortBy.CREATED_AT ||
+        dto.sortBy === SearchSortBy.DUE_DATE
+      ) {
         conditions.push(Prisma.sql`
           (
             ${sortByField} ${comp} ${vSql} OR
@@ -266,68 +313,84 @@ export class SearchService {
     `;
 
     const results: any[] = await this.prisma.$queryRaw(query);
-    
+
     const hasNextPage = results.length > limit;
     const items = hasNextPage ? results.slice(0, limit) : results;
-    
+
     let nextCursor = null;
     if (hasNextPage && items.length > 0) {
       const last = items[items.length - 1];
       let v = last.sort_val;
       if (isRelevance) v = last.score;
-      else if (dto.sortBy === SearchSortBy.UPDATED_AT || !dto.sortBy) v = last.updatedAt;
-      
+      else if (dto.sortBy === SearchSortBy.UPDATED_AT || !dto.sortBy)
+        v = last.updatedAt;
+
       nextCursor = this.encodeCursor({
         v,
         u: last.updatedAt,
-        id: last.id
+        id: last.id,
       });
     }
 
     if (items.length === 0) {
-      return { items: [], meta: { limit, nextCursor: null, hasNextPage: false } };
+      return {
+        items: [],
+        meta: { limit, nextCursor: null, hasNextPage: false },
+      };
     }
 
-    const issueIds = items.map(r => r.id);
+    const issueIds = items.map((r) => r.id);
     const fullIssues = await this.prisma.issue.findMany({
       where: { id: { in: issueIds } },
-      select: ISSUE_SELECT
+      select: ISSUE_SELECT,
     });
 
-    const orderedIssues = items.map(r => fullIssues.find(i => i.id === r.id)).filter(Boolean);
+    const orderedIssues = items
+      .map((r) => fullIssues.find((i) => i.id === r.id))
+      .filter(Boolean);
 
     return {
-      items: orderedIssues.map(i => this.mapIssue(i)),
-      meta: { limit, nextCursor, hasNextPage }
+      items: orderedIssues.map((i) => this.mapIssue(i)),
+      meta: { limit, nextCursor, hasNextPage },
     };
   }
 
   private async searchProjects(projectIds: string[], dto: SearchQueryDto) {
     const q = dto.q?.trim();
     const limit = dto.limit || 20;
-    
+
     const where: any = { id: { in: projectIds } };
     if (q) {
       where.OR = [
         { name: { contains: q, mode: 'insensitive' } },
-        { key: { contains: q, mode: 'insensitive' } }
+        { key: { contains: q, mode: 'insensitive' } },
       ];
     }
 
     const items = await this.prisma.project.findMany({
       where,
-      select: { id: true, name: true, key: true, organizationId: true, updatedAt: true },
+      select: {
+        id: true,
+        name: true,
+        key: true,
+        organizationId: true,
+        updatedAt: true,
+      },
       orderBy: { updatedAt: 'desc' },
       take: limit + 1,
-      ...(dto.cursor ? { skip: 1, cursor: { id: this.decodeCursor(dto.cursor).id } } : {})
+      ...(dto.cursor
+        ? { skip: 1, cursor: { id: this.decodeCursor(dto.cursor).id } }
+        : {}),
     });
 
     const hasNextPage = items.length > limit;
     const paginatedItems = hasNextPage ? items.slice(0, limit) : items;
-    
+
     let nextCursor = null;
     if (hasNextPage && paginatedItems.length > 0) {
-      nextCursor = this.encodeCursor({ id: paginatedItems[paginatedItems.length - 1].id });
+      nextCursor = this.encodeCursor({
+        id: paginatedItems[paginatedItems.length - 1].id,
+      });
     }
 
     return { items: paginatedItems, meta: { limit, nextCursor, hasNextPage } };
@@ -336,14 +399,14 @@ export class SearchService {
   private async searchUsers(projectIds: string[], dto: SearchQueryDto) {
     const q = dto.q?.trim();
     const limit = dto.limit || 20;
-    
+
     const where: any = {
-      projectMemberships: { some: { projectId: { in: projectIds } } }
+      projectMemberships: { some: { projectId: { in: projectIds } } },
     };
     if (q) {
       where.OR = [
         { displayName: { contains: q, mode: 'insensitive' } },
-        { email: { contains: q, mode: 'insensitive' } }
+        { email: { contains: q, mode: 'insensitive' } },
       ];
     }
 
@@ -351,16 +414,26 @@ export class SearchService {
       where,
       orderBy: { updatedAt: 'desc' },
       take: limit + 1,
-      ...(dto.cursor ? { skip: 1, cursor: { id: this.decodeCursor(dto.cursor).id } } : {}),
-      select: { id: true, displayName: true, email: true, avatarUrl: true, updatedAt: true }
+      ...(dto.cursor
+        ? { skip: 1, cursor: { id: this.decodeCursor(dto.cursor).id } }
+        : {}),
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        avatarUrl: true,
+        updatedAt: true,
+      },
     });
 
     const hasNextPage = items.length > limit;
     const paginatedItems = hasNextPage ? items.slice(0, limit) : items;
-    
+
     let nextCursor = null;
     if (hasNextPage && paginatedItems.length > 0) {
-      nextCursor = this.encodeCursor({ id: paginatedItems[paginatedItems.length - 1].id });
+      nextCursor = this.encodeCursor({
+        id: paginatedItems[paginatedItems.length - 1].id,
+      });
     }
 
     return { items: paginatedItems, meta: { limit, nextCursor, hasNextPage } };
@@ -375,18 +448,22 @@ export class SearchService {
       projectKey: issue.project?.key,
       projectName: issue.project?.name,
       orgId: issue.project?.organizationId,
-      workflowStatus: issue.workflowStatus ? {
-        id: issue.workflowStatus.id,
-        name: issue.workflowStatus.name,
-        category: issue.workflowStatus.category,
-        color: issue.workflowStatus.color,
-      } : null,
-      assignee: issue.assignee ? {
-        id: issue.assignee.id,
-        displayName: issue.assignee.displayName,
-        email: issue.assignee.email,
-        avatarUrl: issue.assignee.avatarUrl,
-      } : null,
+      workflowStatus: issue.workflowStatus
+        ? {
+            id: issue.workflowStatus.id,
+            name: issue.workflowStatus.name,
+            category: issue.workflowStatus.category,
+            color: issue.workflowStatus.color,
+          }
+        : null,
+      assignee: issue.assignee
+        ? {
+            id: issue.assignee.id,
+            displayName: issue.assignee.displayName,
+            email: issue.assignee.email,
+            avatarUrl: issue.assignee.avatarUrl,
+          }
+        : null,
       type: issue.type,
       priority: issue.priority,
       createdAt: issue.createdAt,

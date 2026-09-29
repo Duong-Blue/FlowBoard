@@ -72,13 +72,20 @@ describe('SearchService', () => {
 
   describe('getSuggestions', () => {
     beforeEach(() => {
-      vi.spyOn(service, 'getAccessibleProjectIds').mockResolvedValue(['proj-1']);
+      vi.spyOn(service, 'getAccessibleProjectIds').mockResolvedValue([
+        'proj-1',
+      ]);
     });
 
     it('should return empty if no accessible projects', async () => {
       vi.spyOn(service, 'getAccessibleProjectIds').mockResolvedValue([]);
       const result = await service.getSuggestions('user-1', { q: 'test' });
-      expect(result).toEqual({ exactMatch: null, issues: [], projects: [], users: [] });
+      expect(result).toEqual({
+        exactMatch: null,
+        issues: [],
+        projects: [],
+        users: [],
+      });
     });
 
     it('should match exact full key and prioritize target issue', async () => {
@@ -101,14 +108,17 @@ describe('SearchService', () => {
     it('should handle shorthand key with projectId', async () => {
       const project = { id: 'proj-1', key: 'FB' };
       const issue = { id: 'issue-1', key: 'FB-123', projectId: 'proj-1' };
-      
+
       vi.spyOn(prisma.project, 'findUnique').mockResolvedValue(project as any);
       vi.spyOn(prisma.issue, 'findFirst').mockResolvedValue(issue as any);
       vi.spyOn(prisma.issue, 'findMany').mockResolvedValue([]);
       vi.spyOn(prisma.project, 'findMany').mockResolvedValue([]);
       vi.spyOn(prisma.user, 'findMany').mockResolvedValue([]);
 
-      const result = await service.getSuggestions('user-1', { q: '#123', projectId: 'proj-1' });
+      const result = await service.getSuggestions('user-1', {
+        q: '#123',
+        projectId: 'proj-1',
+      });
 
       expect(prisma.project.findUnique).toHaveBeenCalledWith({
         where: { id: 'proj-1' },
@@ -125,12 +135,17 @@ describe('SearchService', () => {
 
   describe('fullSearch users', () => {
     it('should search users only in accessible projects', async () => {
-      vi.spyOn(service, 'getAccessibleProjectIds').mockResolvedValue(['proj-1']);
+      vi.spyOn(service, 'getAccessibleProjectIds').mockResolvedValue([
+        'proj-1',
+      ]);
       vi.spyOn(prisma.user, 'findMany').mockResolvedValue([
         { id: 'user-2', displayName: 'Test User' } as any,
       ]);
 
-      const result = await service.fullSearch('user-1', { type: 'USER', q: 'Test' } as any);
+      const result = await service.fullSearch('user-1', {
+        type: 'USER',
+        q: 'Test',
+      } as any);
 
       expect(prisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -54,7 +54,10 @@ describe('SearchController', () => {
         priority: 'HIGH',
       };
 
-      vi.spyOn(service, 'fullSearch').mockResolvedValue({ items: [], meta: {} } as any);
+      vi.spyOn(service, 'fullSearch').mockResolvedValue({
+        items: [],
+        meta: {},
+      } as any);
 
       const result = await controller.search(req, query as any);
       expect(result).toEqual({ items: [], meta: {} });
@@ -68,7 +71,10 @@ describe('SearchController', () => {
         q: 'test',
       };
 
-      vi.spyOn(service, 'fullSearch').mockResolvedValue({ items: [], meta: {} } as any);
+      vi.spyOn(service, 'fullSearch').mockResolvedValue({
+        items: [],
+        meta: {},
+      } as any);
 
       const result = await controller.search(req, query as any);
       expect(result).toEqual({ items: [], meta: {} });
