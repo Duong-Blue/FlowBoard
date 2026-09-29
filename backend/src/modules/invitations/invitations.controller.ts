@@ -11,6 +11,7 @@ import { Throttle } from '@nestjs/throttler';
 import { InvitationsService } from './invitations.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
+import { DeclineInvitationDto } from './dto/decline-invitation.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { OrgMemberGuard } from '../../common/guards/org-member.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -32,8 +33,11 @@ export class InvitationsController {
 
   @UseGuards(JwtAuthGuard, OrgMemberGuard)
   @Get()
-  findPending(@Param('orgId') orgId: string) {
-    return this.invitationsService.findPending(orgId);
+  findPending(
+    @Param('orgId') orgId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.invitationsService.findPending(orgId, userId);
   }
 
   @UseGuards(JwtAuthGuard, OrgMemberGuard)
@@ -47,9 +51,19 @@ export class InvitationsController {
   }
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  @UseGuards(JwtAuthGuard, OrgMemberGuard)
+  @UseGuards(JwtAuthGuard)
   @Post('accept')
   accept(@CurrentUser('id') userId: string, @Body() dto: AcceptInvitationDto) {
     return this.invitationsService.accept(dto.token, userId);
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @UseGuards(JwtAuthGuard)
+  @Post('decline')
+  decline(
+    @CurrentUser('id') userId: string,
+    @Body() dto: DeclineInvitationDto,
+  ) {
+    return this.invitationsService.decline(dto.token, userId);
   }
 }

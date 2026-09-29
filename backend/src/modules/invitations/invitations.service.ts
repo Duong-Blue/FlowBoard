@@ -12,17 +12,60 @@ import * as crypto from 'crypto';
 export class InvitationsService {
   constructor(private prisma: PrismaService) {}
 
+  private async resolveOrgId(orgIdOrSlug: string): Promise<string> {
+    if (!this.prisma.organization?.findFirst) {
+      return orgIdOrSlug;
+    }
+    const org = await this.prisma.organization.findFirst({
+      where: { OR: [{ id: orgIdOrSlug }, { slug: orgIdOrSlug }] },
+      select: { id: true },
+    });
+    return org?.id || orgIdOrSlug;
+  }
+
   async create(
-    orgId: string,
+    orgIdOrSlug: string,
     invitedById: string,
     dto: { email: string; role: string },
   ) {
+    const orgId = await this.resolveOrgId(orgIdOrSlug);
+    const requester = await this.prisma.organizationMember.findUnique({
+      where: {
+        organizationId_userId: { organizationId: orgId, userId: invitedById },
+      },
+      include: { user: true },
+    });
+    if (
+      !requester ||
+      (requester.role !== 'OWNER' && requester.role !== 'ADMIN')
+    ) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+    if (dto.role === 'OWNER') {
+      throw new ForbiddenException('Cannot invite as OWNER');
+    }
+    if (requester.user.email.toLowerCase() === dto.email.toLowerCase()) {
+      throw new BadRequestException('Cannot invite yourself');
+    }
+
+    const activeMember = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: orgId,
+        user: { email: { equals: dto.email, mode: 'insensitive' } },
+      },
+    });
+    if (activeMember) {
+      throw new ConflictException('User is already a member');
+    }
+
     const existing = await this.prisma.invitation.findFirst({
       where: {
         organizationId: orgId,
         email: dto.email,
         acceptedAt: null,
         revokedAt: null,
+        declinedAt: null,
+        expiresAt: { gt: new Date() },
       },
     });
     if (existing) throw new ConflictException('Pending invitation exists');
@@ -47,13 +90,33 @@ export class InvitationsService {
     return { invitationToken: rawToken };
   }
 
-  async findPending(orgId: string) {
+  async findPending(orgIdOrSlug: string, requesterId: string) {
+    const orgId = await this.resolveOrgId(orgIdOrSlug);
+    const requester = await this.prisma.organizationMember.findUnique({
+      where: {
+        organizationId_userId: { organizationId: orgId, userId: requesterId },
+      },
+    });
+    if (
+      !requester ||
+      (requester.role !== 'OWNER' && requester.role !== 'ADMIN')
+    ) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
     return this.prisma.invitation.findMany({
-      where: { organizationId: orgId, acceptedAt: null, revokedAt: null },
+      where: {
+        organizationId: orgId,
+        acceptedAt: null,
+        revokedAt: null,
+        declinedAt: null,
+        expiresAt: { gt: new Date() },
+      },
     });
   }
 
-  async revoke(orgId: string, invitationId: string, requesterId: string) {
+  async revoke(orgIdOrSlug: string, invitationId: string, requesterId: string) {
+    const orgId = await this.resolveOrgId(orgIdOrSlug);
     const requester = await this.prisma.organizationMember.findFirst({
       where: { organizationId: orgId, userId: requesterId },
     });
@@ -86,6 +149,7 @@ export class InvitationsService {
         tokenHash,
         acceptedAt: null,
         revokedAt: null,
+        declinedAt: null,
         expiresAt: { gt: new Date() },
       },
     });
@@ -98,18 +162,68 @@ export class InvitationsService {
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      await tx.invitation.update({
-        where: { id: invitation.id },
-        data: { acceptedAt: new Date() },
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        await tx.invitation.update({
+          where: { id: invitation.id },
+          data: { acceptedAt: new Date() },
+        });
+        return await tx.organizationMember.create({
+          data: {
+            organizationId: invitation.organizationId,
+            userId: userId,
+            role: invitation.role,
+          },
+        });
       });
-      return tx.organizationMember.create({
-        data: {
-          organizationId: invitation.organizationId,
-          userId: userId,
-          role: invitation.role,
-        },
-      });
+    } catch (error: any) {
+      if (error?.code === 'P2002') {
+        const existingMember = await this.prisma.organizationMember.findUnique({
+          where: {
+            organizationId_userId: {
+              organizationId: invitation.organizationId,
+              userId: userId,
+            },
+          },
+        });
+        if (existingMember) {
+          await this.prisma.invitation.update({
+            where: { id: invitation.id },
+            data: { acceptedAt: new Date() },
+          });
+          return existingMember;
+        }
+      }
+      throw error;
+    }
+  }
+
+  async decline(rawToken: string, userId: string) {
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
+    const invitation = await this.prisma.invitation.findFirst({
+      where: {
+        tokenHash,
+        acceptedAt: null,
+        revokedAt: null,
+        declinedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+    });
+    if (!invitation) throw new BadRequestException('Invalid or expired token');
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.email.toLowerCase() !== invitation.email.toLowerCase()) {
+      throw new BadRequestException(
+        'Invitation token was not issued for this user email',
+      );
+    }
+
+    return this.prisma.invitation.update({
+      where: { id: invitation.id },
+      data: { declinedAt: new Date() },
     });
   }
 }

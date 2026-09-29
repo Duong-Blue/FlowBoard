@@ -1,9 +1,10 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsEnum } from 'class-validator';
+import { OrgRole } from '@prisma/client';
 
 export class CreateInvitationDto {
   @IsEmail()
   email: string;
 
-  @IsNotEmpty()
+  @IsEnum(OrgRole)
   role: string;
 }
