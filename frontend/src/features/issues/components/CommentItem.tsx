@@ -68,21 +68,21 @@ export function CommentItem({ comment, projectId, currentUserId, userRole }: Com
   };
 
   return (
-    <div className="flex gap-4 py-4">
+    <div className="flex gap-4 py-4 rounded-lg border border-slate-100/80 bg-slate-50/40 px-4 dark:bg-slate-900/60 dark:border-slate-800">
       <Avatar className="h-8 w-8 mt-1">
         {comment.author && <AvatarImage src={comment.author.avatarUrl} alt={authorName} />}
-        <AvatarFallback>{authorInitials}</AvatarFallback>
+        <AvatarFallback className="dark:bg-slate-800 dark:text-slate-300">{authorInitials}</AvatarFallback>
       </Avatar>
 
       <div className="flex-1 space-y-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-slate-900">{authorName}</span>
-            <span className="text-xs text-slate-500">
+            <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">{authorName}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
               {new Date(comment.createdAt).toLocaleString()}
             </span>
             {comment.createdAt !== comment.updatedAt && (
-              <span className="text-xs text-slate-400">(edited)</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">(edited)</span>
             )}
           </div>
           {canEditOrDelete && !isEditing && (
@@ -90,7 +90,7 @@ export function CommentItem({ comment, projectId, currentUserId, userRole }: Com
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-slate-400 hover:text-indigo-600"
+                className="h-6 w-6 text-slate-400 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-slate-800"
                 onClick={() => setIsEditing(true)}
               >
                 <Edit2 className="h-3 w-3" />
@@ -98,7 +98,7 @@ export function CommentItem({ comment, projectId, currentUserId, userRole }: Com
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-slate-400 hover:text-rose-600"
+                className="h-6 w-6 text-slate-400 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 dark:hover:bg-slate-800"
                 onClick={handleDelete}
               >
                 <Trash2 className="h-3 w-3" />
@@ -112,13 +112,14 @@ export function CommentItem({ comment, projectId, currentUserId, userRole }: Com
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="min-h-[60px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 disabled:opacity-50"
+              className="min-h-[60px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
               disabled={isSubmitting}
             />
             <div className="flex justify-end gap-2">
               <Button
                 variant="ghost"
                 size="sm"
+                className="dark:text-slate-300 dark:hover:bg-slate-800"
                 onClick={() => {
                   setIsEditing(false);
                   setEditContent(comment.content);
@@ -133,7 +134,7 @@ export function CommentItem({ comment, projectId, currentUserId, userRole }: Com
             </div>
           </div>
         ) : (
-          <div className="text-sm text-slate-700 whitespace-pre-wrap">{comment.content}</div>
+          <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{comment.content}</div>
         )}
       </div>
     </div>

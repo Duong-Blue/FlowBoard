@@ -44,20 +44,22 @@ export function ActivityItem({ activity }: ActivityItemProps) {
     : 'Deleted User';
   
   const renderMessage = () => {
+    const badgeClass = "font-medium text-slate-700 bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-1.5 py-0.5 rounded";
+
     switch (activity.type) {
       case 'ISSUE_CREATED':
         return <span>created this issue</span>;
       case 'TITLE_CHANGED':
-        return <span>changed title from <strong>{activity.metadata.from}</strong> to <strong>{activity.metadata.to}</strong></span>;
+        return <span>changed title from <strong className={badgeClass}>{activity.metadata.from}</strong> to <strong className={badgeClass}>{activity.metadata.to}</strong></span>;
       case 'DESCRIPTION_CHANGED':
         return <span>updated the description</span>;
       case 'STATUS_CHANGED':
-        return <span>changed status from <strong>{activity.metadata.from}</strong> to <strong>{activity.metadata.to}</strong></span>;
+        return <span>changed status from <strong className={badgeClass}>{activity.metadata.from}</strong> to <strong className={badgeClass}>{activity.metadata.to}</strong></span>;
       case 'PRIORITY_CHANGED':
-        return <span>changed priority from <strong>{activity.metadata.from}</strong> to <strong>{activity.metadata.to}</strong></span>;
+        return <span>changed priority from <strong className={badgeClass}>{activity.metadata.from}</strong> to <strong className={badgeClass}>{activity.metadata.to}</strong></span>;
       case 'ASSIGNEE_CHANGED':
         return activity.metadata.toName 
-          ? <span>assigned issue to <strong>{activity.metadata.toName}</strong></span>
+          ? <span>assigned issue to <strong className={badgeClass}>{activity.metadata.toName}</strong></span>
           : <span>unassigned issue</span>;
       case 'COMMENT_CREATED':
         return <span>added a comment</span>;
@@ -65,7 +67,7 @@ export function ActivityItem({ activity }: ActivityItemProps) {
         return <span>edited a comment</span>;
       case 'COMMENT_DELETED':
         return <span>deleted a comment</span>;
-      case 'PROJECT_CREATED': return <span>created project <strong>{activity.metadata?.projectName}</strong></span>;
+      case 'PROJECT_CREATED': return <span>created project <strong className={badgeClass}>{activity.metadata?.projectName}</strong></span>;
       case 'PROJECT_MEMBER_ADDED': return <span>added member to project</span>;
       case 'PROJECT_MEMBER_REMOVED': return <span>removed member from project</span>;
       case 'ORG_MEMBER_ADDED': return <span>added member to organization</span>;
@@ -85,15 +87,15 @@ export function ActivityItem({ activity }: ActivityItemProps) {
 
   return (
     <div className="flex gap-3 text-sm">
-      <div className="relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-50 border border-slate-100 ring-4 ring-white z-10">
+      <div className="relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 ring-4 ring-white dark:ring-slate-900 z-10">
         {getActivityIcon(activity.type)}
       </div>
       <div className="flex flex-col py-1">
-        <div className="text-slate-600">
-          <span className="font-medium text-slate-900">{actorName}</span>{' '}
+        <div className="text-slate-600 dark:text-slate-400">
+          <span className="font-medium text-slate-900 dark:text-slate-200">{actorName}</span>{' '}
           {renderMessage()}
         </div>
-        <div className="text-xs text-slate-400 mt-0.5">{formattedDate}</div>
+        <div className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">{formattedDate}</div>
       </div>
     </div>
   );
