@@ -1,4 +1,7 @@
-import { OAuthProviderAdapter, OAuthProfile } from '../interfaces/oauth-provider.interface';
+import {
+  OAuthProviderAdapter,
+  OAuthProfile,
+} from '../interfaces/oauth-provider.interface';
 import { oauthConfig } from '../oauth.config';
 
 export class GitHubAdapter implements OAuthProviderAdapter {
@@ -24,7 +27,10 @@ export class GitHubAdapter implements OAuthProviderAdapter {
     return `${this.authUrl}?${params.toString()}`;
   }
 
-  async exchangeCode(code: string, codeVerifier: string): Promise<OAuthProfile> {
+  async exchangeCode(
+    code: string,
+    codeVerifier: string,
+  ): Promise<OAuthProfile> {
     // 1. Exchange code for access_token
     const body = new URLSearchParams({
       client_id: this.config.clientId,
@@ -37,21 +43,25 @@ export class GitHubAdapter implements OAuthProviderAdapter {
 
     const tokenResponse = await fetch(this.tokenUrl, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json' 
+        Accept: 'application/json',
       },
       body: body.toString(),
     });
 
     if (!tokenResponse.ok) {
-      throw new Error(`GitHub token exchange failed: ${tokenResponse.statusText}`);
+      throw new Error(
+        `GitHub token exchange failed: ${tokenResponse.statusText}`,
+      );
     }
 
     const tokenData = await tokenResponse.json();
-    
+
     if (tokenData.error) {
-      throw new Error(`GitHub token error: ${tokenData.error_description || tokenData.error}`);
+      throw new Error(
+        `GitHub token error: ${tokenData.error_description || tokenData.error}`,
+      );
     }
 
     const accessToken = tokenData.access_token;
@@ -59,14 +69,16 @@ export class GitHubAdapter implements OAuthProviderAdapter {
     // 2. Fetch user profile
     const profileResponse = await fetch(`${this.apiUrl}/user`, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/vnd.github.v3+json',
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github.v3+json',
         'User-Agent': 'FlowBoard-OAuth',
       },
     });
 
     if (!profileResponse.ok) {
-      throw new Error(`GitHub profile fetch failed: ${profileResponse.statusText}`);
+      throw new Error(
+        `GitHub profile fetch failed: ${profileResponse.statusText}`,
+      );
     }
 
     const profileData = await profileResponse.json();
@@ -74,21 +86,23 @@ export class GitHubAdapter implements OAuthProviderAdapter {
     // 3. Fetch user emails
     const emailsResponse = await fetch(`${this.apiUrl}/user/emails`, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/vnd.github.v3+json',
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github.v3+json',
         'User-Agent': 'FlowBoard-OAuth',
       },
     });
 
     if (!emailsResponse.ok) {
-      throw new Error(`GitHub emails fetch failed: ${emailsResponse.statusText}`);
+      throw new Error(
+        `GitHub emails fetch failed: ${emailsResponse.statusText}`,
+      );
     }
 
     const emailsData = await emailsResponse.json();
 
     // 4. Find primary, verified email
     const primaryVerifiedEmail = emailsData.find(
-      (email: any) => email.primary === true && email.verified === true
+      (email: any) => email.primary === true && email.verified === true,
     );
 
     if (!primaryVerifiedEmail) {

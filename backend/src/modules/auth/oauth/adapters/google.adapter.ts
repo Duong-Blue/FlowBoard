@@ -1,4 +1,7 @@
-import { OAuthProviderAdapter, OAuthProfile } from '../interfaces/oauth-provider.interface';
+import {
+  OAuthProviderAdapter,
+  OAuthProfile,
+} from '../interfaces/oauth-provider.interface';
 import { oauthConfig } from '../oauth.config';
 
 export class GoogleAdapter implements OAuthProviderAdapter {
@@ -22,7 +25,10 @@ export class GoogleAdapter implements OAuthProviderAdapter {
     return `${this.authUrl}?${params.toString()}`;
   }
 
-  async exchangeCode(code: string, codeVerifier: string): Promise<OAuthProfile> {
+  async exchangeCode(
+    code: string,
+    codeVerifier: string,
+  ): Promise<OAuthProfile> {
     // 1. Exchange code for access_token and id_token
     const body = new URLSearchParams({
       client_id: this.config.clientId,
@@ -40,21 +46,28 @@ export class GoogleAdapter implements OAuthProviderAdapter {
     });
 
     if (!tokenResponse.ok) {
-      throw new Error(`Google token exchange failed: ${tokenResponse.statusText}`);
+      throw new Error(
+        `Google token exchange failed: ${tokenResponse.statusText}`,
+      );
     }
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
     // 2. Fetch user profile
-    const profileResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+    const profileResponse = await fetch(
+      'https://www.googleapis.com/oauth2/v3/userinfo',
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       },
-    });
+    );
 
     if (!profileResponse.ok) {
-      throw new Error(`Google profile fetch failed: ${profileResponse.statusText}`);
+      throw new Error(
+        `Google profile fetch failed: ${profileResponse.statusText}`,
+      );
     }
 
     const profileData = await profileResponse.json();
@@ -73,7 +86,8 @@ export class GoogleAdapter implements OAuthProviderAdapter {
       email: profileData.email,
       firstName: profileData.given_name,
       lastName: profileData.family_name,
-      displayName: profileData.name || profileData.given_name || profileData.email,
+      displayName:
+        profileData.name || profileData.given_name || profileData.email,
       avatarUrl: profileData.picture,
     };
   }

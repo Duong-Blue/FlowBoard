@@ -12,7 +12,7 @@ describe('OAuth Adapters', () => {
     oauthConfig.google.clientId = 'mock-google-client';
     oauthConfig.google.clientSecret = 'mock-google-secret';
     oauthConfig.google.redirectUri = 'http://localhost/google';
-    
+
     oauthConfig.github.clientId = 'mock-github-client';
     oauthConfig.github.clientSecret = 'mock-github-secret';
     oauthConfig.github.redirectUri = 'http://localhost/github';
@@ -29,7 +29,9 @@ describe('OAuth Adapters', () => {
     it('should generate correct authorization URL', () => {
       const url = adapter.getAuthorizationUrl('my-state', 'my-challenge');
       const parsed = new URL(url);
-      expect(parsed.origin + parsed.pathname).toBe('https://accounts.google.com/o/oauth2/v2/auth');
+      expect(parsed.origin + parsed.pathname).toBe(
+        'https://accounts.google.com/o/oauth2/v2/auth',
+      );
       expect(parsed.searchParams.get('client_id')).toBe('mock-google-client');
       expect(parsed.searchParams.get('response_type')).toBe('code');
       expect(parsed.searchParams.get('state')).toBe('my-state');
@@ -79,12 +81,17 @@ describe('OAuth Adapters', () => {
         if (url === 'https://www.googleapis.com/oauth2/v3/userinfo') {
           return {
             ok: true,
-            json: async () => ({ email: 'test@google.com', email_verified: false }),
+            json: async () => ({
+              email: 'test@google.com',
+              email_verified: false,
+            }),
           };
         }
       });
 
-      await expect(adapter.exchangeCode('code', 'ver')).rejects.toThrow('Google email is not verified');
+      await expect(adapter.exchangeCode('code', 'ver')).rejects.toThrow(
+        'Google email is not verified',
+      );
     });
 
     it('should throw if email is missing', async () => {
@@ -100,7 +107,9 @@ describe('OAuth Adapters', () => {
         }
       });
 
-      await expect(adapter.exchangeCode('code', 'ver')).rejects.toThrow('Google profile missing email');
+      await expect(adapter.exchangeCode('code', 'ver')).rejects.toThrow(
+        'Google profile missing email',
+      );
     });
   });
 
@@ -110,7 +119,9 @@ describe('OAuth Adapters', () => {
     it('should generate correct authorization URL', () => {
       const url = adapter.getAuthorizationUrl('gh-state', 'gh-challenge');
       const parsed = new URL(url);
-      expect(parsed.origin + parsed.pathname).toBe('https://github.com/login/oauth/authorize');
+      expect(parsed.origin + parsed.pathname).toBe(
+        'https://github.com/login/oauth/authorize',
+      );
       expect(parsed.searchParams.get('client_id')).toBe('mock-github-client');
       expect(parsed.searchParams.get('state')).toBe('gh-state');
       expect(parsed.searchParams.get('code_challenge')).toBe('gh-challenge');
@@ -140,11 +151,19 @@ describe('OAuth Adapters', () => {
         if (url === 'https://api.github.com/user/emails') {
           return {
             ok: true,
-            json: async () => ([
-              { email: 'unverified@github.com', primary: true, verified: false },
-              { email: 'not-primary@github.com', primary: false, verified: true },
+            json: async () => [
+              {
+                email: 'unverified@github.com',
+                primary: true,
+                verified: false,
+              },
+              {
+                email: 'not-primary@github.com',
+                primary: false,
+                verified: true,
+              },
               { email: 'primary@github.com', primary: true, verified: true },
-            ]),
+            ],
           };
         }
       });
@@ -171,14 +190,20 @@ describe('OAuth Adapters', () => {
         if (url === 'https://api.github.com/user/emails') {
           return {
             ok: true,
-            json: async () => ([
-              { email: 'unverified@github.com', primary: true, verified: false },
-            ]),
+            json: async () => [
+              {
+                email: 'unverified@github.com',
+                primary: true,
+                verified: false,
+              },
+            ],
           };
         }
       });
 
-      await expect(adapter.exchangeCode('code', 'ver')).rejects.toThrow('GitHub account does not have a primary, verified email');
+      await expect(adapter.exchangeCode('code', 'ver')).rejects.toThrow(
+        'GitHub account does not have a primary, verified email',
+      );
     });
   });
 });
