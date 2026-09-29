@@ -15,6 +15,7 @@ model User {
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   refreshTokens      RefreshToken[]
+  passwordResetCodes PasswordResetCode[]
   oauthAccounts      OAuthAccount[]
   oauthExchangeCodes OAuthExchangeCode[]
   orgMemberships     OrganizationMember[]
