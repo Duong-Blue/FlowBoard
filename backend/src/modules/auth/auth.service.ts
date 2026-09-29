@@ -6,10 +6,11 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
-import { createHash, randomBytes, randomUUID } from 'crypto';
+import { createHash, randomBytes, randomUUID, randomInt } from 'crypto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { PrismaService } from '../../database/prisma.service';
+import { MailerService } from '../mailer/mailer.service';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private prisma: PrismaService,
+    private mailerService: MailerService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -130,7 +132,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    
+
     const payload = { email: user.email, sub: user.id };
     const accessToken = this.jwtService.sign(payload);
     const rawRefreshToken = randomBytes(32).toString('hex');
@@ -161,5 +163,139 @@ export class AuthService {
       accessToken,
       refreshToken: rawRefreshToken,
     };
+  }
+
+  async forgotPassword(email: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.usersService.findByEmail(normalizedEmail);
+    if (!user) {
+      return {
+        message:
+          'If an account exists, a password reset code will be sent to the email.',
+      };
+    }
+
+    const code = randomInt(100000, 1000000).toString();
+    const codeHash = createHash('sha256').update(code).digest('hex');
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await this.prisma.passwordResetCode.create({
+      data: {
+        userId: user.id,
+        codeHash,
+        expiresAt,
+      },
+    });
+
+    await this.mailerService.sendPasswordResetCode(normalizedEmail, code);
+
+    return {
+      message:
+        'If an account exists, a password reset code will be sent to the email.',
+    };
+  }
+
+  async verifyResetCode(email: string, code: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.usersService.findByEmail(normalizedEmail);
+    if (!user) {
+      throw new BadRequestException('Invalid or expired reset code');
+    }
+
+    const codeHash = createHash('sha256').update(code).digest('hex');
+    const resetCode = await this.prisma.passwordResetCode.findFirst({
+      where: {
+        userId: user.id,
+        consumedAt: null,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!resetCode) {
+      throw new BadRequestException('Invalid or expired reset code');
+    }
+
+    if (resetCode.expiresAt < new Date()) {
+      throw new BadRequestException('Invalid or expired reset code');
+    }
+
+    if (resetCode.attempts >= 5) {
+      throw new BadRequestException(
+        'Too many attempts. Please request a new reset code.',
+      );
+    }
+
+    if (resetCode.codeHash !== codeHash) {
+      await this.prisma.passwordResetCode.update({
+        where: { id: resetCode.id },
+        data: { attempts: { increment: 1 } },
+      });
+      throw new BadRequestException('Invalid or expired reset code');
+    }
+
+    const rawResetToken = randomBytes(32).toString('hex');
+    const resetTokenHash = createHash('sha256')
+      .update(rawResetToken)
+      .digest('hex');
+    const resetTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await this.prisma.passwordResetCode.update({
+      where: { id: resetCode.id },
+      data: {
+        verifiedAt: new Date(),
+        resetTokenHash,
+        resetTokenExpiresAt,
+        attempts: 0,
+      },
+    });
+
+    return { resetToken: rawResetToken };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const resetCode = await this.prisma.passwordResetCode.findUnique({
+      where: { resetTokenHash: tokenHash },
+    });
+
+    if (!resetCode || resetCode.consumedAt !== null) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    if (
+      !resetCode.resetTokenExpiresAt ||
+      resetCode.resetTokenExpiresAt < new Date()
+    ) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: resetCode.userId },
+        data: { passwordHash },
+      });
+      await tx.passwordResetCode.update({
+        where: { id: resetCode.id },
+        data: { consumedAt: new Date() },
+      });
+      await tx.refreshToken.updateMany({
+        where: { userId: resetCode.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    });
+
+    return { message: 'Password updated successfully' };
+  }
+
+  async cleanExpiredResetCodes(): Promise<number> {
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const result = await this.prisma.passwordResetCode.deleteMany({
+      where: {
+        OR: [{ expiresAt: { lt: new Date() } }, { consumedAt: { lt: cutoff } }],
+      },
+    });
+    return result.count;
   }
 }
