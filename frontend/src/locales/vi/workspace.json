@@ -299,9 +299,16 @@
     "noPending": "Không có lời mời nào đang chờ.",
     "tokenLabel": "Mã lời mời",
     "acceptTitle": "Chấp nhận lời mời tham gia tổ chức",
-    "acceptDesc": "Bạn đã được mời tham gia vào tổ chức này.",
+    "acceptDesc": "Bạn đã nhận được lời mời gia nhập tổ chức trên FlowBoard.",
     "acceptButton": "Chấp nhận lời mời",
-    "rejectButton": "Từ chối lời mời"
+    "rejectButton": "Từ chối lời mời",
+    "declineSuccess": "Đã từ chối lời mời tham gia tổ chức.",
+    "acceptSuccess": "Đã chấp nhận lời mời và tham gia tổ chức thành công!",
+    "loggedInAs": "Bạn đang đăng nhập với tài khoản:",
+    "switchAccount": "Đăng nhập tài khoản khác",
+    "invalidTokenTitle": "Liên kết lời mời không hợp lệ",
+    "invalidTokenDesc": "Liên kết lời mời thiếu mã xác thực (token) hoặc mã tổ chức (orgId).",
+    "goWorkspace": "Trở về Không gian làm việc"
   },
   "notFound": {
     "title": "404 - Không tìm thấy trang",

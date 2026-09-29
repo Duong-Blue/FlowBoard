@@ -299,9 +299,16 @@
     "noPending": "No pending invitations.",
     "tokenLabel": "Invitation Token",
     "acceptTitle": "Accept Organization Invitation",
-    "acceptDesc": "You have been invited to join this organization.",
+    "acceptDesc": "You have received an invitation to join an organization on FlowBoard.",
     "acceptButton": "Accept Invitation",
-    "rejectButton": "Decline Invitation"
+    "rejectButton": "Decline Invitation",
+    "declineSuccess": "Invitation declined successfully.",
+    "acceptSuccess": "Joined organization successfully!",
+    "loggedInAs": "Logged in as:",
+    "switchAccount": "Log in with a different account",
+    "invalidTokenTitle": "Invalid Invitation Link",
+    "invalidTokenDesc": "The invitation link is missing a valid token or organization ID.",
+    "goWorkspace": "Go to Workspace"
   },
   "notFound": {
     "title": "404 - Page Not Found",
