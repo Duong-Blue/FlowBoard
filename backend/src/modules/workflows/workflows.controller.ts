@@ -1,13 +1,13 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Body, 
-  Param, 
-  Query, 
-  UseGuards
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { WorkflowsService } from './workflows.service';
 import { CreateStatusDto } from './dto/create-status.dto';
@@ -56,7 +56,11 @@ export class WorkflowsController {
     @Param('statusId') statusId: string,
     @Query('fallbackStatusId') fallbackStatusId: string,
   ) {
-    return this.workflowsService.deleteStatus(projectId, statusId, fallbackStatusId);
+    return this.workflowsService.deleteStatus(
+      projectId,
+      statusId,
+      fallbackStatusId,
+    );
   }
 
   @Post('transitions')

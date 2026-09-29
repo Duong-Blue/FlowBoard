@@ -9,33 +9,79 @@ import { IssueStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class WorkflowsService {
-  constructor(private prisma: PrismaService, private eventEmitter: EventEmitter2) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
-  async createDefaultWorkflow(projectId: string, tx: Prisma.TransactionClient = this.prisma) {
+  async createDefaultWorkflow(
+    projectId: string,
+    tx: Prisma.TransactionClient = this.prisma,
+  ) {
     const workflow = await tx.workflow.create({
       data: { projectId },
     });
 
     const todo = await tx.workflowStatus.create({
-      data: { workflowId: workflow.id, name: 'To Do', category: IssueStatus.TODO, order: 0, color: '#e2e8f0' },
+      data: {
+        workflowId: workflow.id,
+        name: 'To Do',
+        category: IssueStatus.TODO,
+        order: 0,
+        color: '#e2e8f0',
+      },
     });
     const inProgress = await tx.workflowStatus.create({
-      data: { workflowId: workflow.id, name: 'In Progress', category: IssueStatus.IN_PROGRESS, order: 1, color: '#bfdbfe' },
+      data: {
+        workflowId: workflow.id,
+        name: 'In Progress',
+        category: IssueStatus.IN_PROGRESS,
+        order: 1,
+        color: '#bfdbfe',
+      },
     });
     const inPreview = await tx.workflowStatus.create({
-      data: { workflowId: workflow.id, name: 'In Preview', category: IssueStatus.IN_PREVIEW, order: 2, color: '#fef08a' },
+      data: {
+        workflowId: workflow.id,
+        name: 'In Preview',
+        category: IssueStatus.IN_PREVIEW,
+        order: 2,
+        color: '#fef08a',
+      },
     });
     const done = await tx.workflowStatus.create({
-      data: { workflowId: workflow.id, name: 'Done', category: IssueStatus.DONE, order: 3, color: '#bbf7d0' },
+      data: {
+        workflowId: workflow.id,
+        name: 'Done',
+        category: IssueStatus.DONE,
+        order: 3,
+        color: '#bbf7d0',
+      },
     });
 
     await tx.workflowTransition.createMany({
       data: [
         { workflowId: workflow.id, fromStatusId: null, toStatusId: todo.id },
-        { workflowId: workflow.id, fromStatusId: todo.id, toStatusId: inProgress.id },
-        { workflowId: workflow.id, fromStatusId: inProgress.id, toStatusId: inPreview.id },
-        { workflowId: workflow.id, fromStatusId: inPreview.id, toStatusId: done.id },
-        { workflowId: workflow.id, fromStatusId: done.id, toStatusId: inProgress.id },
+        {
+          workflowId: workflow.id,
+          fromStatusId: todo.id,
+          toStatusId: inProgress.id,
+        },
+        {
+          workflowId: workflow.id,
+          fromStatusId: inProgress.id,
+          toStatusId: inPreview.id,
+        },
+        {
+          workflowId: workflow.id,
+          fromStatusId: inPreview.id,
+          toStatusId: done.id,
+        },
+        {
+          workflowId: workflow.id,
+          fromStatusId: done.id,
+          toStatusId: inProgress.id,
+        },
       ],
     });
 
@@ -45,7 +91,9 @@ export class WorkflowsService {
         statuses: { orderBy: { order: 'asc' } },
         transitions: true,
       },
-    }) as Promise<NonNullable<Awaited<ReturnType<typeof tx.workflow.findUnique>>>>;
+    }) as Promise<
+      NonNullable<Awaited<ReturnType<typeof tx.workflow.findUnique>>>
+    >;
   }
 
   async getWorkflow(projectId: string) {
@@ -70,7 +118,7 @@ export class WorkflowsService {
   async createStatus(projectId: string, dto: CreateStatusDto) {
     const workflow = await this.getWorkflow(projectId);
     const order = dto.order ?? workflow.statuses.length;
-    
+
     const status = await this.prisma.workflowStatus.create({
       data: {
         workflowId: workflow.id,
@@ -85,9 +133,13 @@ export class WorkflowsService {
     return status;
   }
 
-  async updateStatus(projectId: string, statusId: string, dto: UpdateStatusDto) {
+  async updateStatus(
+    projectId: string,
+    statusId: string,
+    dto: UpdateStatusDto,
+  ) {
     const workflow = await this.getWorkflow(projectId);
-    
+
     const status = await this.prisma.workflowStatus.update({
       where: { id: statusId, workflowId: workflow.id },
       data: dto,
@@ -97,40 +149,56 @@ export class WorkflowsService {
     return status;
   }
 
-  async deleteStatus(projectId: string, statusId: string, fallbackStatusId: string) {
+  async deleteStatus(
+    projectId: string,
+    statusId: string,
+    fallbackStatusId: string,
+  ) {
     if (!fallbackStatusId) {
       throw new BadRequestException('fallbackStatusId is required');
     }
 
     if (statusId === fallbackStatusId) {
-      throw new BadRequestException('fallbackStatusId cannot be the same as the status being deleted');
+      throw new BadRequestException(
+        'fallbackStatusId cannot be the same as the status being deleted',
+      );
     }
 
     const workflow = await this.getWorkflow(projectId);
 
     if (workflow.statuses.length <= 1) {
-      throw new BadRequestException('Cannot delete the last remaining status of a workflow');
+      throw new BadRequestException(
+        'Cannot delete the last remaining status of a workflow',
+      );
     }
 
-    const statusToDelete = workflow.statuses.find(s => s.id === statusId);
-    const fallbackStatus = workflow.statuses.find(s => s.id === fallbackStatusId);
+    const statusToDelete = workflow.statuses.find((s) => s.id === statusId);
+    const fallbackStatus = workflow.statuses.find(
+      (s) => s.id === fallbackStatusId,
+    );
 
-    if (!statusToDelete) throw new BadRequestException('Status to delete not found in this workflow');
-    if (!fallbackStatus) throw new BadRequestException('Fallback status not found in this workflow');
+    if (!statusToDelete)
+      throw new BadRequestException(
+        'Status to delete not found in this workflow',
+      );
+    if (!fallbackStatus)
+      throw new BadRequestException(
+        'Fallback status not found in this workflow',
+      );
 
     const result = await this.prisma.$transaction(async (tx) => {
       await tx.issue.updateMany({
         where: { workflowStatusId: statusId },
-        data: { workflowStatusId: fallbackStatusId, status: fallbackStatus.category },
+        data: {
+          workflowStatusId: fallbackStatusId,
+          status: fallbackStatus.category,
+        },
       });
 
       await tx.workflowTransition.deleteMany({
         where: {
           workflowId: workflow.id,
-          OR: [
-            { fromStatusId: statusId },
-            { toStatusId: statusId },
-          ],
+          OR: [{ fromStatusId: statusId }, { toStatusId: statusId }],
         },
       });
 
@@ -150,15 +218,18 @@ export class WorkflowsService {
       throw new BadRequestException('Cannot transition to the same status');
     }
 
-    const fromStatus = workflow.statuses.find(s => s.id === dto.fromStatusId);
-    const toStatus = workflow.statuses.find(s => s.id === dto.toStatusId);
+    const fromStatus = workflow.statuses.find((s) => s.id === dto.fromStatusId);
+    const toStatus = workflow.statuses.find((s) => s.id === dto.toStatusId);
 
     if (!fromStatus || !toStatus) {
-      throw new BadRequestException('Transition statuses must belong to the workflow');
+      throw new BadRequestException(
+        'Transition statuses must belong to the workflow',
+      );
     }
 
     const existing = workflow.transitions.find(
-      t => t.fromStatusId === dto.fromStatusId && t.toStatusId === dto.toStatusId
+      (t) =>
+        t.fromStatusId === dto.fromStatusId && t.toStatusId === dto.toStatusId,
     );
     if (existing) {
       throw new BadRequestException('Transition already exists');
@@ -187,16 +258,24 @@ export class WorkflowsService {
     return transition;
   }
 
-  async updateTransitionsMatrix(projectId: string, dto: UpdateTransitionsMatrixDto) {
+  async updateTransitionsMatrix(
+    projectId: string,
+    dto: UpdateTransitionsMatrixDto,
+  ) {
     const workflow = await this.getWorkflow(projectId);
-    
+
     if (dto.transitions && dto.transitions.length > 0) {
-      const validStatusIds = new Set(workflow.statuses.map(s => s.id));
+      const validStatusIds = new Set(workflow.statuses.map((s) => s.id));
       const seen = new Set<string>();
 
       for (const t of dto.transitions) {
-        if (!validStatusIds.has(t.fromStatusId) || !validStatusIds.has(t.toStatusId)) {
-          throw new BadRequestException('Transition statuses must belong to the workflow');
+        if (
+          !validStatusIds.has(t.fromStatusId) ||
+          !validStatusIds.has(t.toStatusId)
+        ) {
+          throw new BadRequestException(
+            'Transition statuses must belong to the workflow',
+          );
         }
         if (t.fromStatusId === t.toStatusId) {
           throw new BadRequestException('Cannot transition to the same status');
@@ -216,7 +295,7 @@ export class WorkflowsService {
 
       if (dto.transitions && dto.transitions.length > 0) {
         await tx.workflowTransition.createMany({
-          data: dto.transitions.map(t => ({
+          data: dto.transitions.map((t) => ({
             workflowId: workflow.id,
             fromStatusId: t.fromStatusId,
             toStatusId: t.toStatusId,
