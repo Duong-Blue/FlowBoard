@@ -10,10 +10,10 @@ export default function NotFound() {
   }, [t]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 text-center">
-      <h1 className="text-6xl font-bold text-slate-900 mb-4">404</h1>
-      <h2 className="text-2xl font-semibold text-slate-700 mb-2">{t('notFound.title')}</h2>
-      <p className="text-slate-500 max-w-md mb-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950 p-4 text-center text-slate-900 dark:text-slate-100">
+      <h1 className="text-6xl font-bold text-slate-900 dark:text-slate-100 mb-4">404</h1>
+      <h2 className="text-2xl font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('notFound.title')}</h2>
+      <p className="text-slate-500 dark:text-slate-400 max-w-md mb-8">
         {t('notFound.subtitle')}
       </p>
       <Button asChild>

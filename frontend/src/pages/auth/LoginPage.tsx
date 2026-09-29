@@ -50,10 +50,10 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="w-full shadow-none border border-slate-200 bg-white">
+    <Card className="w-full shadow-none border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">{t('login.title')}</CardTitle>
-        <CardDescription>
+        <CardDescription className="dark:text-slate-400">
           {t('login.subtitle')}
         </CardDescription>
       </CardHeader>
@@ -90,9 +90,9 @@ export default function LoginPage() {
             {isLoading ? t('login.submittingButton') : t('login.submitButton')}
           </Button>
           <OAuthButtons disabled={isLoading} />
-          <div className="text-center text-sm text-slate-500 pt-2">
+          <div className="text-center text-sm text-slate-500 dark:text-slate-400 pt-2">
             {t('login.noAccount')}{' '}
-            <Link to="/register" className="font-semibold text-primary hover:underline">
+            <Link to="/register" className="font-semibold text-primary hover:underline dark:text-slate-400 dark:hover:text-slate-200">
               {t('login.registerLink')}
             </Link>
           </div>

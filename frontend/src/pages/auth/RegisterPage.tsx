@@ -39,10 +39,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <Card className="w-full shadow-none border border-slate-200 bg-white">
+    <Card className="w-full shadow-none border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">{t('register.title')}</CardTitle>
-        <CardDescription>
+        <CardDescription className="dark:text-slate-400">
           {t('register.subtitle')}
         </CardDescription>
       </CardHeader>
@@ -103,9 +103,9 @@ export default function RegisterPage() {
             {isLoading ? t('register.submittingButton') : t('register.submitButton')}
           </Button>
           <OAuthButtons disabled={isLoading} />
-          <div className="text-center text-sm text-slate-500 pt-2">
+          <div className="text-center text-sm text-slate-500 dark:text-slate-400 pt-2">
             {t('register.hasAccount')}{' '}
-            <Link to="/login" className="font-semibold text-primary hover:underline">
+            <Link to="/login" className="font-semibold text-primary hover:underline dark:hover:text-slate-200">
               {t('register.loginLink')}
             </Link>
           </div>
