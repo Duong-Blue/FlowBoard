@@ -106,7 +106,9 @@ export class OrgMembersService {
         where: { organizationId: orgId, role: 'OWNER' },
       });
       if (ownerCount <= 1) {
-        throw new BadRequestException('Cannot remove the only owner of the organization');
+        throw new BadRequestException(
+          'Cannot remove the only owner of the organization',
+        );
       }
     }
 

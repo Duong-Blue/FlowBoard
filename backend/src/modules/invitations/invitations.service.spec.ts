@@ -113,9 +113,9 @@ describe('InvitationsService', () => {
 
       const p2002Error = new Error('Prisma error');
       (p2002Error as any).code = 'P2002';
-      
+
       vi.mocked(prisma.$transaction).mockRejectedValue(p2002Error);
-      
+
       const existingMember = {
         id: 'mem1',
         organizationId: 'org1',
@@ -128,7 +128,7 @@ describe('InvitationsService', () => {
       vi.mocked(prisma.invitation.update).mockResolvedValue({} as any);
 
       const result = await service.accept('dummy_token', 'user2');
-      
+
       expect(result).toEqual(existingMember);
       expect(prisma.invitation.update).toHaveBeenCalledWith({
         where: { id: 'inv1' },
@@ -144,17 +144,19 @@ describe('InvitationsService', () => {
         organizationId: 'org1',
         email: 'test@test.com',
       };
-      vi.mocked(prisma.invitation.findFirst).mockResolvedValue(invitation as any);
+      vi.mocked(prisma.invitation.findFirst).mockResolvedValue(
+        invitation as any,
+      );
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'user2',
         email: 'test@test.com',
       } as any);
-      
+
       const updatedInv = { ...invitation, declinedAt: new Date() };
       vi.mocked(prisma.invitation.update).mockResolvedValue(updatedInv as any);
 
       const result = await service.decline('dummy_token', 'user2');
-      
+
       expect(result).toEqual(updatedInv);
       expect(prisma.invitation.update).toHaveBeenCalledWith({
         where: { id: 'inv1' },
@@ -187,7 +189,7 @@ describe('InvitationsService', () => {
         userId: 'user1',
         role: 'ADMIN',
       } as any);
-      
+
       vi.mocked(prisma.invitation.findMany).mockResolvedValue([]);
 
       await service.findPending('org1', 'user1');
