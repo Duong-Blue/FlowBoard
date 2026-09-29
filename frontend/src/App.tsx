@@ -19,6 +19,10 @@ import { IssueDetailPage } from './features/issues/pages/IssueDetailPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import VerifyResetCodePage from './pages/auth/VerifyResetCodePage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import ResetSuccessPage from './pages/auth/ResetSuccessPage';
 import HomePage from './pages/public/HomePage';
 import InvitationsPage from './pages/invitations/InvitationsPage';
 import AcceptInvitationPage from './pages/invitations/AcceptInvitationPage';
@@ -81,6 +85,10 @@ const router = createBrowserRouter([
           { path: 'login', element: <LoginPage /> },
           { path: 'register', element: <RegisterPage /> },
           { path: 'oauth/callback', element: <OAuthCallbackPage /> },
+          { path: 'forgot-password', element: <ForgotPasswordPage /> },
+          { path: 'verify-reset-code', element: <VerifyResetCodePage /> },
+          { path: 'reset-password', element: <ResetPasswordPage /> },
+          { path: 'reset-success', element: <ResetSuccessPage /> },
           { path: 'invitations/accept', element: <AcceptInvitationPage /> },
         ],
       },
