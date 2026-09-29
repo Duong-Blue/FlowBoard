@@ -167,22 +167,22 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
       {/* Calendar Header Controls */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50/50">
+      <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
         <div className="flex items-center gap-2 sm:gap-3">
-          <CalendarIcon className="h-5 w-5 text-blue-600 shrink-0" />
-          <span className="text-xs sm:text-sm font-semibold text-slate-500 hidden xs:inline">{t('board.calendarView', { defaultValue: 'Calendar' })}</span>
-          <span className="text-slate-300 hidden xs:inline">•</span>
-          <h2 className="text-base sm:text-lg font-bold text-slate-900 capitalize">{monthName}</h2>
-          {loading && <span className="text-xs text-slate-500 animate-pulse ml-2">{t('common:status.loading', { defaultValue: 'Loading...' })}</span>}
+          <CalendarIcon className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
+          <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 hidden xs:inline">{t('board.calendarView', { defaultValue: 'Calendar' })}</span>
+          <span className="text-slate-300 dark:text-slate-700 hidden xs:inline">•</span>
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 capitalize">{monthName}</h2>
+          {loading && <span className="text-xs text-slate-500 dark:text-slate-400 animate-pulse ml-2">{t('common:status.loading', { defaultValue: 'Loading...' })}</span>}
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleToday} className="text-xs">
             {t('board.today', { defaultValue: 'Today' })}
           </Button>
-          <div className="flex items-center border border-slate-200 rounded-md bg-white">
-            <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8 rounded-r-none border-r border-slate-200">
+          <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-md bg-white dark:bg-slate-900">
+            <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8 rounded-r-none border-r border-slate-200 dark:border-slate-800">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8 rounded-l-none">
@@ -193,14 +193,14 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
       </div>
 
       {statuses.length > 0 && (
-        <div className="flex items-center gap-2 sm:gap-3 px-4 py-2 bg-slate-50/80 border-b border-slate-200 overflow-x-auto text-xs no-scrollbar">
-          <span className="font-semibold text-slate-500 text-[11px] uppercase tracking-wider shrink-0">Trạng thái:</span>
+        <div className="flex items-center gap-2 sm:gap-3 px-4 py-2 bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 overflow-x-auto text-xs no-scrollbar">
+          <span className="font-semibold text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider shrink-0">Trạng thái:</span>
           {statuses.map((st) => {
             const color = st.color || getStatusColor(st.id);
             return (
-              <div key={st.id} className="flex items-center gap-1.5 shrink-0 bg-white px-2 py-0.5 rounded border border-slate-200 shadow-2xs">
+              <div key={st.id} className="flex items-center gap-1.5 shrink-0 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800 shadow-2xs">
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                <span className="text-slate-700 font-medium text-[11px]">{st.name}</span>
+                <span className="text-slate-700 dark:text-slate-300 font-medium text-[11px]">{st.name}</span>
               </div>
             );
           })}
@@ -208,7 +208,7 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
       )}
 
       {error && (
-        <div className="p-3 bg-rose-50 text-rose-700 text-xs border-b border-rose-200 flex items-center justify-between">
+        <div className="p-3 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs border-b border-rose-200 dark:border-rose-800/60 flex items-center justify-between">
           <span>{error}</span>
           <Button
             variant="ghost"
@@ -216,7 +216,7 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
             onClick={() => {
               setCurrentDate(new Date(currentDate));
             }}
-            className="h-6 text-xs text-rose-700 hover:text-rose-800 hover:bg-rose-100"
+            className="h-6 text-xs text-rose-700 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-200 hover:bg-rose-100 dark:hover:bg-rose-900/50"
           >
             Retry
           </Button>
@@ -226,14 +226,14 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
       {/* Main Desktop Grid View (sm and larger) */}
       <div className="hidden sm:flex flex-1 flex-col overflow-y-auto">
         {/* Days of week header */}
-        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-100/70 text-center font-semibold text-xs text-slate-600 py-2.5">
+        <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/70 text-center font-semibold text-xs text-slate-600 dark:text-slate-400 py-2.5">
           {weekDays.map((day) => (
             <div key={day}>{day}</div>
           ))}
         </div>
 
         {/* Date cells grid */}
-        <div className="flex-1 grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-200 bg-slate-200/40 min-h-[500px]">
+        <div className="flex-1 grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-200 dark:divide-slate-800 bg-slate-200/40 dark:bg-slate-800/40 min-h-[500px]">
           {gridDays.map((day) => {
             const dateKey = formatDateKey(day);
             const isCurrentMonth = day.getMonth() === month;
@@ -244,8 +244,8 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
               <div
                 key={dateKey}
                 className={`min-h-[110px] p-1.5 flex flex-col transition-colors ${
-                  isCurrentMonth ? 'bg-white' : 'bg-slate-50/70 text-slate-400'
-                } ${isToday ? 'bg-blue-50/40' : ''}`}
+                  isCurrentMonth ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/70 dark:bg-slate-950/70 text-slate-400 dark:text-slate-500'
+                } ${isToday ? 'bg-blue-50/40 dark:bg-blue-950/30' : ''}`}
               >
                 {/* Date header */}
                 <div className="flex items-center justify-between mb-1 px-1">
@@ -254,14 +254,14 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
                       isToday
                         ? 'bg-blue-600 text-white shadow-sm'
                         : isCurrentMonth
-                        ? 'text-slate-800'
-                        : 'text-slate-400'
+                        ? 'text-slate-800 dark:text-slate-200'
+                        : 'text-slate-400 dark:text-slate-500'
                     }`}
                   >
                     {day.getDate()}
                   </span>
                   {dayIssues.length > 0 && (
-                    <span className="text-[10px] font-medium text-slate-400">
+                    <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
                       {dayIssues.length}
                     </span>
                   )}
@@ -307,7 +307,7 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
                         <div className="font-medium truncate flex items-center justify-between gap-1">
                           <div className="flex items-center gap-1 truncate">
                             <span className="font-mono text-[10px] opacity-80 shrink-0 font-bold">{issue.key}</span>
-                            <span className="truncate font-semibold text-slate-900">{issue.title}</span>
+                            <span className="truncate font-semibold text-slate-900 dark:text-slate-100">{issue.title}</span>
                           </div>
                           {isStartDay && (
                             <span className="text-[9px] font-bold px-1 rounded bg-blue-600 text-white shrink-0">Bắt đầu</span>
@@ -317,7 +317,7 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between gap-1 text-[10px] text-slate-600">
+                        <div className="flex items-center justify-between gap-1 text-[10px] text-slate-600 dark:text-slate-400">
                           <span
                             className="inline-flex items-center gap-1 px-1 py-0.5 rounded font-medium shrink-0"
                             style={{
@@ -333,8 +333,8 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
                           </span>
 
                           {dateDisplay && (
-                            <span className="font-mono text-[9px] text-slate-600 shrink-0 flex items-center gap-0.5 font-medium bg-white/60 px-1 py-0.5 rounded border border-slate-200">
-                              <Clock className="w-2.5 h-2.5 text-slate-400" />
+                            <span className="font-mono text-[9px] text-slate-600 dark:text-slate-400 shrink-0 flex items-center gap-0.5 font-medium bg-white/60 dark:bg-slate-900/60 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                              <Clock className="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" />
                               {dateDisplay}
                             </span>
                           )}
@@ -352,11 +352,11 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
       {/* Mobile Agenda Fallback View (< 640px) */}
       <div className="flex sm:hidden flex-1 flex-col overflow-y-auto p-3 space-y-3">
         {loading ? (
-          <div className="p-8 text-center text-sm text-slate-500 animate-pulse">
+          <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400 animate-pulse">
             {t('common:status.loading', { defaultValue: 'Loading calendar...' })}
           </div>
         ) : gridDays.filter(day => day.getMonth() === month && (dayIssuesMap[formatDateKey(day)] || []).length > 0).length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+          <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
             No issues scheduled for this month.
           </div>
         ) : (
@@ -367,12 +367,12 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
               const dayIssues = dayIssuesMap[dateKey] || [];
               const isToday = dateKey === todayKey;
               return (
-                <div key={dateKey} className="rounded-lg border border-slate-200 bg-white p-3 shadow-2xs">
-                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isToday ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                <div key={dateKey} className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-2xs">
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isToday ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
                       {day.getDate()}
                     </span>
-                    <span className="text-xs font-semibold text-slate-600">
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                       {day.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                     </span>
                   </div>
@@ -386,11 +386,11 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
                           key={issue.id}
                           type="button"
                           onClick={() => handleIssueClick(issue)}
-                          className="w-full text-left p-2 rounded border border-slate-200 hover:border-blue-300 bg-slate-50/50 flex flex-col gap-1 transition-colors"
+                          className="w-full text-left p-2 rounded border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 bg-slate-50/50 dark:bg-slate-950/50 flex flex-col gap-1 transition-colors"
                           style={{ borderLeftWidth: '4px', borderLeftColor: statusColor }}
                         >
                           <div className="flex items-center justify-between text-xs">
-                            <span className="font-mono text-[10px] text-slate-500 font-semibold">{issue.key}</span>
+                            <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 font-semibold">{issue.key}</span>
                             <span
                               className="text-[10px] px-1.5 py-0.5 rounded font-medium"
                               style={{ backgroundColor: `${statusColor}20`, color: statusColor }}
@@ -398,7 +398,7 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
                               {statusName}
                             </span>
                           </div>
-                          <span className="text-xs font-medium text-slate-800 truncate">{issue.title}</span>
+                          <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">{issue.title}</span>
                         </button>
                       );
                     })}
@@ -411,9 +411,9 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
 
       {/* Unscheduled Issues Drawer / Footer */}
       {unscheduledIssues.length > 0 && (
-        <div className="border-t border-slate-200 bg-slate-50 p-3">
-          <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-slate-700">
-            <Clock className="h-3.5 w-3.5 text-slate-500" />
+        <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-3">
+          <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <Clock className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
             <span>Unscheduled Issues ({unscheduledIssues.length})</span>
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
@@ -422,10 +422,10 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
                 key={issue.id}
                 type="button"
                 onClick={() => handleIssueClick(issue)}
-                className="shrink-0 max-w-[200px] px-2.5 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-100 text-xs transition-colors text-left"
+                className="shrink-0 max-w-[200px] px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs transition-colors text-left"
               >
-                <div className="font-mono text-[10px] text-slate-500">{issue.key}</div>
-                <div className="font-medium text-slate-800 truncate">{issue.title}</div>
+                <div className="font-mono text-[10px] text-slate-500 dark:text-slate-400">{issue.key}</div>
+                <div className="font-medium text-slate-800 dark:text-slate-200 truncate">{issue.title}</div>
               </button>
             ))}
           </div>

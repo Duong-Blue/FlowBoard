@@ -68,12 +68,12 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
     <div className="space-y-6">
       {/* Type */}
       <div>
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t('form.typeLabel')}</h4>
+        <h4 className="text-xs font-semibold text-muted-foreground dark:text-slate-400 uppercase tracking-wider mb-2">{t('form.typeLabel')}</h4>
         <Select 
           value={issue.type || 'TASK'} 
           onValueChange={(val) => onUpdate({ type: val as IssueType })}
         >
-          <SelectTrigger className="w-full h-8 px-2 border-transparent hover:border-border hover:bg-slate-50 justify-start">
+          <SelectTrigger className="w-full h-8 px-2 border-transparent hover:border-border dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-200 justify-start">
             <SemanticBadge status={issue.type === 'BUG' ? 'destructive' : issue.type === 'FEATURE' ? 'active' : issue.type === 'IMPROVEMENT' ? 'member' : 'pending'}>
               {issue.type || 'TASK'}
             </SemanticBadge>
@@ -92,7 +92,7 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
 
       {/* Status */}
       <div>
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t('detail.status')}</h4>
+        <h4 className="text-xs font-semibold text-muted-foreground dark:text-slate-400 uppercase tracking-wider mb-2">{t('detail.status')}</h4>
         <Select 
           value={currentStatusId} 
           onValueChange={(val) => {
@@ -107,7 +107,7 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
             }
           }}
         >
-          <SelectTrigger className="w-full h-8 px-2 border-transparent hover:border-border hover:bg-slate-50 justify-start">
+          <SelectTrigger className="w-full h-8 px-2 border-transparent hover:border-border dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-200 justify-start">
             <span
               className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border"
               style={{
@@ -155,12 +155,12 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
 
       {/* Priority */}
       <div>
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t('detail.priority')}</h4>
+        <h4 className="text-xs font-semibold text-muted-foreground dark:text-slate-400 uppercase tracking-wider mb-2">{t('detail.priority')}</h4>
         <Select 
           value={issue.priority} 
           onValueChange={(val) => onUpdate({ priority: val })}
         >
-          <SelectTrigger className="w-full h-8 px-2 border-transparent hover:border-border hover:bg-slate-50 justify-start">
+          <SelectTrigger className="w-full h-8 px-2 border-transparent hover:border-border dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-200 justify-start">
             <SemanticBadge status={issue.priority === 'URGENT' || issue.priority === 'HIGH' ? 'destructive' : 'pending'}>
               {issue.priority}
             </SemanticBadge>
@@ -179,22 +179,22 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
 
       {/* Assignee */}
       <div>
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t('detail.assignee')}</h4>
+        <h4 className="text-xs font-semibold text-muted-foreground dark:text-slate-400 uppercase tracking-wider mb-2">{t('detail.assignee')}</h4>
         <Select 
           value={issue.assigneeId || 'unassigned'} 
           onValueChange={(val) => onUpdate({ assigneeId: val === 'unassigned' ? undefined : val })}
         >
-          <SelectTrigger className="w-full h-10 px-2 border-transparent hover:border-border hover:bg-slate-50 justify-start space-x-2">
+          <SelectTrigger className="w-full h-10 px-2 border-transparent hover:border-border dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-200 justify-start space-x-2">
             {assignee ? (
               <div className="flex items-center space-x-2">
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={assignee.avatarUrl} />
                   <AvatarFallback>{(assignee.displayName?.charAt(0) || assignee.firstName?.charAt(0) || assignee.email?.charAt(0)) ?? ' ?'}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm truncate">{(assignee.displayName || assignee.firstName || assignee.email) ?? ' ?'}</span>
+                <span className="text-sm truncate dark:text-slate-200">{(assignee.displayName || assignee.firstName || assignee.email) ?? ' ?'}</span>
               </div>
             ) : (
-              <span className="text-sm text-muted-foreground">{t('form.unassigned')}</span>
+              <span className="text-sm text-muted-foreground dark:text-slate-400">{t('form.unassigned')}</span>
             )}
           </SelectTrigger>
           <SelectContent>
@@ -216,7 +216,7 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
 
       {/* Reporter */}
       <div>
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t('detail.reporter')}</h4>
+        <h4 className="text-xs font-semibold text-muted-foreground dark:text-slate-400 uppercase tracking-wider mb-2">{t('detail.reporter')}</h4>
         <div className="flex items-center space-x-2 px-2 py-1">
           {reporter ? (
             <>
@@ -224,20 +224,20 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
                 <AvatarImage src={reporter.avatarUrl} />
                 <AvatarFallback>{(reporter.displayName?.charAt(0) || reporter.firstName?.charAt(0) || reporter.email?.charAt(0)) ?? ' ?'}</AvatarFallback>
               </Avatar>
-              <span className="text-sm text-foreground">{(reporter.displayName || reporter.firstName || reporter.email) ?? ' ?'}</span>
+              <span className="text-sm text-foreground dark:text-slate-200">{(reporter.displayName || reporter.firstName || reporter.email) ?? ' ?'}</span>
             </>
           ) : (
-            <span className="text-sm text-muted-foreground">{t('form.unassigned')}</span>
+            <span className="text-sm text-muted-foreground dark:text-slate-400">{t('form.unassigned')}</span>
           )}
         </div>
       </div>
 
       {/* Dates Section */}
-      <div className="space-y-4 pt-4 border-t border-slate-200">
+      <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('detail.dates', 'Dates')}</h4>
+          <h4 className="text-xs font-semibold text-muted-foreground dark:text-slate-400 uppercase tracking-wider">{t('detail.dates', 'Dates')}</h4>
           {calculateDurationInDays(issue.startDate, issue.dueDate) !== null && (
-            <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900/50">
               {calculateDurationInDays(issue.startDate, issue.dueDate)} ngày
             </span>
           )}
@@ -245,7 +245,7 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
         
         {/* Start Date */}
         <div>
-          <label className="text-xs font-medium text-muted-foreground block mb-1">{t('detail.startDate', 'Start Date')}</label>
+          <label className="text-xs font-medium text-muted-foreground dark:text-slate-400 block mb-1">{t('detail.startDate', 'Start Date')}</label>
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             <input
               type="date"
@@ -254,10 +254,10 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
                 const val = e.target.value;
                 onUpdate({ startDate: val ? new Date(val).toISOString() : (null as any) });
               }}
-              className="text-xs border border-input rounded px-2 py-1 bg-background hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-ring"
+              className="text-xs border border-input dark:border-slate-700 rounded px-2 py-1 bg-background dark:bg-slate-900 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-ring"
             />
             {issue.startDate && (
-              <span className="text-xs text-slate-600 font-medium">
+              <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                 {formatDateTime(issue.startDate)}
               </span>
             )}
@@ -266,7 +266,7 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
 
         {/* Due Date */}
         <div>
-          <label className="text-xs font-medium text-muted-foreground block mb-1">{t('detail.dueDate', 'Due Date')}</label>
+          <label className="text-xs font-medium text-muted-foreground dark:text-slate-400 block mb-1">{t('detail.dueDate', 'Due Date')}</label>
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             <input
               type="date"
@@ -275,11 +275,11 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
                 const val = e.target.value;
                 onUpdate({ dueDate: val ? new Date(val).toISOString() : (null as any) });
               }}
-              className="text-xs border border-input rounded px-2 py-1 bg-background hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-ring"
+              className="text-xs border border-input dark:border-slate-700 rounded px-2 py-1 bg-background dark:bg-slate-900 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-ring"
             />
             {issue.dueDate && (
               <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                <span className="text-xs text-slate-600 font-medium">
+                <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                   {formatDateTime(issue.dueDate)}
                 </span>
                 <SemanticBadge status={getDeadlineBadgeStatus(deadlineState)}>
@@ -293,8 +293,8 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
         {/* Completed At (Read-only) */}
         {issue.completedAt && (
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">{t('detail.completedAt', 'Completed At')}</label>
-            <div className="text-xs text-foreground px-2 py-1 bg-slate-50 rounded border border-slate-100 font-medium">
+            <label className="text-xs font-medium text-muted-foreground dark:text-slate-400 block mb-1">{t('detail.completedAt', 'Completed At')}</label>
+            <div className="text-xs text-foreground dark:text-slate-200 px-2 py-1 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-800 font-medium">
               {formatDateTime(issue.completedAt)}
             </div>
           </div>
@@ -302,15 +302,15 @@ export function IssueMetadataSidebar({ issue, members, onUpdate, onStatusChange 
       </div>
 
       {/* Timestamps Section */}
-      <div className="space-y-2 pt-4 border-t border-slate-200 text-xs">
+      <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs">
         <div>
-          <span className="font-semibold text-muted-foreground">{t('common:labels.created', 'Tạo lúc')}: </span>
-          <span className="text-foreground">{formatDateTime(issue.createdAt)}</span>
+          <span className="font-semibold text-muted-foreground dark:text-slate-400">{t('common:labels.created', 'Tạo lúc')}: </span>
+          <span className="text-foreground dark:text-slate-200">{formatDateTime(issue.createdAt)}</span>
         </div>
         {issue.updatedAt && (
           <div>
-            <span className="font-semibold text-muted-foreground">Cập nhật lần cuối: </span>
-            <span className="text-foreground">{formatDateTime(issue.updatedAt)}</span>
+            <span className="font-semibold text-muted-foreground dark:text-slate-400">Cập nhật lần cuối: </span>
+            <span className="text-foreground dark:text-slate-200">{formatDateTime(issue.updatedAt)}</span>
           </div>
         )}
       </div>
