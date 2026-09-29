@@ -6,7 +6,9 @@ model Invitation {
   tokenHash      String       @unique
   expiresAt      DateTime
   acceptedAt     DateTime?
-  revokedAt      DateTime?
+    revokedAt      DateTime?
+    declinedAt     DateTime?
+
   invitedById    String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
