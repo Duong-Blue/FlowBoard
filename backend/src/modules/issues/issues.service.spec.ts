@@ -31,8 +31,17 @@ describe('IssuesService', () => {
     activity: { create: vi.fn() },
 
     issueRelation: { findMany: vi.fn() },
-    workflow: { findUnique: vi.fn(), create: vi.fn(), findUniqueOrThrow: vi.fn() },
-    workflowStatus: { create: vi.fn(), findMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn() },
+    workflow: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+    },
+    workflowStatus: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+    },
     workflowTransition: { createMany: vi.fn(), findFirst: vi.fn() },
   };
 
@@ -152,7 +161,7 @@ describe('IssuesService', () => {
         service.findAll('p1', {
           startDateFrom: '2026-01-01T00:00:00Z',
           startDateTo: '2026-08-01T00:00:00Z',
-        })
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -169,18 +178,24 @@ describe('IssuesService', () => {
               {
                 OR: [
                   { dueDate: { gte: new Date('2026-05-01T00:00:00Z') } },
-                  { dueDate: null, startDate: { gte: new Date('2026-05-01T00:00:00Z') } },
+                  {
+                    dueDate: null,
+                    startDate: { gte: new Date('2026-05-01T00:00:00Z') },
+                  },
                 ],
               },
               {
                 OR: [
                   { startDate: { lte: new Date('2026-05-15T00:00:00Z') } },
-                  { startDate: null, dueDate: { lte: new Date('2026-05-15T00:00:00Z') } },
+                  {
+                    startDate: null,
+                    dueDate: { lte: new Date('2026-05-15T00:00:00Z') },
+                  },
                 ],
               },
             ]),
           }),
-        })
+        }),
       );
     });
 
@@ -189,7 +204,7 @@ describe('IssuesService', () => {
         service.findAll('p1', {
           dueDateFrom: '2026-01-01T00:00:00Z',
           dueDateTo: '2026-08-01T00:00:00Z',
-        })
+        }),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -264,7 +279,12 @@ describe('IssuesService', () => {
     it('should return array of issues with workflowStatus', async () => {
       mockPrisma.project.findFirst.mockResolvedValue({ id: 'p1' });
       mockPrisma.issue.findMany.mockResolvedValue([
-        { id: 'i1', status: IssueStatus.TODO, workflowStatusId: 'ws1', workflowStatus: { id: 'ws1', category: IssueStatus.TODO } },
+        {
+          id: 'i1',
+          status: IssueStatus.TODO,
+          workflowStatusId: 'ws1',
+          workflowStatus: { id: 'ws1', category: IssueStatus.TODO },
+        },
       ]);
 
       const result = await service.getBoard('p1');
@@ -285,7 +305,7 @@ describe('IssuesService', () => {
         id: 'wf1',
         statuses: [
           { id: 'ws-in-progress', category: IssueStatus.IN_PROGRESS },
-          { id: 'ws-done', category: IssueStatus.DONE }
+          { id: 'ws-done', category: IssueStatus.DONE },
         ],
         transitions: [],
       });
@@ -484,65 +504,93 @@ describe('IssuesService', () => {
         'Cannot move issue to DONE while it is blocked by unresolved issues',
       );
     });
-  
-  describe('getWorkload', () => {
-    it('should aggregate workload correctly without subtasks', async () => {
-      const projectId = 'proj-1';
-      const now = new Date();
-      const pastDate = new Date(now.getTime() - 100000);
-      const futureDate = new Date(now.getTime() + 100000);
 
-      const mockIssues = [
-        { assigneeId: 'user-1', status: 'TODO', dueDate: pastDate, parentId: null },
-        { assigneeId: 'user-1', status: 'IN_PROGRESS', dueDate: futureDate, parentId: null },
-        { assigneeId: 'user-2', status: 'DONE', dueDate: pastDate, parentId: null },
-      ];
+    describe('getWorkload', () => {
+      it('should aggregate workload correctly without subtasks', async () => {
+        const projectId = 'proj-1';
+        const now = new Date();
+        const pastDate = new Date(now.getTime() - 100000);
+        const futureDate = new Date(now.getTime() + 100000);
 
-      (mockPrisma.project.findFirst as any).mockResolvedValue({ id: projectId });
-      (mockPrisma.issue.findMany as any).mockResolvedValue(mockIssues);
+        const mockIssues = [
+          {
+            assigneeId: 'user-1',
+            status: 'TODO',
+            dueDate: pastDate,
+            parentId: null,
+          },
+          {
+            assigneeId: 'user-1',
+            status: 'IN_PROGRESS',
+            dueDate: futureDate,
+            parentId: null,
+          },
+          {
+            assigneeId: 'user-2',
+            status: 'DONE',
+            dueDate: pastDate,
+            parentId: null,
+          },
+        ];
 
-      const workload = await service.getWorkload(projectId, false);
+        (mockPrisma.project.findFirst as any).mockResolvedValue({
+          id: projectId,
+        });
+        (mockPrisma.issue.findMany as any).mockResolvedValue(mockIssues);
 
-      expect(mockPrisma.issue.findMany).toHaveBeenCalledWith({
-        where: { projectId, assigneeId: { not: null }, parentId: null },
-        select: { assigneeId: true, status: true, dueDate: true },
+        const workload = await service.getWorkload(projectId, false);
+
+        expect(mockPrisma.issue.findMany).toHaveBeenCalledWith({
+          where: { projectId, assigneeId: { not: null }, parentId: null },
+          select: { assigneeId: true, status: true, dueDate: true },
+        });
+
+        expect(workload['user-1'].totalIssues).toBe(2);
+        expect(workload['user-1'].statusBreakdown.TODO).toBe(1);
+        expect(workload['user-1'].statusBreakdown.IN_PROGRESS).toBe(1);
+        expect(workload['user-1'].overdueCount).toBe(1); // TODO is overdue
+
+        expect(workload['user-2'].totalIssues).toBe(1);
+        expect(workload['user-2'].statusBreakdown.DONE).toBe(1);
+        expect(workload['user-2'].overdueCount).toBe(0); // DONE is not overdue
       });
 
-      expect(workload['user-1'].totalIssues).toBe(2);
-      expect(workload['user-1'].statusBreakdown.TODO).toBe(1);
-      expect(workload['user-1'].statusBreakdown.IN_PROGRESS).toBe(1);
-      expect(workload['user-1'].overdueCount).toBe(1); // TODO is overdue
+      it('should aggregate workload correctly including subtasks', async () => {
+        const projectId = 'proj-1';
+        const now = new Date();
+        const pastDate = new Date(now.getTime() - 100000);
 
-      expect(workload['user-2'].totalIssues).toBe(1);
-      expect(workload['user-2'].statusBreakdown.DONE).toBe(1);
-      expect(workload['user-2'].overdueCount).toBe(0); // DONE is not overdue
-    });
+        const mockIssues = [
+          {
+            assigneeId: 'user-1',
+            status: 'TODO',
+            dueDate: pastDate,
+            parentId: null,
+          },
+          {
+            assigneeId: 'user-1',
+            status: 'TODO',
+            dueDate: pastDate,
+            parentId: 'parent-1',
+          },
+        ];
 
-    it('should aggregate workload correctly including subtasks', async () => {
-      const projectId = 'proj-1';
-      const now = new Date();
-      const pastDate = new Date(now.getTime() - 100000);
+        (mockPrisma.project.findFirst as any).mockResolvedValue({
+          id: projectId,
+        });
+        (mockPrisma.issue.findMany as any).mockResolvedValue(mockIssues);
 
-      const mockIssues = [
-        { assigneeId: 'user-1', status: 'TODO', dueDate: pastDate, parentId: null },
-        { assigneeId: 'user-1', status: 'TODO', dueDate: pastDate, parentId: 'parent-1' },
-      ];
+        const workload = await service.getWorkload(projectId, true);
 
-      (mockPrisma.project.findFirst as any).mockResolvedValue({ id: projectId });
-      (mockPrisma.issue.findMany as any).mockResolvedValue(mockIssues);
+        expect(mockPrisma.issue.findMany).toHaveBeenCalledWith({
+          where: { projectId, assigneeId: { not: null } },
+          select: { assigneeId: true, status: true, dueDate: true },
+        });
 
-      const workload = await service.getWorkload(projectId, true);
-
-      expect(mockPrisma.issue.findMany).toHaveBeenCalledWith({
-        where: { projectId, assigneeId: { not: null } },
-        select: { assigneeId: true, status: true, dueDate: true },
+        expect(workload['user-1'].totalIssues).toBe(2);
+        expect(workload['user-1'].statusBreakdown.TODO).toBe(2);
+        expect(workload['user-1'].overdueCount).toBe(2);
       });
-
-      expect(workload['user-1'].totalIssues).toBe(2);
-      expect(workload['user-1'].statusBreakdown.TODO).toBe(2);
-      expect(workload['user-1'].overdueCount).toBe(2);
     });
-  });
-
   });
 });

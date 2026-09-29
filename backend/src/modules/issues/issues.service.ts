@@ -51,28 +51,76 @@ export class IssuesService {
       });
 
       const todo = await tx.workflowStatus.create({
-        data: { workflowId: workflow.id, name: 'To Do', category: IssueStatus.TODO, order: 0 },
+        data: {
+          workflowId: workflow.id,
+          name: 'To Do',
+          category: IssueStatus.TODO,
+          order: 0,
+        },
       });
       const inProgress = await tx.workflowStatus.create({
-        data: { workflowId: workflow.id, name: 'In Progress', category: IssueStatus.IN_PROGRESS, order: 1 },
+        data: {
+          workflowId: workflow.id,
+          name: 'In Progress',
+          category: IssueStatus.IN_PROGRESS,
+          order: 1,
+        },
       });
       const inPreview = await tx.workflowStatus.create({
-        data: { workflowId: workflow.id, name: 'In Preview', category: IssueStatus.IN_PREVIEW, order: 2 },
+        data: {
+          workflowId: workflow.id,
+          name: 'In Preview',
+          category: IssueStatus.IN_PREVIEW,
+          order: 2,
+        },
       });
       const done = await tx.workflowStatus.create({
-        data: { workflowId: workflow.id, name: 'Done', category: IssueStatus.DONE, order: 3 },
+        data: {
+          workflowId: workflow.id,
+          name: 'Done',
+          category: IssueStatus.DONE,
+          order: 3,
+        },
       });
 
       const transitionsData = [
         { workflowId: workflow.id, fromStatusId: null, toStatusId: todo.id },
-        { workflowId: workflow.id, fromStatusId: todo.id, toStatusId: inProgress.id },
-        { workflowId: workflow.id, fromStatusId: inProgress.id, toStatusId: todo.id },
-        { workflowId: workflow.id, fromStatusId: inProgress.id, toStatusId: inPreview.id },
-        { workflowId: workflow.id, fromStatusId: inProgress.id, toStatusId: done.id },
-        { workflowId: workflow.id, fromStatusId: inPreview.id, toStatusId: inProgress.id },
-        { workflowId: workflow.id, fromStatusId: inPreview.id, toStatusId: done.id },
+        {
+          workflowId: workflow.id,
+          fromStatusId: todo.id,
+          toStatusId: inProgress.id,
+        },
+        {
+          workflowId: workflow.id,
+          fromStatusId: inProgress.id,
+          toStatusId: todo.id,
+        },
+        {
+          workflowId: workflow.id,
+          fromStatusId: inProgress.id,
+          toStatusId: inPreview.id,
+        },
+        {
+          workflowId: workflow.id,
+          fromStatusId: inProgress.id,
+          toStatusId: done.id,
+        },
+        {
+          workflowId: workflow.id,
+          fromStatusId: inPreview.id,
+          toStatusId: inProgress.id,
+        },
+        {
+          workflowId: workflow.id,
+          fromStatusId: inPreview.id,
+          toStatusId: done.id,
+        },
         { workflowId: workflow.id, fromStatusId: done.id, toStatusId: todo.id },
-        { workflowId: workflow.id, fromStatusId: done.id, toStatusId: inProgress.id },
+        {
+          workflowId: workflow.id,
+          fromStatusId: done.id,
+          toStatusId: inProgress.id,
+        },
       ];
 
       await tx.workflowTransition.createMany({ data: transitionsData });
@@ -222,23 +270,39 @@ export class IssuesService {
       select: { status: true, workflowStatus: { select: { category: true } } },
     });
 
-    const allDone = siblings.every((s) => s.workflowStatus?.category === IssueStatus.DONE || s.status === IssueStatus.DONE);
+    const allDone = siblings.every(
+      (s) =>
+        s.workflowStatus?.category === IssueStatus.DONE ||
+        s.status === IssueStatus.DONE,
+    );
     if (allDone) {
       const parent = await tx.issue.findUnique({
         where: { id: parentId },
-        select: { id: true, status: true, projectId: true, workflowStatusId: true },
+        select: {
+          id: true,
+          status: true,
+          projectId: true,
+          workflowStatusId: true,
+        },
       });
 
       if (parent) {
         const parentCurrentWs = parent.workflowStatusId
-          ? await tx.workflowStatus.findUnique({ where: { id: parent.workflowStatusId } })
+          ? await tx.workflowStatus.findUnique({
+              where: { id: parent.workflowStatusId },
+            })
           : null;
-        
-        const isParentDone = parentCurrentWs?.category === IssueStatus.DONE || parent.status === IssueStatus.DONE;
+
+        const isParentDone =
+          parentCurrentWs?.category === IssueStatus.DONE ||
+          parent.status === IssueStatus.DONE;
 
         if (!isParentDone) {
           const doneStatuses = await tx.workflowStatus.findMany({
-            where: { workflow: { projectId: parent.projectId }, category: IssueStatus.DONE },
+            where: {
+              workflow: { projectId: parent.projectId },
+              category: IssueStatus.DONE,
+            },
             orderBy: { order: 'asc' },
           });
 
@@ -247,22 +311,26 @@ export class IssuesService {
 
           await tx.issue.update({
             where: { id: parent.id },
-            data: { status: IssueStatus.DONE, workflowStatusId: targetWorkflowStatusId, completedAt: new Date() },
+            data: {
+              status: IssueStatus.DONE,
+              workflowStatusId: targetWorkflowStatusId,
+              completedAt: new Date(),
+            },
           });
 
-        await tx.activity.create({
-          data: {
-            issueId: parent.id,
-            actorId,
-            type: 'STATUS_CHANGED',
-            metadata: {
-              from: parent.status,
-              to: IssueStatus.DONE,
-              toWorkflowStatusId: targetWorkflowStatusId,
-              autoCompleted: true,
+          await tx.activity.create({
+            data: {
+              issueId: parent.id,
+              actorId,
+              type: 'STATUS_CHANGED',
+              metadata: {
+                from: parent.status,
+                to: IssueStatus.DONE,
+                toWorkflowStatusId: targetWorkflowStatusId,
+                autoCompleted: true,
+              },
             },
-          },
-        });
+          });
         }
       }
     }
@@ -294,7 +362,10 @@ export class IssuesService {
       targetCategory = ws.category;
     } else if (targetCategory) {
       const ws = workflow.statuses.find((s) => s.category === targetCategory);
-      if (!ws) throw new BadRequestException(`No workflow status for category ${targetCategory}`);
+      if (!ws)
+        throw new BadRequestException(
+          `No workflow status for category ${targetCategory}`,
+        );
       targetWorkflowStatusId = ws.id;
     } else {
       const ws = workflow.statuses.find((s) => s.category === IssueStatus.TODO);
@@ -535,7 +606,6 @@ export class IssuesService {
     return this.mapIssueWithDeadlineState(issue);
   }
 
-  
   async getWorkload(projectParam: string, includeSubtasks = false) {
     const projectId = await this.resolveProjectId(projectParam);
     const where: any = {
@@ -556,17 +626,25 @@ export class IssuesService {
       },
     });
 
-    const workload: Record<string, {
-      totalIssues: number;
-      statusBreakdown: { TODO: number; IN_PROGRESS: number; IN_PREVIEW: number; DONE: number };
-      overdueCount: number;
-    }> = {};
+    const workload: Record<
+      string,
+      {
+        totalIssues: number;
+        statusBreakdown: {
+          TODO: number;
+          IN_PROGRESS: number;
+          IN_PREVIEW: number;
+          DONE: number;
+        };
+        overdueCount: number;
+      }
+    > = {};
 
     const now = new Date();
 
     for (const issue of issues) {
       if (!issue.assigneeId) continue;
-      
+
       if (!workload[issue.assigneeId]) {
         workload[issue.assigneeId] = {
           totalIssues: 0,
@@ -640,15 +718,23 @@ export class IssuesService {
       let targetCategory = dto.status;
 
       if (targetWorkflowStatusId) {
-        const ws = workflow.statuses.find((s) => s.id === targetWorkflowStatusId);
-        if (!ws) throw new BadRequestException('Invalid targetWorkflowStatusId');
+        const ws = workflow.statuses.find(
+          (s) => s.id === targetWorkflowStatusId,
+        );
+        if (!ws)
+          throw new BadRequestException('Invalid targetWorkflowStatusId');
         targetCategory = ws.category;
       } else if (targetCategory) {
         const ws = workflow.statuses.find((s) => s.category === targetCategory);
-        if (!ws) throw new BadRequestException(`No workflow status for category ${targetCategory}`);
+        if (!ws)
+          throw new BadRequestException(
+            `No workflow status for category ${targetCategory}`,
+          );
         targetWorkflowStatusId = ws.id;
       } else {
-        throw new BadRequestException('Must provide targetWorkflowStatusId or status');
+        throw new BadRequestException(
+          'Must provide targetWorkflowStatusId or status',
+        );
       }
 
       let a: string | null = null;
@@ -819,7 +905,10 @@ export class IssuesService {
     let targetCategory = dto.status;
     let willChangeStatus = false;
 
-    if (targetWorkflowStatusId && targetWorkflowStatusId !== oldIssue.workflowStatusId) {
+    if (
+      targetWorkflowStatusId &&
+      targetWorkflowStatusId !== oldIssue.workflowStatusId
+    ) {
       willChangeStatus = true;
       const ws = workflow.statuses.find((s) => s.id === targetWorkflowStatusId);
       if (!ws) throw new BadRequestException('Invalid workflowStatusId');
@@ -827,7 +916,10 @@ export class IssuesService {
     } else if (targetCategory && targetCategory !== oldIssue.status) {
       willChangeStatus = true;
       const ws = workflow.statuses.find((s) => s.category === targetCategory);
-      if (!ws) throw new BadRequestException(`No workflow status for category ${targetCategory}`);
+      if (!ws)
+        throw new BadRequestException(
+          `No workflow status for category ${targetCategory}`,
+        );
       targetWorkflowStatusId = ws.id;
     }
 
@@ -847,7 +939,9 @@ export class IssuesService {
           title: dto.title,
           description: dto.description,
           status: willChangeStatus ? targetCategory : undefined,
-          workflowStatusId: willChangeStatus ? targetWorkflowStatusId : undefined,
+          workflowStatusId: willChangeStatus
+            ? targetWorkflowStatusId
+            : undefined,
           type: dto.type,
           priority: dto.priority,
           assigneeId: dto.assigneeId,
@@ -914,7 +1008,12 @@ export class IssuesService {
             issueId,
             actorId,
             type: 'STATUS_CHANGED',
-            metadata: { from: oldIssue.status, to: targetCategory, fromWorkflowStatusId: oldIssue.workflowStatusId, toWorkflowStatusId: targetWorkflowStatusId },
+            metadata: {
+              from: oldIssue.status,
+              to: targetCategory,
+              fromWorkflowStatusId: oldIssue.workflowStatusId,
+              toWorkflowStatusId: targetWorkflowStatusId,
+            },
           },
         });
 
