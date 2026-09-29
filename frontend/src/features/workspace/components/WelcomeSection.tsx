@@ -69,16 +69,16 @@ export const WelcomeSection: React.FC<WelcomeSectionProps> = ({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 md:p-8 shadow-sm transition-all',
+        'relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-r from-indigo-50/50 via-white to-slate-50/50 dark:from-indigo-950/40 dark:to-slate-900 p-6 md:p-8 shadow-sm transition-all',
         className
       )}
     >
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1.5 max-w-2xl">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {greetingText}
           </h1>
-          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400">
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-300">
             {t('home.welcome.subtitle')}
           </p>
         </div>
@@ -87,7 +87,7 @@ export const WelcomeSection: React.FC<WelcomeSectionProps> = ({
           <Button
             type="button"
             onClick={handleCreateProject}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white shadow-sm"
           >
             <FolderPlus className="h-4 w-4" />
             <span>{t('home.actions.createProject')}</span>
@@ -97,7 +97,7 @@ export const WelcomeSection: React.FC<WelcomeSectionProps> = ({
             type="button"
             variant="outline"
             onClick={handleCreateOrg}
-            className="flex items-center gap-2 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="flex items-center gap-2 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
           >
             <Building2 className="h-4 w-4 text-slate-500 dark:text-slate-400" />
             <span>{t('home.actions.createOrg')}</span>
@@ -107,7 +107,7 @@ export const WelcomeSection: React.FC<WelcomeSectionProps> = ({
             type="button"
             variant="outline"
             onClick={handleJoinOrg}
-            className="flex items-center gap-2 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="flex items-center gap-2 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
           >
             <UserPlus className="h-4 w-4 text-slate-500 dark:text-slate-400" />
             <span>{t('home.actions.joinOrg')}</span>

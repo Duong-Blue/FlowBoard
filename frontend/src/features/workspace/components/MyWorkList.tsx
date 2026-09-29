@@ -40,7 +40,7 @@ export function getIssueTypeIcon(type?: string) {
     case 'IMPROVEMENT':
       return <Layers className="h-4 w-4 text-purple-500 shrink-0" />;
     default:
-      return <FileText className="h-4 w-4 text-slate-400 shrink-0" />;
+      return <FileText className="h-4 w-4 text-slate-400 dark:text-slate-500 shrink-0" />;
   }
 }
 
@@ -212,7 +212,7 @@ export function MyWorkList({
             key={issue.id}
             to={path}
             onClick={handleClick}
-            className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm transition-all duration-200"
+            className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm transition-all duration-200"
           >
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
               {getIssueTypeIcon(issue.type)}
