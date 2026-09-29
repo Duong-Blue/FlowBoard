@@ -58,7 +58,7 @@ export function OrganizationCard({ org, className, onClick }: OrganizationCardPr
     <Card
       onClick={handleCardClick}
       className={cn(
-        'group relative flex flex-col justify-between overflow-hidden transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 cursor-pointer',
+        'group relative flex flex-col justify-between overflow-hidden transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:bg-slate-900 dark:border-slate-800 dark:hover:border-slate-700 cursor-pointer',
         className,
       )}
     >
@@ -69,7 +69,7 @@ export function OrganizationCard({ org, className, onClick }: OrganizationCardPr
               <img
                 src={org.logoUrl}
                 alt={org.name}
-                className="h-10 w-10 rounded-lg object-cover border border-slate-200 shrink-0"
+                className="h-10 w-10 rounded-lg object-cover border border-slate-200 dark:border-slate-800 shrink-0"
               />
             ) : (
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 font-bold text-sm border border-blue-100 dark:border-blue-900 shrink-0">
