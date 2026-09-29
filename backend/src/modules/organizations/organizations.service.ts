@@ -75,7 +75,9 @@ export class OrganizationsService {
       where: { organizationId_userId: { organizationId: org.id, userId } },
     });
     if (!member || (member.role !== 'OWNER' && member.role !== 'ADMIN')) {
-      throw new ForbiddenException('Insufficient permissions to update organization');
+      throw new ForbiddenException(
+        'Insufficient permissions to update organization',
+      );
     }
 
     return this.prisma.organization.update({
@@ -87,7 +89,9 @@ export class OrganizationsService {
   async delete(orgId: string, userId: string) {
     const targetOrg = await this.findOne(orgId, userId);
     const member = await this.prisma.organizationMember.findUnique({
-      where: { organizationId_userId: { organizationId: targetOrg.id, userId } },
+      where: {
+        organizationId_userId: { organizationId: targetOrg.id, userId },
+      },
     });
     if (!member || member.role !== 'OWNER') {
       throw new ForbiddenException('Only the organization owner can delete it');

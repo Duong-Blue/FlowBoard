@@ -6,7 +6,7 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 describe('OrganizationsService', () => {
   let service: OrganizationsService;
-  
+
   const mockPrisma = {
     $transaction: vi.fn(async (cb) => cb(mockPrisma)),
     organization: {
@@ -69,7 +69,7 @@ describe('OrganizationsService', () => {
   describe('delete', () => {
     it('rejects ADMIN or MEMBER role', async () => {
       mockPrisma.organization.findFirst.mockResolvedValue({ id: 'org1' });
-      
+
       // ADMIN
       mockPrisma.organizationMember.findUnique.mockResolvedValue({
         organizationId: 'org1',
