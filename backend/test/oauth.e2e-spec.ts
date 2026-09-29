@@ -5,7 +5,15 @@ import { AppModule } from '../src/app.module';
 import { GoogleAdapter } from '../src/modules/auth/oauth/adapters/google.adapter';
 import { GitHubAdapter } from '../src/modules/auth/oauth/adapters/github.adapter';
 import { PrismaService } from '../src/database/prisma.service';
-import { vitest, describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
+import {
+  vitest,
+  describe,
+  it,
+  beforeAll,
+  afterAll,
+  expect,
+  beforeEach,
+} from 'vitest';
 
 const mockGoogleAdapter = {
   getAuthorizationUrl: vitest.fn(),
@@ -33,7 +41,7 @@ describe('OAuth Flow (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    
+
     prisma = app.get<PrismaService>(PrismaService);
   });
 
@@ -50,13 +58,17 @@ describe('OAuth Flow (e2e)', () => {
     let flowBoardCode: string;
 
     it('/auth/oauth/google (GET) - begin flow & valid redirect', async () => {
-      mockGoogleAdapter.getAuthorizationUrl.mockReturnValue('https://accounts.google.com/o/oauth2/v2/auth?client_id=123');
+      mockGoogleAdapter.getAuthorizationUrl.mockReturnValue(
+        'https://accounts.google.com/o/oauth2/v2/auth?client_id=123',
+      );
 
       const response = await request(app.getHttpServer())
         .get('/auth/oauth/google?returnTo=/dashboard')
         .expect(302);
 
-      expect(response.header.location).toBe('https://accounts.google.com/o/oauth2/v2/auth?client_id=123');
+      expect(response.header.location).toBe(
+        'https://accounts.google.com/o/oauth2/v2/auth?client_id=123',
+      );
 
       expect(mockGoogleAdapter.getAuthorizationUrl).toHaveBeenCalled();
       testState = mockGoogleAdapter.getAuthorizationUrl.mock.calls[0][0];
@@ -72,12 +84,16 @@ describe('OAuth Flow (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-        .get(`/auth/oauth/google/callback?code=mock-google-code&state=${testState}`)
+        .get(
+          `/auth/oauth/google/callback?code=mock-google-code&state=${testState}`,
+        )
         .expect(302);
 
       const location = response.header.location;
-      expect(location).toMatch(/http:\/\/localhost:5173\/oauth\/callback\?code=.+/);
-      
+      expect(location).toMatch(
+        /http:\/\/localhost:5173\/oauth\/callback\?code=.+/,
+      );
+
       const url = new URL(location);
       flowBoardCode = url.searchParams.get('code') as string;
       expect(flowBoardCode).toBeDefined();
@@ -104,11 +120,15 @@ describe('OAuth Flow (e2e)', () => {
 
     it('/auth/oauth/google/callback (GET) - prevents replay with consumed state', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/auth/oauth/google/callback?code=mock-google-code&state=${testState}`)
+        .get(
+          `/auth/oauth/google/callback?code=mock-google-code&state=${testState}`,
+        )
         .expect(302);
 
       const location = response.header.location;
-      expect(location).toMatch(/http:\/\/localhost:5173\/oauth\/callback\?error=invalid_state/);
+      expect(location).toMatch(
+        /http:\/\/localhost:5173\/oauth\/callback\?error=invalid_state/,
+      );
     });
   });
 
@@ -116,7 +136,9 @@ describe('OAuth Flow (e2e)', () => {
     let testState: string;
 
     beforeEach(async () => {
-      mockGitHubAdapter.getAuthorizationUrl.mockReturnValue('https://github.com/login/oauth/authorize?client_id=123');
+      mockGitHubAdapter.getAuthorizationUrl.mockReturnValue(
+        'https://github.com/login/oauth/authorize?client_id=123',
+      );
       await request(app.getHttpServer())
         .get('/auth/oauth/github?returnTo=https://evil.com')
         .expect(302);
@@ -125,17 +147,25 @@ describe('OAuth Flow (e2e)', () => {
     });
 
     it('rejects unverified email', async () => {
-      mockGitHubAdapter.exchangeCode.mockRejectedValue(new Error('GitHub account does not have a primary, verified email'));
+      mockGitHubAdapter.exchangeCode.mockRejectedValue(
+        new Error('GitHub account does not have a primary, verified email'),
+      );
 
       const response = await request(app.getHttpServer())
-        .get(`/auth/oauth/github/callback?code=mock-github-code&state=${testState}`)
+        .get(
+          `/auth/oauth/github/callback?code=mock-github-code&state=${testState}`,
+        )
         .expect(302);
 
-      expect(response.header.location).toMatch(/http:\/\/localhost:5173\/oauth\/callback\?error=exchange_failed/);
+      expect(response.header.location).toMatch(
+        /http:\/\/localhost:5173\/oauth\/callback\?error=exchange_failed/,
+      );
     });
 
     it('auto-links account (password user logging in with OAuth)', async () => {
-      await prisma.user.deleteMany({ where: { email: 'conflict@example.com' } });
+      await prisma.user.deleteMany({
+        where: { email: 'conflict@example.com' },
+      });
 
       await prisma.user.create({
         data: {
@@ -155,10 +185,14 @@ describe('OAuth Flow (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-        .get(`/auth/oauth/github/callback?code=mock-github-code&state=${testState}`)
+        .get(
+          `/auth/oauth/github/callback?code=mock-github-code&state=${testState}`,
+        )
         .expect(302);
 
-      expect(response.header.location).toMatch(/http:\/\/localhost:5173\/oauth\/callback\?code=.+/);
+      expect(response.header.location).toMatch(
+        /http:\/\/localhost:5173\/oauth\/callback\?code=.+/,
+      );
 
       const user = await prisma.user.findUnique({
         where: { email: 'conflict@example.com' },
@@ -179,7 +213,9 @@ describe('OAuth Flow (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-        .get(`/auth/oauth/github/callback?code=mock-github-code&state=${testState}`)
+        .get(
+          `/auth/oauth/github/callback?code=mock-github-code&state=${testState}`,
+        )
         .expect(302);
 
       const location = response.header.location;

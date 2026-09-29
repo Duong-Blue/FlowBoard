@@ -13,10 +13,7 @@ export function generateCodeVerifier(): string {
  * @param verifier The code verifier string
  */
 export function generateCodeChallenge(verifier: string): string {
-  return crypto
-    .createHash('sha256')
-    .update(verifier)
-    .digest('base64url');
+  return crypto.createHash('sha256').update(verifier).digest('base64url');
 }
 
 /**
@@ -39,22 +36,22 @@ export function hashToken(raw: string): string {
 /**
  * Validates the returnTo URL to prevent Open Redirect vulnerabilities.
  * It strictly allows only relative paths starting with `/workspace`.
- * 
+ *
  * @param returnTo The requested redirect path
  * @returns A safe relative path (defaults to `/workspace`)
  */
 export function validateReturnTo(returnTo?: string): string {
   const defaultPath = '/workspace';
-  
+
   if (!returnTo || typeof returnTo !== 'string') {
     return defaultPath;
   }
 
   // Reject anything that looks like an absolute URL or protocol-relative URL
   if (
-    returnTo.startsWith('//') || 
-    returnTo.startsWith('http://') || 
-    returnTo.startsWith('https://') || 
+    returnTo.startsWith('//') ||
+    returnTo.startsWith('http://') ||
+    returnTo.startsWith('https://') ||
     returnTo.startsWith('javascript:') ||
     returnTo.includes('://')
   ) {
@@ -65,7 +62,7 @@ export function validateReturnTo(returnTo?: string): string {
   if (!returnTo.startsWith('/workspace')) {
     return defaultPath;
   }
-  
+
   // Reject path traversal attempts just to be safe
   if (returnTo.includes('../') || returnTo.includes('..\\')) {
     return defaultPath;
@@ -73,7 +70,11 @@ export function validateReturnTo(returnTo?: string): string {
 
   // Validate that if there's anything after /workspace, it's either a slash or a valid path
   // (e.g. we don't want to allow `/workspace.evil.com` if somehow misconfigured on the frontend later)
-  if (returnTo.length > '/workspace'.length && returnTo[10] !== '/' && returnTo[10] !== '?') {
+  if (
+    returnTo.length > '/workspace'.length &&
+    returnTo[10] !== '/' &&
+    returnTo[10] !== '?'
+  ) {
     return defaultPath;
   }
 

@@ -60,8 +60,12 @@ describe('OAuth Security Utils', () => {
 
     it('should allow valid relative workspace paths', () => {
       expect(validateReturnTo('/workspace')).toBe('/workspace');
-      expect(validateReturnTo('/workspace/projects/1')).toBe('/workspace/projects/1');
-      expect(validateReturnTo('/workspace?board=123')).toBe('/workspace?board=123');
+      expect(validateReturnTo('/workspace/projects/1')).toBe(
+        '/workspace/projects/1',
+      );
+      expect(validateReturnTo('/workspace?board=123')).toBe(
+        '/workspace?board=123',
+      );
     });
 
     it('should reject external URLs', () => {
