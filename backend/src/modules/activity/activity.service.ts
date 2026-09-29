@@ -70,7 +70,9 @@ export class ActivityService {
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         include: { actor: { select: USER_SELECT } },
       }),
-      this.prisma.activity.count({ where: { projectId, entityType: 'PROJECT' } }),
+      this.prisma.activity.count({
+        where: { projectId, entityType: 'PROJECT' },
+      }),
     ]);
 
     return {
@@ -109,7 +111,9 @@ export class ActivityService {
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         include: { actor: { select: USER_SELECT } },
       }),
-      this.prisma.activity.count({ where: { organizationId: orgId, entityType: 'ORGANIZATION' } }),
+      this.prisma.activity.count({
+        where: { organizationId: orgId, entityType: 'ORGANIZATION' },
+      }),
     ]);
 
     return {
