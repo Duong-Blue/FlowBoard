@@ -14,6 +14,8 @@ import { Menu, Settings, LogOut, Search } from 'lucide-react';
 import { AppBreadcrumb } from '../components/shared/AppBreadcrumb';
 import { NotificationCenter } from '../components/shared/NotificationCenter';
 import { LanguageSwitcher } from '../components/shared/LanguageSwitcher';
+import { ThemeToggleButton } from '@/components/shared/ThemeToggleButton';
+import { useTheme, type Theme } from '@/providers/ThemeProvider';
 import { GlobalSearchModal } from '../components/shared/GlobalSearchModal';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import {
@@ -27,6 +29,7 @@ import {
 export default function WorkspaceLayout() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { setTheme } = useTheme();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { list: orgs, activeOrgId } = useAppSelector((state) => state.org);
   const { list: projects, activeProjectId } = useAppSelector((state) => state.project);
@@ -75,6 +78,12 @@ export default function WorkspaceLayout() {
       isMounted = false;
     };
   }, [isAuthenticated, dispatch]);
+
+  useEffect(() => {
+    if (user?.theme) {
+      setTheme(user.theme as Theme);
+    }
+  }, [user?.theme, setTheme]);
 
   // 1. Safely fetch organizations on mount
   useEffect(() => {
@@ -209,6 +218,7 @@ export default function WorkspaceLayout() {
                 Ctrl K
               </kbd>
             </button>
+            <ThemeToggleButton />
             <LanguageSwitcher />
             <NotificationCenter />
             <DropdownMenu>
