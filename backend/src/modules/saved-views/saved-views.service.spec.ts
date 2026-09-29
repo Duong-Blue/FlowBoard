@@ -135,7 +135,9 @@ describe('SavedViewsService', () => {
         createdById: 'u1',
       });
       await expect(
-        service.update('p1', 'v1', 'u1', ProjectRole.MEMBER, { name: 'New Name' }),
+        service.update('p1', 'v1', 'u1', ProjectRole.MEMBER, {
+          name: 'New Name',
+        }),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -147,7 +149,9 @@ describe('SavedViewsService', () => {
         createdById: 'u1',
       });
       mockPrismaService.savedView.update.mockResolvedValue({ id: 'v1' });
-      await service.update('p1', 'v1', 'u1', ProjectRole.MEMBER, { name: 'New' });
+      await service.update('p1', 'v1', 'u1', ProjectRole.MEMBER, {
+        name: 'New',
+      });
       expect(mockPrismaService.savedView.update).toHaveBeenCalled();
     });
   });
@@ -172,7 +176,9 @@ describe('SavedViewsService', () => {
         isShared: true,
         createdById: 'u1',
       });
-      await expect(service.remove('p1', 'v1', 'u1', ProjectRole.MEMBER)).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.remove('p1', 'v1', 'u1', ProjectRole.MEMBER),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

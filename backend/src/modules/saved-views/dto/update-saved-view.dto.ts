@@ -1,9 +1,4 @@
-import {
-  IsString,
-  IsBoolean,
-  IsOptional,
-  IsObject,
-} from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsObject } from 'class-validator';
 
 export class UpdateSavedViewDto {
   @IsString()

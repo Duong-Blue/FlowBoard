@@ -30,7 +30,9 @@ export class SavedViewsService {
     };
 
     if (getDepth(filterJson) > 5) {
-      throw new BadRequestException('filterJson is too deeply nested (max depth 5)');
+      throw new BadRequestException(
+        'filterJson is too deeply nested (max depth 5)',
+      );
     }
   }
 
@@ -43,7 +45,9 @@ export class SavedViewsService {
     this.validateFilterJson(dto.filterJson);
 
     if (dto.isShared && role !== ProjectRole.ADMIN) {
-      throw new ForbiddenException('Only project admins can create shared views');
+      throw new ForbiddenException(
+        'Only project admins can create shared views',
+      );
     }
 
     return this.prisma.savedView.create({
@@ -61,10 +65,7 @@ export class SavedViewsService {
     return this.prisma.savedView.findMany({
       where: {
         projectId,
-        OR: [
-          { isShared: true },
-          { createdById: userId },
-        ],
+        OR: [{ isShared: true }, { createdById: userId }],
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -80,7 +81,9 @@ export class SavedViewsService {
     }
 
     if (!view.isShared && view.createdById !== userId) {
-      throw new ForbiddenException('You do not have access to this private view');
+      throw new ForbiddenException(
+        'You do not have access to this private view',
+      );
     }
 
     return view;
@@ -101,17 +104,23 @@ export class SavedViewsService {
 
     if (view.isShared) {
       if (role !== ProjectRole.ADMIN) {
-        throw new ForbiddenException('Only project admins can edit shared views');
+        throw new ForbiddenException(
+          'Only project admins can edit shared views',
+        );
       }
     } else {
       if (view.createdById !== userId) {
-        throw new ForbiddenException('You can only edit your own private views');
+        throw new ForbiddenException(
+          'You can only edit your own private views',
+        );
       }
     }
 
     if (dto.isShared !== undefined && dto.isShared !== view.isShared) {
       if (role !== ProjectRole.ADMIN) {
-        throw new ForbiddenException('Only project admins can change the shared status');
+        throw new ForbiddenException(
+          'Only project admins can change the shared status',
+        );
       }
     }
 
@@ -125,16 +134,25 @@ export class SavedViewsService {
     });
   }
 
-  async remove(projectId: string, id: string, userId: string, role: ProjectRole) {
+  async remove(
+    projectId: string,
+    id: string,
+    userId: string,
+    role: ProjectRole,
+  ) {
     const view = await this.findOne(projectId, id, userId);
 
     if (view.isShared) {
       if (role !== ProjectRole.ADMIN) {
-        throw new ForbiddenException('Only project admins can delete shared views');
+        throw new ForbiddenException(
+          'Only project admins can delete shared views',
+        );
       }
     } else {
       if (view.createdById !== userId) {
-        throw new ForbiddenException('You can only delete your own private views');
+        throw new ForbiddenException(
+          'You can only delete your own private views',
+        );
       }
     }
 
