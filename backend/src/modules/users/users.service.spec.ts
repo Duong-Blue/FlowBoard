@@ -4,6 +4,8 @@ import { PrismaService } from '../../database/prisma.service';
 import { LocalStorageService } from '../storage/local-storage.service';
 import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { vi } from 'vitest';
+import * as crypto from 'crypto';
 
 vi.mock('bcrypt', () => ({
   hash: vi.fn().mockResolvedValue('hashed_password'),
@@ -16,24 +18,24 @@ describe('UsersService', () => {
   const mockPrisma = {
     $transaction: vi.fn((cb) => (Array.isArray(cb) ? Promise.all(cb) : cb(mockPrisma))),
     user: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
+      findUnique: vi.fn().mockResolvedValue({ id: '1', email: 'test@example.com', passwordHash: 'hash', oauthAccounts: [{ provider: 'github' }] }),
+      create: vi.fn().mockResolvedValue({ id: '1' }),
+      update: vi.fn().mockResolvedValue({ id: '1' }),
+      delete: vi.fn().mockResolvedValue({ id: '1' }),
     },
     refreshToken: {
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      updateMany: vi.fn(),
-      deleteMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
+      findUnique: vi.fn().mockResolvedValue({ familyId: 'f1' }),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
     organizationMember: {
-      findMany: vi.fn(),
-      count: vi.fn(),
-      deleteMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
+      count: vi.fn().mockResolvedValue(0),
+      deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
     projectMember: {
-      deleteMany: vi.fn(),
+      deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
   };
 
@@ -58,13 +60,6 @@ describe('UsersService', () => {
 
   describe('getProfile', () => {
     it('returns profile with hasPassword and oauthProviders', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
-        id: '1',
-        email: 'test@example.com',
-        passwordHash: 'hash',
-        oauthAccounts: [{ provider: 'github' }],
-      });
-      
       const profile = await service.getProfile('1');
       expect(profile.hasPassword).toBe(true);
       expect(profile.oauthProviders).toEqual(['github']);
@@ -73,7 +68,6 @@ describe('UsersService', () => {
 
   describe('updateProfile', () => {
     it('normalizes empty strings for bio/displayName', async () => {
-      mockPrisma.user.update.mockResolvedValue({ id: '1' });
       await service.updateProfile('1', { displayName: '', bio: '' });
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
@@ -83,7 +77,6 @@ describe('UsersService', () => {
     });
 
     it('preserves non-null firstName/lastName', async () => {
-      mockPrisma.user.update.mockResolvedValue({ id: '1' });
       await service.updateProfile('1', { firstName: 'John', lastName: 'Doe' });
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
@@ -96,7 +89,7 @@ describe('UsersService', () => {
   describe('uploadAvatar & deleteAvatar', () => {
     it('handles storage operations and URL formatting on upload', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: '1', avatarUrl: null });
-      mockPrisma.user.update.mockResolvedValue({ id: '1' });
+      // mockPrisma.user.update is already set up to resolve
       
       const file = { originalname: 'test.jpg', buffer: Buffer.from('test') } as any;
       await service.uploadAvatar('1', file);
@@ -113,7 +106,7 @@ describe('UsersService', () => {
         id: '1',
         avatarUrl: '/api/users/me/avatar/download?path=old/path.jpg',
       });
-      mockPrisma.user.update.mockResolvedValue({ id: '1' });
+      // mockPrisma.user.update is already set up to resolve
       
       await service.deleteAvatar('1');
       
@@ -150,14 +143,12 @@ describe('UsersService', () => {
 
   describe('Sessions', () => {
     it('getSessions groups by familyId and marks isCurrent', async () => {
+      const tokenHash = crypto.createHash('sha256').update('refresh').digest('hex');
       const activeTokens = [
         { familyId: 'f1', createdAt: new Date('2023-01-01'), expiresAt: new Date('2023-01-10'), tokenHash: 'hash1' },
-        { familyId: 'f1', createdAt: new Date('2023-01-02'), expiresAt: new Date('2023-01-11'), tokenHash: 'hash2' },
+        { familyId: 'f1', createdAt: new Date('2023-01-02'), expiresAt: new Date('2023-01-11'), tokenHash },
       ];
       mockPrisma.refreshToken.findMany.mockResolvedValue(activeTokens);
-      require('crypto').createHash = vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({ digest: vi.fn().mockReturnValue('hash2') })
-      });
       
       const sessions = await service.getSessions('1', 'refresh');
       expect(sessions.length).toBe(1);

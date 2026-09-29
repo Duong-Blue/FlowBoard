@@ -7,6 +7,7 @@ describe('GlobalExceptionFilter', () => {
 
   beforeEach(async () => {
     filter = new GlobalExceptionFilter();
+    (filter as any).logger = { error: vi.fn() };
   });
 
   it('should handle HttpException correctly', () => {

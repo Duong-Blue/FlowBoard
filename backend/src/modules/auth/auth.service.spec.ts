@@ -73,7 +73,7 @@ describe('AuthService', () => {
     };
     vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
     vi.mocked(usersService.findById).mockResolvedValue(user as any);
-    vi.mocked(bcrypt.compare).mockResolvedValue(true);
+    vi.mocked(bcrypt.compare).mockResolvedValue(true as any);
     vi.mocked(prisma.refreshToken.create).mockResolvedValue({} as any);
 
     const result = await authService.login({

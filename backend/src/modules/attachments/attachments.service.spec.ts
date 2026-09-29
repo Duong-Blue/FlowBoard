@@ -5,10 +5,11 @@ import { LocalStorageService } from '../storage/local-storage.service';
 import { ActivityService } from '../activity/activity.service';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Multer } from 'multer';
+import { vi } from 'vitest';
 
 describe('AttachmentsService Security', () => {
   let service: AttachmentsService;
-  let prisma: jest.Mocked<PrismaService>;
+  let prisma: any;
 
   beforeEach(async () => {
     const mockPrisma = {
