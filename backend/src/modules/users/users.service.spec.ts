@@ -2,7 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { PrismaService } from '../../database/prisma.service';
 import { LocalStorageService } from '../storage/local-storage.service';
-import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { vi } from 'vitest';
 import * as crypto from 'crypto';
@@ -14,11 +19,18 @@ vi.mock('bcrypt', () => ({
 
 describe('UsersService', () => {
   let service: UsersService;
-  
+
   const mockPrisma = {
-    $transaction: vi.fn((cb) => (Array.isArray(cb) ? Promise.all(cb) : cb(mockPrisma))),
+    $transaction: vi.fn((cb) =>
+      Array.isArray(cb) ? Promise.all(cb) : cb(mockPrisma),
+    ),
     user: {
-      findUnique: vi.fn().mockResolvedValue({ id: '1', email: 'test@example.com', passwordHash: 'hash', oauthAccounts: [{ provider: 'github' }] }),
+      findUnique: vi.fn().mockResolvedValue({
+        id: '1',
+        email: 'test@example.com',
+        passwordHash: 'hash',
+        oauthAccounts: [{ provider: 'github' }],
+      }),
       create: vi.fn().mockResolvedValue({ id: '1' }),
       update: vi.fn().mockResolvedValue({ id: '1' }),
       delete: vi.fn().mockResolvedValue({ id: '1' }),
@@ -88,17 +100,29 @@ describe('UsersService', () => {
 
   describe('uploadAvatar & deleteAvatar', () => {
     it('handles storage operations and URL formatting on upload', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: '1', avatarUrl: null });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        avatarUrl: null,
+      });
       // mockPrisma.user.update is already set up to resolve
-      
-      const file = { originalname: 'test.jpg', buffer: Buffer.from('test') } as any;
+
+      const file = {
+        originalname: 'test.jpg',
+        buffer: Buffer.from('test'),
+      } as any;
       await service.uploadAvatar('1', file);
-      
+
       expect(mockStorage.saveFile).toHaveBeenCalled();
-      expect(mockPrisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
-        where: { id: '1' },
-        data: { avatarUrl: expect.stringContaining('/api/users/me/avatar/download?path=avatars%2F1%2F') },
-      }));
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: '1' },
+          data: {
+            avatarUrl: expect.stringContaining(
+              '/api/users/me/avatar/download?path=avatars%2F1%2F',
+            ),
+          },
+        }),
+      );
     });
 
     it('deletes old avatar from storage on deleteAvatar', async () => {
@@ -107,49 +131,77 @@ describe('UsersService', () => {
         avatarUrl: '/api/users/me/avatar/download?path=old/path.jpg',
       });
       // mockPrisma.user.update is already set up to resolve
-      
+
       await service.deleteAvatar('1');
-      
+
       expect(mockStorage.deleteFile).toHaveBeenCalledWith('old/path.jpg');
-      expect(mockPrisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
-        data: { avatarUrl: null },
-      }));
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { avatarUrl: null },
+        }),
+      );
     });
   });
 
   describe('changePassword', () => {
     it('verifies current password, updates hash, deletes refresh tokens', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: '1', passwordHash: 'old_hash' });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        passwordHash: 'old_hash',
+      });
       (bcrypt.compare as any).mockResolvedValue(true);
-      
-      await service.changePassword('1', { currentPassword: 'old', newPassword: 'new' });
-      
+
+      await service.changePassword('1', {
+        currentPassword: 'old',
+        newPassword: 'new',
+      });
+
       expect(bcrypt.compare).toHaveBeenCalledWith('old', 'old_hash');
       expect(mockPrisma.$transaction).toHaveBeenCalled();
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
         data: { passwordHash: 'hashed_password' },
       });
-      expect(mockPrisma.refreshToken.deleteMany).toHaveBeenCalledWith({ where: { userId: '1' } });
+      expect(mockPrisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: '1' },
+      });
     });
   });
 
   describe('setPassword', () => {
     it('prevents setting if password already exists', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: '1', passwordHash: 'exists' });
-      await expect(service.setPassword('1', { newPassword: 'new' })).rejects.toThrow(BadRequestException);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        passwordHash: 'exists',
+      });
+      await expect(
+        service.setPassword('1', { newPassword: 'new' }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('Sessions', () => {
     it('getSessions groups by familyId and marks isCurrent', async () => {
-      const tokenHash = crypto.createHash('sha256').update('refresh').digest('hex');
+      const tokenHash = crypto
+        .createHash('sha256')
+        .update('refresh')
+        .digest('hex');
       const activeTokens = [
-        { familyId: 'f1', createdAt: new Date('2023-01-01'), expiresAt: new Date('2023-01-10'), tokenHash: 'hash1' },
-        { familyId: 'f1', createdAt: new Date('2023-01-02'), expiresAt: new Date('2023-01-11'), tokenHash },
+        {
+          familyId: 'f1',
+          createdAt: new Date('2023-01-01'),
+          expiresAt: new Date('2023-01-10'),
+          tokenHash: 'hash1',
+        },
+        {
+          familyId: 'f1',
+          createdAt: new Date('2023-01-02'),
+          expiresAt: new Date('2023-01-11'),
+          tokenHash,
+        },
       ];
       mockPrisma.refreshToken.findMany.mockResolvedValue(activeTokens);
-      
+
       const sessions = await service.getSessions('1', 'refresh');
       expect(sessions.length).toBe(1);
       expect(sessions[0].familyId).toBe('f1');
@@ -178,27 +230,44 @@ describe('UsersService', () => {
 
   describe('deleteAccount', () => {
     it('checks sole-owner org blocking', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: '1', passwordHash: null });
-      mockPrisma.organizationMember.findMany.mockResolvedValue([{ organizationId: 'o1', role: 'OWNER' }]);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        passwordHash: null,
+      });
+      mockPrisma.organizationMember.findMany.mockResolvedValue([
+        { organizationId: 'o1', role: 'OWNER' },
+      ]);
       mockPrisma.organizationMember.count.mockResolvedValue(1);
-      
-      await expect(service.deleteAccount('1', { confirmation: 'DELETE' })).rejects.toThrow(BadRequestException);
+
+      await expect(
+        service.deleteAccount('1', { confirmation: 'DELETE' }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('requires correct confirmation if no password', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: '1', passwordHash: null });
-      await expect(service.deleteAccount('1', { confirmation: 'wrong' })).rejects.toThrow(BadRequestException);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        passwordHash: null,
+      });
+      await expect(
+        service.deleteAccount('1', { confirmation: 'wrong' }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('requires password if password is set', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: '1', passwordHash: 'hash' });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        passwordHash: 'hash',
+      });
       (bcrypt.compare as any).mockResolvedValue(true);
       mockPrisma.organizationMember.findMany.mockResolvedValue([]);
-      
+
       await service.deleteAccount('1', { password: 'pass' });
-      
+
       expect(mockPrisma.$transaction).toHaveBeenCalled();
-      expect(mockPrisma.user.delete).toHaveBeenCalledWith({ where: { id: '1' } });
+      expect(mockPrisma.user.delete).toHaveBeenCalledWith({
+        where: { id: '1' },
+      });
     });
   });
 });
