@@ -1,4 +1,13 @@
-import { IsOptional, IsString, IsInt, Max, Min, IsUUID, MaxLength, IsNotEmpty } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsInt,
+  Max,
+  Min,
+  IsUUID,
+  MaxLength,
+  IsNotEmpty,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class SearchSuggestionsQueryDto {

@@ -1,4 +1,14 @@
-import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min, IsDateString, IsIn } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+  IsDateString,
+  IsIn,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export enum SearchEntityType {
