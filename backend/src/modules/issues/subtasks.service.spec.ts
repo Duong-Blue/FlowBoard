@@ -8,10 +8,19 @@ import { BadRequestException } from '@nestjs/common';
 describe('SubtasksService', () => {
   let service: SubtasksService;
   const mockPrisma = {
-    issue: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), findMany: vi.fn() },
+    issue: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+    },
     project: { update: vi.fn() },
     activity: { create: vi.fn() },
-    workflowStatus: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn() },
+    workflowStatus: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+    },
     $transaction: vi.fn((cb) => cb(mockPrisma)),
   };
   const mockEventEmitter = { emit: vi.fn() };
@@ -46,7 +55,10 @@ describe('SubtasksService', () => {
       projectId: 'proj1',
       key: 'PROJ-1',
     });
-    mockPrisma.workflowStatus.findFirst.mockResolvedValue({ id: 'ws1', category: 'TODO' });
+    mockPrisma.workflowStatus.findFirst.mockResolvedValue({
+      id: 'ws1',
+      category: 'TODO',
+    });
     mockPrisma.issue.findFirst.mockResolvedValue({ order: 'a0' });
     mockPrisma.issue.create.mockResolvedValue({
       id: 'sub1',

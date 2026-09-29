@@ -40,7 +40,7 @@ export class SubtasksService {
 
       let workflowStatusId = dto.workflowStatusId || null;
       let targetCategory = dto.status || IssueStatus.TODO;
-      
+
       if (workflowStatusId) {
         const ws = await tx.workflowStatus.findUnique({
           where: { id: workflowStatusId, workflow: { projectId } },
@@ -112,7 +112,9 @@ export class SubtasksService {
 
     const total = subtasks.length;
     const completed = subtasks.filter(
-      (s) => s.workflowStatus?.category === IssueStatus.DONE || s.status === IssueStatus.DONE,
+      (s) =>
+        s.workflowStatus?.category === IssueStatus.DONE ||
+        s.status === IssueStatus.DONE,
     ).length;
 
     return {
