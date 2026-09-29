@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiPost } from '../../utils/api_helper';
 import { Button } from '../../components/ui/button';
@@ -10,9 +10,13 @@ import { OAuthButtons } from '../../components/shared/OAuthButtons';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const emailParam = searchParams.get('email');
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(emailParam || '');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -29,7 +33,13 @@ export default function RegisterPage() {
     try {
       await apiPost('/auth/register', { firstName, lastName, email, password });
       toast.success('Registration successful! Please login.');
-      navigate('/login');
+      
+      const locationState = location.state as { from?: unknown } | null;
+      if (locationState?.from) {
+        navigate(locationState.from as any);
+      } else {
+        navigate('/login');
+      }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to register';
       toast.error(message);
