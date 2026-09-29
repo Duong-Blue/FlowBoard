@@ -99,8 +99,8 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
 
   if (!statuses || statuses.length === 0) {
     return (
-      <Card className="border border-slate-200">
-        <CardContent className="p-6 text-center text-slate-500">
+      <Card className="border border-slate-200 dark:border-slate-800 dark:bg-slate-900">
+        <CardContent className="p-6 text-center text-slate-500 dark:text-slate-400">
           {t('workflow.matrix.emptyStatuses')}
         </CardContent>
       </Card>
@@ -108,23 +108,23 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
   }
 
   return (
-    <Card className="border border-slate-200 shadow-sm">
+    <Card className="border border-slate-200 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <ArrowRight className="h-5 w-5 text-indigo-600" />
-              <CardTitle className="text-xl font-semibold text-slate-900">
+              <ArrowRight className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <CardTitle className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                 {t('workflow.matrix.title')}
               </CardTitle>
             </div>
-            <CardDescription className="text-slate-500 mt-1">
+            <CardDescription className="text-slate-500 dark:text-slate-400 mt-1">
               {t('workflow.matrix.desc')}
             </CardDescription>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center border border-slate-200 rounded-md overflow-hidden bg-slate-50 sm:hidden">
+            <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden bg-slate-50 dark:bg-slate-800 sm:hidden">
               <Button
                 variant={viewMode === 'matrix' ? 'secondary' : 'ghost'}
                 size="sm"
@@ -182,41 +182,41 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
 
       <CardContent className="space-y-4">
         {successMessage && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-lg flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs rounded-lg flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>{successMessage}</span>
           </div>
         )}
 
         {errorMessage && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-lg flex items-center gap-2">
-            <X className="h-4 w-4 text-red-600 shrink-0" />
+          <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-xs rounded-lg flex items-center gap-2">
+            <X className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {initialTransitions.length === 0 && !hasChanges && (
-          <div className="flex items-start gap-2.5 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600">
-            <Info className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2.5 p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-600 dark:text-slate-300">
+            <Info className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0 mt-0.5" />
             <span>{t('workflow.matrix.defaultNotice')}</span>
           </div>
         )}
 
         <div
-          className={`overflow-x-auto relative border border-slate-200 rounded-lg ${
+          className={`overflow-x-auto relative border border-slate-200 dark:border-slate-800 rounded-lg ${
             viewMode === 'cards' ? 'hidden sm:block' : 'block'
           }`}
         >
           <table className="w-full text-xs text-left border-collapse min-w-[500px]">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="p-3 font-semibold text-slate-700 bg-slate-100 min-w-[150px] sticky left-0 z-20 shadow-[1px_0_0_0_rgba(226,232,240,1)]">
+              <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                <th className="p-3 font-semibold text-slate-700 dark:text-slate-100 bg-slate-100 dark:bg-slate-900 min-w-[150px] sticky left-0 z-20 shadow-[1px_0_0_0_rgba(226,232,240,1)] dark:shadow-[1px_0_0_0_rgba(30,41,59,1)]">
                   {t('workflow.matrix.fromTo')}
                 </th>
                 {statuses.map((toStatus) => (
                   <th
                     key={toStatus.id}
-                    className="p-3 font-semibold text-slate-700 text-center min-w-[120px] border-l border-slate-200"
+                    className="p-3 font-semibold text-slate-700 dark:text-slate-100 text-center min-w-[120px] border-l border-slate-200 dark:border-slate-800"
                   >
                     <div className="flex flex-col items-center gap-1">
                       <div className="flex items-center gap-1.5">
@@ -236,8 +236,8 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
             </thead>
             <tbody>
               {statuses.map((fromStatus) => (
-                <tr key={fromStatus.id} className="border-b border-slate-200 hover:bg-slate-50/50">
-                  <td className="p-3 font-medium text-slate-900 bg-slate-50 border-r border-slate-200 sticky left-0 z-10 shadow-[1px_0_0_0_rgba(226,232,240,1)]">
+                <tr key={fromStatus.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                  <td className="p-3 font-medium text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 sticky left-0 z-10 shadow-[1px_0_0_0_rgba(226,232,240,1)] dark:shadow-[1px_0_0_0_rgba(30,41,59,1)]">
                     <div className="flex items-center gap-2">
                       <span
                         className="h-2.5 w-2.5 rounded-full shrink-0"
@@ -245,7 +245,7 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
                       />
                       <div>
                         <div className="font-semibold">{fromStatus.name}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                           {fromStatus.category}
                         </div>
                       </div>
@@ -259,15 +259,15 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
                     return (
                       <td
                         key={toStatus.id}
-                        className={`p-3 text-center border-l border-slate-200 transition-colors ${
+                        className={`p-3 text-center border-l border-slate-200 dark:border-slate-800 transition-colors ${
                           isSame || !isAdmin
-                            ? 'bg-slate-100/60 cursor-not-allowed'
-                            : 'cursor-pointer hover:bg-indigo-50/50'
+                            ? 'bg-slate-100/60 dark:bg-slate-800/40 cursor-not-allowed'
+                            : 'cursor-pointer hover:bg-indigo-50/50 dark:hover:bg-slate-800/50'
                         }`}
                         onClick={() => isAdmin && !isSame && toggleTransition(fromStatus.id, toStatus.id)}
                       >
                         {isSame ? (
-                          <span className="text-slate-300 font-mono text-[10px]">—</span>
+                          <span className="text-slate-300 dark:text-slate-600 font-mono text-[10px]">—</span>
                         ) : (
                           <div className="flex justify-center items-center">
                             <input
@@ -276,7 +276,7 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
                               disabled={!isAdmin}
                               onChange={() => isAdmin && toggleTransition(fromStatus.id, toStatus.id)}
                               aria-label={`Allow transition from ${fromStatus.name} to ${toStatus.name}`}
-                              className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:cursor-not-allowed"
+                              className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:cursor-not-allowed"
                             />
                           </div>
                         )}
@@ -299,15 +299,15 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
             return (
               <div
                 key={fromStatus.id}
-                className="p-4 rounded-lg border border-slate-200 bg-white space-y-3"
+                className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3"
               >
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2">
                     <span
                       className="h-3 w-3 rounded-full shrink-0"
                       style={{ backgroundColor: fromStatus.color || '#3b82f6' }}
                     />
-                    <span className="font-semibold text-sm text-slate-900">{fromStatus.name}</span>
+                    <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">{fromStatus.name}</span>
                   </div>
                   <Badge variant="outline" className="text-xs font-mono">
                     {fromStatus.category}
@@ -315,7 +315,7 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <span className="text-xs font-medium text-slate-500">
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     {t('workflow.matrix.allowedTransitions')}:
                   </span>
                   <div className="grid grid-cols-1 gap-2 pt-1">
@@ -326,8 +326,8 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
                           key={toStatus.id}
                           className={`flex items-center justify-between p-2 rounded-md border text-xs cursor-pointer transition-colors ${
                             isAllowed
-                              ? 'bg-indigo-50/60 border-indigo-200 text-indigo-900 font-medium'
-                              : 'bg-slate-50/50 border-slate-200 text-slate-600'
+                              ? 'bg-indigo-50/60 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 font-medium'
+                              : 'bg-slate-50/50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
                           } ${!isAdmin ? 'cursor-not-allowed opacity-80' : ''}`}
                         >
                           <div className="flex items-center gap-2">
@@ -342,7 +342,7 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
                             checked={isAllowed}
                             disabled={!isAdmin}
                             onChange={() => isAdmin && toggleTransition(fromStatus.id, toStatus.id)}
-                            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-indigo-600 focus:ring-indigo-500"
                           />
                         </label>
                       );
@@ -354,12 +354,12 @@ export const TransitionMatrix: React.FC<TransitionMatrixProps> = ({
           })}
         </div>
 
-        <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1">
           <span className="font-mono">
             {t('workflow.matrix.activePairs', { count: allowedTransitions.size })}
           </span>
           {hasChanges && (
-            <span className="text-amber-600 font-medium animate-pulse">
+            <span className="text-amber-600 dark:text-amber-400 font-medium animate-pulse">
               {t('workflow.matrix.unsavedChanges')}
             </span>
           )}

@@ -112,16 +112,16 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
   return (
     <div className="space-y-6">
       {!isAdmin && (
-        <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-600 text-sm">
+        <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 dark:border-amber-500/30 rounded-lg text-amber-600 dark:text-amber-400 text-sm">
           <Lock className="h-4 w-4 shrink-0" />
           <span>{t('projects.viewOnlyNotice')}</span>
         </div>
       )}
 
-      <Card className="border border-slate-200 shadow-sm">
+      <Card className="border border-slate-200 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-slate-900">{t('projects.generalInfo')}</CardTitle>
-          <CardDescription className="text-slate-500">
+          <CardTitle className="text-xl font-semibold text-slate-900 dark:text-slate-100">{t('projects.generalInfo')}</CardTitle>
+          <CardDescription className="text-slate-500 dark:text-slate-400">
             {t('projects.generalDesc')}
           </CardDescription>
         </CardHeader>
@@ -129,7 +129,7 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
           <form id="general-settings-form" onSubmit={handleSave} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="projectName" className="text-sm font-medium text-slate-700">
+                <Label htmlFor="projectName" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {t('projects.projectName')}
                 </Label>
                 <Input
@@ -144,10 +144,10 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="projectKey" className="text-sm font-medium text-slate-700">
+                  <Label htmlFor="projectKey" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     {t('projects.keyLabel')}
                   </Label>
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
                     <Info className="h-3 w-3" /> {t('projects.readOnly')}
                   </span>
                 </div>
@@ -155,13 +155,13 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
                   id="projectKey"
                   value={project.key || ''}
                   disabled
-                  className="bg-slate-100 text-slate-600 font-mono text-sm cursor-not-allowed"
+                  className="bg-slate-100 text-slate-600 font-mono text-sm cursor-not-allowed dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="projectDescription" className="text-sm font-medium text-slate-700">
+              <Label htmlFor="projectDescription" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t('projects.descriptionLabel')}
               </Label>
               <textarea
@@ -171,12 +171,12 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={!isAdmin || saving}
                 placeholder={t('projects.descriptionPlaceholder')}
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-blue-400 dark:disabled:bg-slate-800/50 dark:disabled:text-slate-500"
               />
             </div>
 
             <div className="space-y-2 max-w-xs">
-              <Label htmlFor="projectStatus" className="text-sm font-medium text-slate-700">
+              <Label htmlFor="projectStatus" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t('projects.statusLabel', { defaultValue: 'Status' })}
               </Label>
               <Select
@@ -196,7 +196,7 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
           </form>
         </CardContent>
         {isAdmin && (
-          <CardFooter className="border-t border-slate-100 bg-slate-50/50 px-6 py-4 flex justify-end">
+          <CardFooter className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 px-6 py-4 flex justify-end">
             <Button
               type="submit"
               form="general-settings-form"
@@ -211,22 +211,22 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
       </Card>
 
       {isAdmin && (
-        <Card className="border border-red-200 bg-red-50/30 shadow-sm">
+        <Card className="border border-red-200 bg-red-50/30 dark:bg-red-950/20 dark:border-red-900/50 shadow-sm">
           <CardHeader>
-            <div className="flex items-center gap-2 text-red-600">
+            <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
               <AlertTriangle className="h-5 w-5" />
-              <CardTitle className="text-lg font-semibold text-red-700">{t('projects.dangerZone')}</CardTitle>
+              <CardTitle className="text-lg font-semibold text-red-700 dark:text-red-400">{t('projects.dangerZone')}</CardTitle>
             </div>
-            <CardDescription className="text-red-600/80">
+            <CardDescription className="text-red-600/80 dark:text-red-400/80">
               {t('projects.dangerZoneDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Separator className="bg-red-200/60" />
+            <Separator className="bg-red-200/60 dark:bg-red-900/40" />
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h4 className="font-medium text-slate-900">{t('projects.deleteProject')}</h4>
-                <p className="text-xs text-slate-500">
+                <h4 className="font-medium text-slate-900 dark:text-slate-100">{t('projects.deleteProject')}</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {t('projects.deleteProjectDesc')}
                 </p>
               </div>
@@ -248,17 +248,17 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
       <Dialog open={showDeleteModal} onOpenChange={handleCloseDeleteModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
+            <DialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
               <AlertTriangle className="h-5 w-5" />
               {t('projects.deleteProjectTitle')}
             </DialogTitle>
-            <DialogDescription className="pt-2 text-slate-600">
+            <DialogDescription className="pt-2 text-slate-600 dark:text-slate-400">
               {t('projects.deleteConfirmDesc', { name: project.name })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 py-2">
-            <Label htmlFor="confirm-project-name" className="text-xs font-semibold text-slate-700">
+            <Label htmlFor="confirm-project-name" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               {t('projects.typeToConfirm', { name: project.name })}
             </Label>
             <Input

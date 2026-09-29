@@ -33,10 +33,10 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 };
 
 const CATEGORY_STYLES: Record<string, string> = {
-  TODO: 'bg-slate-100 text-slate-700 border-slate-300',
-  IN_PROGRESS: 'bg-blue-50 text-blue-700 border-blue-200',
-  IN_PREVIEW: 'bg-purple-50 text-purple-700 border-purple-200',
-  DONE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  TODO: 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+  IN_PROGRESS: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/50',
+  IN_PREVIEW: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/50',
+  DONE: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50',
 };
 
 export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
@@ -73,9 +73,9 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
 
   if (!projectId || workflowError) {
     return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center justify-between">
+      <div className="p-6 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5 text-red-600" />
+          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
           <span>{t('workflow.loadFailed')}</span>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
@@ -121,24 +121,24 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
   return (
     <div className="space-y-6">
       {!isAdmin && (
-        <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-600 text-sm">
+        <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-600 dark:text-amber-400 text-sm">
           <Lock className="h-4 w-4 shrink-0" />
           <span>{t('workflow.readOnlyNotice')}</span>
         </div>
       )}
 
       {/* Header & Statuses Section */}
-      <Card className="border border-slate-200 shadow-sm">
+      <Card className="border border-slate-200 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <Workflow className="h-5 w-5 text-slate-700" />
-                <CardTitle className="text-xl font-semibold text-slate-900">
+                <Workflow className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+                <CardTitle className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                   {t('workflow.statusesTitle')}
                 </CardTitle>
               </div>
-              <CardDescription className="text-slate-500 mt-1">
+              <CardDescription className="text-slate-500 dark:text-slate-400 mt-1">
                 {t('workflow.statusesDesc')}
               </CardDescription>
             </div>
@@ -161,24 +161,24 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {statuses.map((statusItem) => {
               const IconComponent = CATEGORY_ICONS[statusItem.category] || Layers;
-              const badgeStyle = CATEGORY_STYLES[statusItem.category] || 'bg-slate-100 text-slate-700';
+              const badgeStyle = CATEGORY_STYLES[statusItem.category] || 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
 
               return (
                 <div
                   key={statusItem.id}
-                  className="flex flex-col p-4 rounded-lg border border-slate-200 bg-white hover:border-slate-300 transition-colors space-y-3"
+                  className="flex flex-col p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 transition-colors space-y-3"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <span
-                        className="h-3 w-3 rounded-full shrink-0 border border-slate-200 shadow-xs"
+                        className="h-3 w-3 rounded-full shrink-0 border border-slate-200 dark:border-slate-700 shadow-xs"
                         style={{ backgroundColor: statusItem.color || '#3b82f6' }}
                         aria-label={`Color ${statusItem.color || '#3b82f6'}`}
                       />
-                      <div className="p-1.5 rounded-md bg-slate-100 text-slate-700">
+                      <div className="p-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                         <IconComponent className="h-4 w-4" />
                       </div>
-                      <span className="font-semibold text-sm text-slate-900">{statusItem.name}</span>
+                      <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">{statusItem.name}</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                     <span className="font-mono text-[11px]">
                       {t('workflow.order', { order: statusItem.order })}
                     </span>
@@ -198,7 +198,7 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-slate-500 hover:text-slate-900"
+                          className="h-7 w-7 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                           onClick={() => handleOpenEdit(statusItem)}
                           title={t('workflow.editStatus')}
                           aria-label={`${t('workflow.editStatus')} ${statusItem.name}`}
@@ -208,7 +208,7 @@ export const WorkflowSettingsTab: React.FC<WorkflowSettingsTabProps> = ({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          className="h-7 w-7 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/30"
                           onClick={() => handleOpenDelete(statusItem)}
                           disabled={statuses.length <= 1}
                           title={
