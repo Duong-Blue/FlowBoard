@@ -87,7 +87,7 @@ export class RealtimeService {
   handleNotificationNew(payload: any) {
     if (payload.userId)
       this.broadcastToUser(payload.userId, 'notification.new', payload);
-    }
+  }
 
   @OnEvent('issue.moved')
   handleIssueMoved(payload: any) {

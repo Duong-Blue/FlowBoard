@@ -1,4 +1,3 @@
-
 import { vi, describe, beforeEach, it, expect } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RealtimeService } from './realtime.service';
@@ -12,38 +11,38 @@ describe('RealtimeService', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let eventEmitter: EventEmitter2;
 
-    beforeEach(async () => {
-      const module: TestingModule = await Test.createTestingModule({
-        providers: [
-          RealtimeService,
-          {
-            provide: RealtimeGateway,
-            useValue: {
-              server: {
-                to: vi.fn().mockReturnThis(),
-                emit: vi.fn(),
-              },
-            },
-          },
-          {
-            provide: EventEmitter2,
-            useValue: {
-              on: vi.fn(),
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        RealtimeService,
+        {
+          provide: RealtimeGateway,
+          useValue: {
+            server: {
+              to: vi.fn().mockReturnThis(),
               emit: vi.fn(),
             },
           },
-        ],
-      }).compile();
+        },
+        {
+          provide: EventEmitter2,
+          useValue: {
+            on: vi.fn(),
+            emit: vi.fn(),
+          },
+        },
+      ],
+    }).compile();
 
-      service = module.get<RealtimeService>(RealtimeService);
-      gateway = module.get<RealtimeGateway>(RealtimeGateway);
-      eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    service = module.get<RealtimeService>(RealtimeService);
+    gateway = module.get<RealtimeGateway>(RealtimeGateway);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
 
-      // Mock implementation of broadcastToProject for testing
-      vi.spyOn(service as any, 'broadcastToProject').mockImplementation(() => {});
-      // Mock implementation of broadcastToUser for testing
-      vi.spyOn(service as any, 'broadcastToUser').mockImplementation(() => {});
-    });
+    // Mock implementation of broadcastToProject for testing
+    vi.spyOn(service as any, 'broadcastToProject').mockImplementation(() => {});
+    // Mock implementation of broadcastToUser for testing
+    vi.spyOn(service as any, 'broadcastToUser').mockImplementation(() => {});
+  });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
@@ -56,7 +55,7 @@ describe('RealtimeService', () => {
       expect((service as any).broadcastToProject).toHaveBeenCalledWith(
         payload.projectId,
         'issue.created',
-        payload
+        payload,
       );
     });
 
@@ -66,7 +65,7 @@ describe('RealtimeService', () => {
       expect((service as any).broadcastToProject).toHaveBeenCalledWith(
         payload.projectId,
         'issue.updated',
-        payload
+        payload,
       );
     });
 
@@ -76,7 +75,7 @@ describe('RealtimeService', () => {
       expect((service as any).broadcastToProject).toHaveBeenCalledWith(
         payload.projectId,
         'issue.deleted',
-        payload
+        payload,
       );
     });
 
@@ -86,7 +85,7 @@ describe('RealtimeService', () => {
       expect((service as any).broadcastToProject).toHaveBeenCalledWith(
         payload.projectId,
         'comment.created',
-        payload
+        payload,
       );
     });
 
@@ -96,7 +95,7 @@ describe('RealtimeService', () => {
       expect((service as any).broadcastToUser).toHaveBeenCalledWith(
         payload.userId,
         'notification.new',
-        payload
+        payload,
       );
     });
 
@@ -108,7 +107,7 @@ describe('RealtimeService', () => {
       expect((service as any).broadcastToProject).toHaveBeenCalledWith(
         payload.projectId,
         'issue.moved',
-        payload
+        payload,
       );
     });
   });
@@ -117,4 +116,4 @@ describe('RealtimeService', () => {
 // Helper function to simulate event emission (if needed, not used in current test structure)
 // function emitEvent(eventEmitter: EventEmitter2, eventName: string, payload: any) {
 //   eventEmitter.emit(eventName, payload);
-// } 
+// }
