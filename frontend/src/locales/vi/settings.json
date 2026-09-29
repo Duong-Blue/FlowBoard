@@ -1,0 +1,167 @@
+{
+  "layout": {
+    "title": "Cài đặt người dùng",
+    "subtitle": "Quản lý hồ sơ cá nhân, tùy chọn tài khoản, bảo mật và giao diện ứng dụng.",
+    "nav": {
+      "profile": "Hồ sơ",
+      "profileDesc": "Thông tin cá nhân và ảnh đại diện",
+      "account": "Tài khoản",
+      "accountDesc": "Quản lý email và tài khoản",
+      "security": "Bảo mật",
+      "securityDesc": "Mật khẩu và xác thực",
+      "appearance": "Giao diện",
+      "appearanceDesc": "Chủ đề và tùy chọn ngôn ngữ"
+    }
+  },
+  "profile": {
+    "title": "Cài đặt hồ sơ",
+    "subtitle": "Quản lý thông tin cá nhân và cách người khác nhìn thấy bạn trên FlowBoard.",
+    "firstName": "Tên",
+    "firstNamePlaceholder": "John",
+    "firstNameRequired": "Họ và Tên là bắt buộc",
+    "lastName": "Họ",
+    "lastNamePlaceholder": "Doe",
+    "displayName": "Tên hiển thị",
+    "displayNamePlaceholder": "John Doe",
+    "displayNameHelp": "Tên này sẽ hiển thị công khai trên công việc, bình luận và hoạt động.",
+    "email": "Địa chỉ Email",
+    "emailHelp": "Địa chỉ email được quản lý trong Cài đặt tài khoản.",
+    "bio": "Tiểu sử",
+    "bioPlaceholder": "Giới thiệu một chút về bản thân...",
+    "bioHelp": "Tiểu sử ngắn cho hồ sơ nhóm của bạn.",
+    "saveChanges": "Lưu thay đổi",
+    "saving": "Đang lưu...",
+    "success": "Cập nhật hồ sơ thành công",
+    "error": "Cập nhật hồ sơ thất bại"
+  },
+  "avatar": {
+    "title": "Ảnh đại diện",
+    "subtitle": "PNG, JPG hoặc WebP tối đa 2MB.",
+    "upload": "Tải ảnh lên",
+    "remove": "Gỡ bỏ",
+    "sizeError": "Dung lượng tệp phải nhỏ hơn 2MB",
+    "typeError": "Chỉ chấp nhận ảnh JPG, PNG và WebP",
+    "uploadSuccess": "Cập nhật ảnh đại diện thành công",
+    "uploadError": "Tải ảnh đại diện thất bại",
+    "removeSuccess": "Đã gỡ ảnh đại diện",
+    "removeError": "Gỡ ảnh đại diện thất bại"
+  },
+  "account": {
+    "title": "Cài đặt tài khoản",
+    "subtitle": "Quản lý thông tin và vòng đời tài khoản của bạn.",
+    "emailLabel": "Địa chỉ Email",
+    "verified": "Đã xác thực",
+    "memberSince": "Thành viên từ",
+    "dangerZone": {
+      "title": "Xóa tài khoản",
+      "description": "Sau khi xóa tài khoản, bạn sẽ không thể hoàn tác. Tất cả tổ chức, dự án, công việc và dữ liệu của bạn sẽ bị xóa vĩnh viễn.",
+      "button": "Xóa tài khoản"
+    },
+    "deleteModal": {
+      "title": "Xóa tài khoản",
+      "description": "Hành động này không thể hoàn tác. Tài khoản và dữ liệu của bạn trên máy chủ sẽ bị xóa vĩnh viễn.",
+      "enterPasswordPrompt": "Vui lòng nhập mật khẩu để xác nhận xóa tài khoản:",
+      "passwordPlaceholder": "Mật khẩu của bạn",
+      "enterDeletePrompt": "Vui lòng nhập {{confirmText}} để xác nhận xóa tài khoản:",
+      "deletePlaceholder": "DELETE",
+      "cancel": "Hủy",
+      "confirm": "Xóa tài khoản",
+      "deleting": "Đang xóa..."
+    },
+    "deleteSuccess": "Xóa tài khoản thành công",
+    "deleteError": "Xóa tài khoản thất bại"
+  },
+  "security": {
+    "title": "Cài đặt bảo mật",
+    "subtitle": "Quản lý mật khẩu, phương thức xác thực và các phiên đăng nhập.",
+    "password": {
+      "title": "Mật khẩu",
+      "hasPasswordDesc": "Đổi mật khẩu hiện tại của bạn.",
+      "noPasswordDesc": "Bạn đã xác thực qua OAuth. Thiết lập mật khẩu để đăng nhập bằng email.",
+      "changeButton": "Đổi mật khẩu",
+      "setButton": "Đặt mật khẩu",
+      "currentPassword": "Mật khẩu hiện tại",
+      "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "newPasswordPlaceholder": "Ít nhất 8 ký tự",
+      "confirmPassword": "Xác nhận mật khẩu mới",
+      "confirmPasswordPlaceholder": "Xác nhận mật khẩu mới",
+      "updateButton": "Cập nhật mật khẩu",
+      "setSubmitButton": "Đặt mật khẩu",
+      "cancelButton": "Hủy",
+      "saving": "Đang lưu...",
+      "mismatchError": "Mật khẩu không khớp",
+      "lengthError": "Mật khẩu phải có ít nhất 8 ký tự",
+      "currentRequiredError": "Vui lòng nhập mật khẩu hiện tại",
+      "changeSuccess": "Đổi mật khẩu thành công. Các phiên làm việc khác đã bị hủy.",
+      "setSuccess": "Đặt mật khẩu thành công",
+      "updateError": "Cập nhật mật khẩu thất bại"
+    },
+    "connectedAccounts": {
+      "title": "Tài khoản đã kết nối",
+      "subtitle": "Các nhà cung cấp OAuth đã kết nối với tài khoản của bạn.",
+      "none": "Không có tài khoản kết nối"
+    },
+    "twoFactor": {
+      "title": "Xác thực hai yếu tố (2FA)",
+      "subtitle": "Thêm một lớp bảo mật cho tài khoản của bạn bằng ứng dụng xác thực TOTP.",
+      "enableButton": "Bật 2FA (Giai đoạn 5)"
+    },
+    "activeSessions": {
+      "title": "Phiên hoạt động",
+      "subtitle": "Quản lý và đăng xuất khỏi các thiết bị hiện đang đăng nhập vào tài khoản."
+    }
+  },
+  "appearance": {
+    "title": "Giao diện & Ngôn ngữ",
+    "subtitle": "Tùy chỉnh giao diện và cách FlowBoard hiển thị cho bạn.",
+    "themeSection": {
+      "title": "Chủ đề giao diện",
+      "subtitle": "Chọn chủ đề màu sắc bạn yêu thích cho FlowBoard.",
+      "light": {
+        "label": "Sáng",
+        "description": "Giao diện sáng rõ ràng với các thành phần độ tương phản cao"
+      },
+      "dark": {
+        "label": "Tối",
+        "description": "Giao diện tối tinh tế, dễ chịu cho mắt trong môi trường thiếu sáng"
+      },
+      "system": {
+        "label": "Hệ thống",
+        "description": "Tự động điều chỉnh chủ đề theo cài đặt thiết bị của bạn"
+      },
+      "successToast": "Đã chuyển chủ đề sang {{theme}}",
+      "errorToast": "Cập nhật tùy chọn chủ đề thất bại"
+    },
+    "languageSection": {
+      "title": "Ngôn ngữ",
+      "subtitle": "Chọn ngôn ngữ hiển thị của bạn.",
+      "en": {
+        "name": "English",
+        "label": "English (US)"
+      },
+      "vi": {
+        "name": "Tiếng Việt",
+        "label": "Tiếng Việt (Vietnam)"
+      },
+      "successToast": "Đã cập nhật ngôn ngữ",
+      "errorToast": "Cập nhật tùy chọn ngôn ngữ thất bại"
+    }
+  },
+  "sessions": {
+    "title": "Phiên hiện tại và đang hoạt động",
+    "revokeAllOthers": "Đăng xuất tất cả thiết bị khác",
+    "revokeAllConfirm": "Bạn có chắc chắn muốn đăng xuất tất cả các phiên hoạt động khác không?",
+    "session": "Phiên",
+    "current": "Hiện tại",
+    "lastUsed": "Dùng lần cuối: {{time}}",
+    "revokeTitle": "Hủy phiên",
+    "loadError": "Tải danh sách phiên hoạt động thất bại",
+    "noSessions": "Không tìm thấy phiên hoạt động nào.",
+    "loading": "Đang tải phiên làm việc...",
+    "revokeSuccess": "Hủy phiên thành công",
+    "revokeError": "Hủy phiên thất bại",
+    "revokeAllSuccess": "Đã hủy tất cả các phiên khác",
+    "revokeAllError": "Hủy các phiên khác thất bại"
+  }
+}

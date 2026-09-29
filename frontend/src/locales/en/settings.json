@@ -1,0 +1,167 @@
+{
+  "layout": {
+    "title": "User Settings",
+    "subtitle": "Manage your personal profile, account options, security preferences, and app appearance.",
+    "nav": {
+      "profile": "Profile",
+      "profileDesc": "Personal details and avatar",
+      "account": "Account",
+      "accountDesc": "Email and account management",
+      "security": "Security",
+      "securityDesc": "Password and authentication",
+      "appearance": "Appearance",
+      "appearanceDesc": "Theme and language preferences"
+    }
+  },
+  "profile": {
+    "title": "Profile Settings",
+    "subtitle": "Manage your personal information and how others see you across FlowBoard.",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "John",
+    "firstNameRequired": "First name and Last name are required",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "Doe",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "John Doe",
+    "displayNameHelp": "This name will be shown publicly on issues, comments, and activities.",
+    "email": "Email Address",
+    "emailHelp": "Email address is managed in Account Settings.",
+    "bio": "Bio",
+    "bioPlaceholder": "Tell us a little about yourself...",
+    "bioHelp": "Brief bio for your team profile.",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "success": "Profile updated successfully",
+    "error": "Failed to update profile"
+  },
+  "avatar": {
+    "title": "Profile Picture",
+    "subtitle": "PNG, JPG or WebP up to 2MB.",
+    "upload": "Upload photo",
+    "remove": "Remove",
+    "sizeError": "File size must be less than 2MB",
+    "typeError": "Only JPG, PNG, and WebP images are allowed",
+    "uploadSuccess": "Avatar updated successfully",
+    "uploadError": "Failed to upload avatar",
+    "removeSuccess": "Avatar removed",
+    "removeError": "Failed to remove avatar"
+  },
+  "account": {
+    "title": "Account Settings",
+    "subtitle": "Manage your account details and account lifecycle.",
+    "emailLabel": "Email Address",
+    "verified": "Verified",
+    "memberSince": "Member Since",
+    "dangerZone": {
+      "title": "Delete Account",
+      "description": "Once you delete your account, there is no going back. All of your organizations, projects, issues, and data will be permanently removed.",
+      "button": "Delete Account"
+    },
+    "deleteModal": {
+      "title": "Delete Account",
+      "description": "This action cannot be undone. This will permanently delete your account and remove your data from our servers.",
+      "enterPasswordPrompt": "Please enter your password to confirm account deletion:",
+      "passwordPlaceholder": "Your password",
+      "enterDeletePrompt": "Please type {{confirmText}} to confirm account deletion:",
+      "deletePlaceholder": "DELETE",
+      "cancel": "Cancel",
+      "confirm": "Delete Account",
+      "deleting": "Deleting..."
+    },
+    "deleteSuccess": "Account successfully deleted",
+    "deleteError": "Failed to delete account"
+  },
+  "security": {
+    "title": "Security Settings",
+    "subtitle": "Manage your password, authentication methods, and active sessions.",
+    "password": {
+      "title": "Password",
+      "hasPasswordDesc": "Change your existing password.",
+      "noPasswordDesc": "You authenticated via OAuth. Set up a password to log in with email.",
+      "changeButton": "Change Password",
+      "setButton": "Set Password",
+      "currentPassword": "Current Password",
+      "currentPasswordPlaceholder": "Enter current password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirmPassword": "Confirm New Password",
+      "confirmPasswordPlaceholder": "Confirm new password",
+      "updateButton": "Update Password",
+      "setSubmitButton": "Set Password",
+      "cancelButton": "Cancel",
+      "saving": "Saving...",
+      "mismatchError": "Passwords do not match",
+      "lengthError": "Password must be at least 8 characters",
+      "currentRequiredError": "Current password is required",
+      "changeSuccess": "Password changed successfully. Other sessions have been revoked.",
+      "setSuccess": "Password set successfully",
+      "updateError": "Failed to update password"
+    },
+    "connectedAccounts": {
+      "title": "Connected Accounts",
+      "subtitle": "OAuth providers connected to your account.",
+      "none": "No connected accounts"
+    },
+    "twoFactor": {
+      "title": "Two-Factor Authentication (2FA)",
+      "subtitle": "Add an extra layer of security to your account using TOTP authenticator apps.",
+      "enableButton": "Enable 2FA (Phase 5)"
+    },
+    "activeSessions": {
+      "title": "Active Sessions",
+      "subtitle": "Manage and revoke devices currently logged in to your account."
+    }
+  },
+  "appearance": {
+    "title": "Appearance & Language",
+    "subtitle": "Customize how FlowBoard looks and behaves for you.",
+    "themeSection": {
+      "title": "Interface Theme",
+      "subtitle": "Select your preferred color theme for FlowBoard.",
+      "light": {
+        "label": "Light",
+        "description": "Clean light mode with high contrast elements"
+      },
+      "dark": {
+        "label": "Dark",
+        "description": "Sleek dark theme easy on the eyes in low light"
+      },
+      "system": {
+        "label": "System",
+        "description": "Automatically adjust theme based on your device settings"
+      },
+      "successToast": "Theme set to {{theme}}",
+      "errorToast": "Failed to update theme preference"
+    },
+    "languageSection": {
+      "title": "Language",
+      "subtitle": "Choose your display language.",
+      "en": {
+        "name": "English",
+        "label": "English (US)"
+      },
+      "vi": {
+        "name": "Tiếng Việt",
+        "label": "Tiếng Việt (Vietnam)"
+      },
+      "successToast": "Language updated",
+      "errorToast": "Failed to update language preference"
+    }
+  },
+  "sessions": {
+    "title": "Current and Active Sessions",
+    "revokeAllOthers": "Revoke All Others",
+    "revokeAllConfirm": "Are you sure you want to revoke all other active sessions?",
+    "session": "Session",
+    "current": "Current",
+    "lastUsed": "Last used: {{time}}",
+    "revokeTitle": "Revoke session",
+    "loadError": "Failed to load active sessions",
+    "noSessions": "No active sessions found.",
+    "loading": "Loading sessions...",
+    "revokeSuccess": "Session revoked successfully",
+    "revokeError": "Failed to revoke session",
+    "revokeAllSuccess": "All other sessions revoked",
+    "revokeAllError": "Failed to revoke other sessions"
+  }
+}
