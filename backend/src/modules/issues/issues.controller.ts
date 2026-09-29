@@ -87,13 +87,15 @@ export class IssuesController {
     return this.issuesService.findAll(projectId, query);
   }
 
-  
   @Get('workload')
   getWorkload(
     @Param('projectId') projectId: string,
     @Query('includeSubtasks') includeSubtasks?: string,
   ) {
-    return this.issuesService.getWorkload(projectId, includeSubtasks === 'true');
+    return this.issuesService.getWorkload(
+      projectId,
+      includeSubtasks === 'true',
+    );
   }
 
   @Get(':issueId')
@@ -165,7 +167,6 @@ export class IssuesController {
   }
 }
 
-
 @UseGuards(JwtAuthGuard, ProjectMemberGuard)
 @Controller('projects/:projectId/workload')
 export class WorkloadController {
@@ -176,6 +177,9 @@ export class WorkloadController {
     @Param('projectId') projectId: string,
     @Query('includeSubtasks') includeSubtasks?: string,
   ) {
-    return this.issuesService.getWorkload(projectId, includeSubtasks === 'true');
+    return this.issuesService.getWorkload(
+      projectId,
+      includeSubtasks === 'true',
+    );
   }
 }

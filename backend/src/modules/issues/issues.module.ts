@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { IssuesService } from './issues.service';
-import { IssuesController, BoardController, WorkloadController } from './issues.controller';
+import {
+  IssuesController,
+  BoardController,
+  WorkloadController,
+} from './issues.controller';
 import { DatabaseModule } from '../../database/database.module';
 import { AuthModule } from '../auth/auth.module';
 import { CommentsModule } from '../comments/comments.module';
