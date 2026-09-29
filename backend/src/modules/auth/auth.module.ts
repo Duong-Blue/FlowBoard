@@ -8,6 +8,8 @@ import { OAuthController } from './oauth/oauth.controller';
 import { GitHubAdapter } from './oauth/adapters/github.adapter';
 import { GoogleAdapter } from './oauth/adapters/google.adapter';
 
+import { MailerModule } from '../mailer/mailer.module';
+
 @Module({
   imports: [
     forwardRef(() => UsersModule),
@@ -17,13 +19,9 @@ import { GoogleAdapter } from './oauth/adapters/google.adapter';
         signOptions: { expiresIn: '15m' },
       }),
     }),
+    MailerModule,
   ],
-  providers: [
-    AuthService,
-    OAuthService,
-    GitHubAdapter,
-    GoogleAdapter,
-  ],
+  providers: [AuthService, OAuthService, GitHubAdapter, GoogleAdapter],
   controllers: [AuthController, OAuthController],
   exports: [AuthService, JwtModule],
 })
