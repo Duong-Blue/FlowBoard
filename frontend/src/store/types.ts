@@ -63,6 +63,14 @@ export interface Member {
   name: string;
   email: string;
   role: string;
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    displayName?: string | null;
+    email: string;
+    avatarUrl?: string | null;
+  };
 }
 
 export interface Invitation {
@@ -70,6 +78,10 @@ export interface Invitation {
   email: string;
   role: string;
   orgId: string;
+  expiresAt?: string;
+  acceptedAt?: string | null;
+  revokedAt?: string | null;
+  declinedAt?: string | null;
 }
 
 export interface IssueUser {
