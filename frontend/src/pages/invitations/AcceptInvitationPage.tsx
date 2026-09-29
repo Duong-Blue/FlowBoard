@@ -1,18 +1,34 @@
-import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { acceptInvitation } from '../../services/invitationService';
+import { acceptInvitation, declineInvitation } from '../../services/invitationService';
 import { Button } from '../../components/ui/button';
+import { useAppSelector } from '../../store';
+import { toast } from 'sonner';
 
 export default function AcceptInvitationPage() {
   const { t } = useTranslation(['workspace', 'common']);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const token = searchParams.get('token');
   const orgId = searchParams.get('orgId');
+
+  const { isAuthenticated, user: currentUser } = useAppSelector((state) => state.auth);
   
   const [accepting, setAccepting] = useState(false);
+  const [declining, setDeclining] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser) {
+      navigate('/login', { state: { from: location } });
+    }
+  }, [isAuthenticated, currentUser, navigate, location]);
+
+  if (!isAuthenticated || !currentUser) {
+    return null;
+  }
 
   const handleAccept = async () => {
     if (!token || !orgId) return;
@@ -21,10 +37,30 @@ export default function AcceptInvitationPage() {
       setAccepting(true);
       setError(null);
       await acceptInvitation(orgId, token);
+      toast.success(t('common:status.success'));
       navigate(`/workspace/orgs/${orgId}`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t('common:status.error'));
+      const message = err instanceof Error ? err.message : t('common:status.error');
+      setError(message);
+      toast.error(message);
       setAccepting(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    if (!token || !orgId) return;
+
+    try {
+      setDeclining(true);
+      setError(null);
+      await declineInvitation(orgId, token);
+      toast.success((t as any)('invitations.declineSuccess') || 'Invitation declined');
+      navigate('/workspace');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : t('common:status.error');
+      setError(message);
+      toast.error(message);
+      setDeclining(false);
     }
   };
 
@@ -60,14 +96,23 @@ export default function AcceptInvitationPage() {
         </div>
       )}
 
-      <div className="mt-8 space-y-6">
+      <div className="mt-8 flex gap-4">
         <Button
           onClick={handleAccept}
-          disabled={accepting || !token}
-          className="w-full"
+          disabled={accepting || declining || !token}
+          className="flex-1"
           size="default"
         >
           {accepting ? t('common:buttons.submitting') : t('invitations.acceptButton')}
+        </Button>
+        <Button
+          onClick={handleDecline}
+          disabled={accepting || declining || !token}
+          variant="outline"
+          className="flex-1 text-slate-700 dark:text-slate-200"
+          size="default"
+        >
+          {declining ? t('common:buttons.submitting') : (t('invitations.rejectButton') || 'Decline Invitation')}
         </Button>
       </div>
     </div>

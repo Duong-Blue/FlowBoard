@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getInvitations, sendInvitation, revokeInvitation } from '../../services/invitationService';
+import { getOrgMembers } from '../../services/memberService';
+import { useAppSelector } from '../../store';
 import type { Invitation } from '../../store/types';
 
 import { AlertCircle, Mail } from 'lucide-react';
@@ -19,7 +21,10 @@ import { EmptyState } from '../../components/shared/EmptyState';
 export default function InvitationsPage() {
   const { t } = useTranslation(['workspace', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -31,10 +36,18 @@ export default function InvitationsPage() {
   useEffect(() => {
     if (!orgId) return;
     let isMounted = true;
-    getInvitations(orgId)
-      .then((data) => {
+
+    Promise.all([
+      getInvitations(orgId),
+      getOrgMembers(orgId).catch(() => [])
+    ])
+      .then(([invData, memberData]) => {
         if (isMounted) {
-          setInvitations(data);
+          setInvitations(invData);
+          const currentMember = memberData.find((m) => m.userId === currentUser?.id);
+          if (currentMember) {
+            setCurrentUserRole(currentMember.role);
+          }
           setError(null);
           setLoading(false);
         }
@@ -45,10 +58,11 @@ export default function InvitationsPage() {
           setLoading(false);
         }
       });
+
     return () => {
       isMounted = false;
     };
-  }, [orgId, t]);
+  }, [orgId, currentUser?.id, t]);
 
   const loadInvitations = async () => {
     if (!orgId) return;
@@ -92,42 +106,46 @@ export default function InvitationsPage() {
   if (loading) return <PageLoader text={t('common:status.loading')} />;
   if (error) return <EmptyState icon={AlertCircle} title={t('common:status.error')} description={error} />;
 
+  const canInvite = currentUserRole !== 'MEMBER';
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6 text-slate-900">{t('invitations.title')}</h1>
       
-      <div className="bg-white rounded-lg shadow border border-slate-200 p-6 mb-8">
-        <h2 className="text-lg font-medium mb-4 text-slate-900">{t('orgMembers.inviteMember')}</h2>
-        {sendError && <div className="text-red-600 text-sm mb-4">{sendError}</div>}
-        <form onSubmit={handleSend} className="flex gap-3 items-end">
-          <div className="flex-1 space-y-2">
-            <Label htmlFor="email">{t('orgMembers.columns.email')}</Label>
-            <Input
-              type="email"
-              id="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t('orgMembers.emailPlaceholder')}
-            />
-          </div>
-          <div className="w-[180px] space-y-2">
-            <Label htmlFor="role">{t('orgMembers.columns.role')}</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger id="role">
-                <SelectValue placeholder={t('orgMembers.columns.role')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="MEMBER">{t('orgMembers.roleMember')}</SelectItem>
-                <SelectItem value="ADMIN">{t('orgMembers.roleAdmin')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button type="submit" disabled={sending}>
-            {sending ? t('common:buttons.submitting') : t('orgMembers.sendInvite')}
-          </Button>
-        </form>
-      </div>
+      {canInvite && (
+        <div className="bg-white rounded-lg shadow border border-slate-200 p-6 mb-8">
+          <h2 className="text-lg font-medium mb-4 text-slate-900">{t('orgMembers.inviteMember')}</h2>
+          {sendError && <div className="text-red-600 text-sm mb-4">{sendError}</div>}
+          <form onSubmit={handleSend} className="flex gap-3 items-end">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="email">{t('orgMembers.columns.email')}</Label>
+              <Input
+                type="email"
+                id="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t('orgMembers.emailPlaceholder')}
+              />
+            </div>
+            <div className="w-[180px] space-y-2">
+              <Label htmlFor="role">{t('orgMembers.columns.role')}</Label>
+              <Select value={role} onValueChange={setRole}>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder={t('orgMembers.columns.role')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MEMBER">{t('orgMembers.roleMember')}</SelectItem>
+                  <SelectItem value="ADMIN">{t('orgMembers.roleAdmin')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" disabled={sending}>
+              {sending ? t('common:buttons.submitting') : t('orgMembers.sendInvite')}
+            </Button>
+          </form>
+        </div>
+      )}
 
       <div className="bg-white rounded-lg shadow border border-slate-200">
         <h2 className="text-lg font-medium p-6 border-b border-slate-200 text-slate-900">{t('invitations.pending')}</h2>
@@ -142,32 +160,43 @@ export default function InvitationsPage() {
                 <tr>
                   <th className="px-6 py-3 font-medium">{t('orgMembers.columns.email')}</th>
                   <th className="px-6 py-3 font-medium">{t('orgMembers.columns.role')}</th>
-                  <th className="px-6 py-3 font-medium">{t('common:labels.actions')}</th>
+                  <th className="px-6 py-3 font-medium">{(t as any)('common:labels.status') || 'Status'}</th>
+                  <th className="px-6 py-3 font-medium">Expires At</th>
                   <th className="px-6 py-3 font-medium text-right">{t('common:labels.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {invitations.map((invitation) => (
-                  <tr key={invitation.id} className="bg-white hover:bg-slate-50/50">
-                    <td className="px-6 py-4 font-medium text-slate-900">{invitation.email}</td>
-                    <td className="px-6 py-4">
-                      <SemanticBadge status={invitation.role}>{invitation.role}</SemanticBadge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <SemanticBadge status="pending">{t('common:status.pending')}</SemanticBadge>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRevoke(invitation.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        {t('common:buttons.revoke')}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {invitations.map((invitation) => {
+                  const isExpired = invitation.expiresAt ? new Date(invitation.expiresAt) < new Date() : false;
+                  return (
+                    <tr key={invitation.id} className="bg-white hover:bg-slate-50/50">
+                      <td className="px-6 py-4 font-medium text-slate-900">{invitation.email}</td>
+                      <td className="px-6 py-4">
+                        <SemanticBadge status={invitation.role}>{invitation.role}</SemanticBadge>
+                      </td>
+                      <td className="px-6 py-4">
+                        {isExpired ? (
+                          <SemanticBadge status="expired">EXPIRED</SemanticBadge>
+                        ) : (
+                          <SemanticBadge status="pending">{t('common:status.pending')}</SemanticBadge>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-slate-500">
+                        {invitation.expiresAt ? new Date(invitation.expiresAt).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRevoke(invitation.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          {t('common:buttons.revoke')}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -100,17 +100,23 @@ export default function OrgMembersPage() {
             const isSelf = member.userId === currentUser?.id;
             const canManage = isOwnerOrAdmin && !isSelf && (isOwner || member.role !== 'OWNER');
 
+            const displayName = member.user?.displayName || 
+              `${member.user?.firstName || ''} ${member.user?.lastName || ''}`.trim() || 
+              member.name;
+            const email = member.user?.email || member.email;
+            const avatarLetter = displayName?.charAt(0).toUpperCase() || '?';
+
             return (
               <div key={member.userId} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="h-7 w-7 text-xs bg-slate-100 text-slate-700 rounded-full flex items-center justify-center font-medium">
-                    {member.name?.charAt(0).toUpperCase() || '?'}
+                    {avatarLetter}
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium text-slate-900">
-                      {member.name} {isSelf && <span className="text-slate-500 font-normal">{t('orgMembers.you')}</span>}
+                      {displayName} {isSelf && <span className="text-slate-500 font-normal">{t('orgMembers.you')}</span>}
                     </span>
-                    <span className="text-xs text-slate-500">{member.email}</span>
+                    <span className="text-xs text-slate-500">{email}</span>
                   </div>
                 </div>
                 
