@@ -308,29 +308,29 @@ export function GlobalSearchModal() {
   return (
     <Dialog open={isModalOpen} onOpenChange={(open) => dispatch(setModalOpen(open))}>
       <DialogContent
-        className="max-w-2xl p-0 gap-0 overflow-hidden bg-white border border-slate-200 shadow-2xl rounded-xl"
+        className="max-w-2xl p-0 gap-0 overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 shadow-2xl rounded-xl"
         onKeyDown={handleKeyDownModal}
       >
         <DialogTitle className="sr-only">Global Search</DialogTitle>
 
         {/* Input Bar */}
-        <div className="relative flex items-center px-4 border-b border-slate-200 bg-slate-50/50">
-          <Search className="w-5 h-5 text-slate-400 shrink-0 mr-3" />
+        <div className="relative flex items-center px-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <Search className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 mr-3" />
           <input
             ref={inputRef}
             type="text"
-            className="w-full py-4 bg-transparent text-slate-900 placeholder-slate-400 text-base outline-none font-medium"
+            className="w-full py-4 bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-base outline-none font-medium"
             placeholder="Search issues, projects, users... (e.g. PROJ-123 or #12)"
             value={query}
             onChange={(e) => setQueryText(e.target.value)}
           />
           {isLoading ? (
-            <Loader2 className="w-5 h-5 text-blue-600 animate-spin shrink-0 ml-2" />
+            <Loader2 className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin shrink-0 ml-2" />
           ) : query ? (
             <button
               type="button"
               onClick={() => setQueryText('')}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+              className="p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -338,26 +338,26 @@ export function GlobalSearchModal() {
         </div>
 
         {/* Modal Body */}
-        <div className="max-h-[60vh] overflow-y-auto p-2 space-y-4 text-slate-900">
+        <div className="max-h-[60vh] overflow-y-auto p-2 space-y-4 text-slate-900 dark:text-slate-100">
           {/* 1. Empty Query State -> Recent Queries */}
           {!query.trim() && (
             <div className="py-2 px-2">
-              <div className="flex items-center justify-between pb-2 mb-1 px-2 border-b border-slate-100">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" /> Recent Searches
+              <div className="flex items-center justify-between pb-2 mb-1 px-2 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" /> Recent Searches
                 </span>
                 {recentQueries.length > 0 && (
                   <button
                     type="button"
                     onClick={() => dispatch(clearRecentQueries())}
-                    className="text-xs text-slate-400 hover:text-red-600 flex items-center gap-1 transition-colors"
+                    className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 flex items-center gap-1 transition-colors"
                   >
                     <Trash2 className="w-3 h-3" /> Clear
                   </button>
                 )}
               </div>
               {recentQueries.length === 0 ? (
-                <div className="py-8 text-center text-slate-400 text-sm">
+                <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-sm">
                   No recent searches yet
                 </div>
               ) : (
@@ -372,15 +372,15 @@ export function GlobalSearchModal() {
                         onMouseEnter={() => idx >= 0 && setSelectedIndex(idx)}
                         className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors ${
                           isSelected
-                            ? 'bg-blue-50 text-blue-700 font-medium'
-                            : 'text-slate-700 hover:bg-slate-100'
+                            ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-medium'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
                         <span className="flex items-center gap-2 truncate">
-                          <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                          <Clock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                           {rq}
                         </span>
-                        <CornerDownLeft className="w-3.5 h-3.5 text-slate-400 opacity-60" />
+                        <CornerDownLeft className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 opacity-60" />
                       </div>
                     );
                   })}
@@ -391,7 +391,7 @@ export function GlobalSearchModal() {
 
           {/* 2. Single Character Hint */}
           {query.trim().length === 1 && (
-            <div className="py-8 text-center text-slate-400 text-sm">
+            <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-sm">
               Type at least 2 characters to search...
             </div>
           )}
@@ -405,8 +405,8 @@ export function GlobalSearchModal() {
                 suggestions.projects.length === 0 &&
                 suggestions.users.length === 0 && (
                   <div className="py-12 text-center">
-                    <p className="text-slate-500 font-medium">No results found for "{query}"</p>
-                    <p className="text-slate-400 text-xs mt-1">
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">No results found for "{query}"</p>
+                    <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">
                       Try searching with different keywords or check spelling.
                     </p>
                   </div>
@@ -415,8 +415,8 @@ export function GlobalSearchModal() {
               {/* Exact Match */}
               {suggestions.exactMatch && (
                 <div className="px-2">
-                  <div className="px-2 pb-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Exact Match
+                  <div className="px-2 pb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Exact Match
                   </div>
                   {(() => {
                     const exact = suggestions.exactMatch!;
@@ -428,16 +428,16 @@ export function GlobalSearchModal() {
                         onMouseEnter={() => idx >= 0 && setSelectedIndex(idx)}
                         className={`p-3 rounded-lg border cursor-pointer transition-all ${
                           isSelected
-                            ? 'bg-amber-50 border-amber-300 shadow-sm'
-                            : 'bg-amber-50/50 border-amber-200 hover:bg-amber-50'
+                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 shadow-sm'
+                            : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60 hover:bg-amber-50 dark:hover:bg-amber-950/40'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-200 text-amber-900 border border-amber-300 shrink-0">
+                            <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-100 border border-amber-300 dark:border-amber-700 shrink-0">
                               {exact.key}
                             </span>
-                            <span className="font-semibold text-slate-900 truncate">
+                            <span className="font-semibold text-slate-900 dark:text-slate-100 truncate">
                               {exact.title}
                             </span>
                           </div>
@@ -467,8 +467,8 @@ export function GlobalSearchModal() {
               {/* Issues */}
               {suggestions.issues.length > 0 && (
                 <div className="px-2">
-                  <div className="px-2 pb-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-blue-500" /> Issues
+                  <div className="px-2 pb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" /> Issues
                   </div>
                   <div className="space-y-0.5">
                     {suggestions.issues.map((issue) => {
@@ -484,19 +484,19 @@ export function GlobalSearchModal() {
                           onMouseEnter={() => idx >= 0 && setSelectedIndex(idx)}
                           className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors ${
                             isSelected
-                              ? 'bg-blue-50 text-blue-900 font-medium'
-                              : 'text-slate-800 hover:bg-slate-100'
+                              ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-200 font-medium'
+                              : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="text-xs font-mono font-semibold text-slate-500 shrink-0">
+                            <span className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400 shrink-0">
                               {issue.key}
                             </span>
                             <span className="truncate">{issue.title}</span>
                           </div>
                           <div className="flex items-center gap-2 shrink-0 ml-2">
                             {issue.projectName && (
-                              <span className="text-xs text-slate-400 hidden sm:inline truncate max-w-[120px]">
+                              <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline truncate max-w-[120px]">
                                 {issue.projectName}
                               </span>
                             )}
@@ -527,8 +527,8 @@ export function GlobalSearchModal() {
               {/* Projects */}
               {suggestions.projects.length > 0 && (
                 <div className="px-2">
-                  <div className="px-2 pb-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <Folder className="w-3.5 h-3.5 text-indigo-500" /> Projects
+                  <div className="px-2 pb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Folder className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" /> Projects
                   </div>
                   <div className="space-y-0.5">
                     {suggestions.projects.map((proj) => {
@@ -541,15 +541,15 @@ export function GlobalSearchModal() {
                           onMouseEnter={() => idx >= 0 && setSelectedIndex(idx)}
                           className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors ${
                             isSelected
-                              ? 'bg-blue-50 text-blue-900 font-medium'
-                              : 'text-slate-800 hover:bg-slate-100'
+                              ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-200 font-medium'
+                              : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <Folder className="w-4 h-4 text-indigo-500 shrink-0" />
+                            <Folder className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0" />
                             <span className="truncate">{proj.name}</span>
                           </div>
-                          <span className="text-xs font-mono text-slate-400 shrink-0">
+                          <span className="text-xs font-mono text-slate-400 dark:text-slate-500 shrink-0">
                             {proj.key}
                           </span>
                         </div>
@@ -562,8 +562,8 @@ export function GlobalSearchModal() {
               {/* Users */}
               {suggestions.users.length > 0 && (
                 <div className="px-2">
-                  <div className="px-2 pb-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-emerald-500" /> Users
+                  <div className="px-2 pb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> Users
                   </div>
                   <div className="space-y-0.5">
                     {suggestions.users.map((u) => {
@@ -576,8 +576,8 @@ export function GlobalSearchModal() {
                           onMouseEnter={() => idx >= 0 && setSelectedIndex(idx)}
                           className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors ${
                             isSelected
-                              ? 'bg-blue-50 text-blue-900 font-medium'
-                              : 'text-slate-800 hover:bg-slate-100'
+                              ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-200 font-medium'
+                              : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
@@ -588,11 +588,11 @@ export function GlobalSearchModal() {
                                 className="w-5 h-5 rounded-full object-cover shrink-0"
                               />
                             ) : (
-                              <User className="w-4 h-4 text-emerald-500 shrink-0" />
+                              <User className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
                             )}
                             <span className="truncate">{u.displayName}</span>
                           </div>
-                          <span className="text-xs text-slate-400 truncate max-w-[180px]">
+                          <span className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-[180px]">
                             {u.email}
                           </span>
                         </div>
@@ -603,7 +603,7 @@ export function GlobalSearchModal() {
               )}
 
               {/* View All Results Button */}
-              <div className="p-2 border-t border-slate-100">
+              <div className="p-2 border-t border-slate-100 dark:border-slate-800">
                 {(() => {
                   const idx = getItemIndex('action-view-all');
                   const isSelected = idx === selectedIndex;
@@ -614,8 +614,8 @@ export function GlobalSearchModal() {
                       onMouseEnter={() => idx >= 0 && setSelectedIndex(idx)}
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         isSelected
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          ? 'bg-blue-600 dark:bg-blue-600 text-white'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       <span>View all results for "{query}"</span>
@@ -629,26 +629,26 @@ export function GlobalSearchModal() {
         </div>
 
         {/* Footer shortcuts hint */}
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-400">
+        <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-mono text-[10px]">
+              <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-mono text-[10px] text-slate-600 dark:text-slate-400">
                 ↑
               </kbd>
-              <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-mono text-[10px]">
+              <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-mono text-[10px] text-slate-600 dark:text-slate-400">
                 ↓
               </kbd>
               Navigate
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-mono text-[10px]">
+              <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-mono text-[10px] text-slate-600 dark:text-slate-400">
                 ↵
               </kbd>
               Select
             </span>
           </div>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-mono text-[10px]">
+            <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-mono text-[10px] text-slate-600 dark:text-slate-400">
               ESC
             </kbd>
             Close

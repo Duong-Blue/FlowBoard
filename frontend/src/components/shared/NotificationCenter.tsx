@@ -109,12 +109,12 @@ export function NotificationCenter() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
+          className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 cursor-pointer"
           aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications'}
         >
           <Bell size={20} />
           {unreadCount > 0 && (
-            <span className="absolute top-0.5 right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full border-2 border-white shadow-sm">
+            <span className="absolute top-0.5 right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
               {displayUnread}
             </span>
           )}
@@ -123,16 +123,16 @@ export function NotificationCenter() {
 
       <DropdownMenuContent
         align="end"
-        className="w-[380px] max-w-[calc(100vw-2rem)] p-0 shadow-lg border border-slate-200 rounded-xl overflow-hidden bg-white"
+        className="w-[380px] max-w-[calc(100vw-2rem)] p-0 shadow-lg border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-          <h3 className="font-semibold text-sm text-slate-900">{t('sidebar.activity')}</h3>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">{t('sidebar.activity')}</h3>
           {unreadCount > 0 && (
             <button
               type="button"
               onClick={handleMarkAllRead}
-              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors cursor-pointer"
             >
               <CheckCheck size={14} />
               {t('common:buttons.confirm')}
@@ -141,16 +141,16 @@ export function NotificationCenter() {
         </div>
 
         {/* Body */}
-        <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-100">
+        <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
           {loading && items.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500 flex flex-col items-center justify-center gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+            <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-slate-400 dark:text-slate-500" />
               <span>{t('common:status.loading')}</span>
             </div>
           ) : items.length === 0 ? (
-            <div className="p-8 text-center flex flex-col items-center justify-center text-slate-500 gap-2">
-              <Bell className="h-8 w-8 text-slate-300 stroke-[1.5]" />
-              <span className="text-sm font-medium text-slate-600">{t('common:emptyState.noData')}</span>
+            <div className="p-8 text-center flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 gap-2">
+              <Bell className="h-8 w-8 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{t('common:emptyState.noData')}</span>
             </div>
           ) : (
             items.map((item) => (
@@ -158,8 +158,8 @@ export function NotificationCenter() {
                 key={item.id}
                 onClick={() => handleItemClick(item)}
                 className={cn(
-                  'flex items-start gap-3 p-3 text-left transition-colors cursor-pointer hover:bg-slate-50',
-                  !item.isRead && 'bg-blue-50/40'
+                  'flex items-start gap-3 p-3 text-left transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60',
+                  !item.isRead && 'bg-blue-50/40 dark:bg-slate-800/30'
                 )}
               >
                 {/* Avatar */}
@@ -167,7 +167,7 @@ export function NotificationCenter() {
                   {item.actor?.avatarUrl && (
                     <AvatarImage src={item.actor.avatarUrl} alt={getActorName(item.actor)} />
                   )}
-                  <AvatarFallback className="bg-slate-200 text-slate-700 text-xs font-medium">
+                  <AvatarFallback className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium">
                     {getInitials(item.actor)}
                   </AvatarFallback>
                 </Avatar>
@@ -175,15 +175,15 @@ export function NotificationCenter() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-semibold text-slate-900 truncate">
+                    <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
                       {item.title || 'Notification'}
                     </p>
-                    <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap shrink-0">
                       {formatRelativeTime(item.createdAt)}
                     </span>
                   </div>
                   {item.message && (
-                    <p className="text-xs text-slate-600 mt-0.5 line-clamp-2 break-words">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 line-clamp-2 break-words">
                       {item.message}
                     </p>
                   )}
@@ -192,7 +192,7 @@ export function NotificationCenter() {
                 {/* Unread indicator */}
                 {!item.isRead && (
                   <span
-                    className="h-2 w-2 rounded-full bg-blue-600 shrink-0 mt-1.5"
+                    className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-500 shrink-0 mt-1.5"
                     aria-hidden="true"
                   />
                 )}
