@@ -84,7 +84,19 @@ export class ActivityService {
     };
   }
 
-  async findOrgActivities(orgId: string, queryDto: QueryActivityDto) {
+  private async resolveOrgId(orgIdOrSlug: string): Promise<string> {
+    if (!this.prisma.organization?.findFirst) {
+      return orgIdOrSlug;
+    }
+    const org = await this.prisma.organization.findFirst({
+      where: { OR: [{ id: orgIdOrSlug }, { slug: orgIdOrSlug }] },
+      select: { id: true },
+    });
+    return org?.id || orgIdOrSlug;
+  }
+
+  async findOrgActivities(orgIdOrSlug: string, queryDto: QueryActivityDto) {
+    const orgId = await this.resolveOrgId(orgIdOrSlug);
     const page = queryDto.page || 1;
     const limit = queryDto.limit || 20;
     const skip = (page - 1) * limit;
