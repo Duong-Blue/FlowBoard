@@ -8,7 +8,13 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { ActivityModule } from '../activity/activity.module';
 
 @Module({
-  imports: [DatabaseModule, OrgMembersModule, AuthModule, NotificationsModule, ActivityModule],
+  imports: [
+    DatabaseModule,
+    OrgMembersModule,
+    AuthModule,
+    NotificationsModule,
+    ActivityModule,
+  ],
   controllers: [ProjectMembersController],
   providers: [ProjectMembersService],
 })

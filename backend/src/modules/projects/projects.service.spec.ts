@@ -6,6 +6,8 @@ import { ActivityModule } from '../activity/activity.module';
 import { ForbiddenException } from '@nestjs/common';
 import { vi } from 'vitest';
 
+import { ActivityService } from '../activity/activity.service';
+
 describe('ProjectsService', () => {
   let service: ProjectsService;
   let prisma: PrismaService;
@@ -14,7 +16,6 @@ describe('ProjectsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [ActivityModule],
       providers: [
         ProjectsService,
         {
@@ -35,6 +36,12 @@ describe('ProjectsService', () => {
             createDefaultWorkflow: vi.fn(),
           },
         },
+        {
+          provide: ActivityService,
+          useValue: {
+            createActivity: vi.fn().mockResolvedValue(null),
+          },
+        }
       ],
     }).compile();
 

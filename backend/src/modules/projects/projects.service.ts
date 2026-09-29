@@ -43,21 +43,23 @@ export class ProjectsService {
       await tx.projectMember.create({
         data: { projectId: p.id, userId, role: 'ADMIN' },
       });
-      
+
       await this.workflowsService.createDefaultWorkflow(p.id, tx);
-      
+
       return p;
     });
 
     // ponytail: fire-and-forget, failure logged
-    this.activityService.createActivity({
-      type: 'PROJECT_CREATED',
-      actorId: userId,
-      organizationId: project.organizationId,
-      projectId: project.id,
-      entityType: 'PROJECT',
-      metadata: { projectName: project.name, projectKey: project.key },
-    }).catch(err => console.error('Activity logging failed', err));
+    this.activityService
+      .createActivity({
+        type: 'PROJECT_CREATED',
+        actorId: userId,
+        organizationId: project.organizationId,
+        projectId: project.id,
+        entityType: 'PROJECT',
+        metadata: { projectName: project.name, projectKey: project.key },
+      })
+      .catch((err) => console.error('Activity logging failed', err));
 
     return project;
   }
@@ -89,7 +91,10 @@ export class ProjectsService {
 
   async update(projectId: string, userId: string, dto: UpdateProjectDto) {
     const targetProject = await this.findOne(projectId, userId);
-    if (targetProject.members.find(member => member.userId === userId)?.role !== 'ADMIN') {
+    if (
+      targetProject.members.find((member) => member.userId === userId)?.role !==
+      'ADMIN'
+    ) {
       throw new ForbiddenException('Only ADMIN users can update projects');
     }
     return this.prisma.project.update({
@@ -100,7 +105,10 @@ export class ProjectsService {
 
   async delete(projectId: string, userId: string) {
     const targetProject = await this.findOne(projectId, userId);
-    if (targetProject.members.find(member => member.userId === userId)?.role !== 'ADMIN') {
+    if (
+      targetProject.members.find((member) => member.userId === userId)?.role !==
+      'ADMIN'
+    ) {
       throw new ForbiddenException('Only ADMIN users can delete projects');
     }
     return this.prisma.project.delete({ where: { id: targetProject.id } });
