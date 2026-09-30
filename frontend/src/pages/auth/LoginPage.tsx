@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch } from '../../store';
 import { setCredentials } from '../../store/slices/authSlice';
 import { apiPost } from '../../utils/api_helper';
@@ -14,6 +15,7 @@ import { toast } from 'sonner';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -76,19 +78,30 @@ export default function LoginPage() {
               <Label htmlFor="password">{t('login.passwordLabel')}</Label>
               <Link
                 to="/forgot-password"
-                className="text-xs font-semibold text-primary hover:underline dark:text-slate-400 dark:hover:text-slate-200"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
               >
                 {t('login.forgotPasswordLink')}
               </Link>
             </div>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                required
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
@@ -98,7 +111,7 @@ export default function LoginPage() {
           <OAuthButtons disabled={isLoading} />
           <div className="text-center text-sm text-slate-500 dark:text-slate-400 pt-2">
             {t('login.noAccount')}{' '}
-            <Link to="/register" className="font-semibold text-primary hover:underline dark:text-slate-400 dark:hover:text-slate-200">
+            <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300">
               {t('login.registerLink')}
             </Link>
           </div>

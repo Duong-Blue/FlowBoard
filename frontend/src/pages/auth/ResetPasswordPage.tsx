@@ -84,7 +84,7 @@ export default function ResetPasswordPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">{t('resetPassword.newPasswordLabel')}</Label>
+            <Label htmlFor="confirmPassword">{t('resetPassword.confirmPasswordLabel')}</Label>
             <Input
               id="confirmPassword"
               type="password"
