@@ -5,7 +5,8 @@ import { getProject } from '../services/projectService';
 import { type Project, type RootState } from '../store/types';
 
 export const useResolvedProject = () => {
-  const { orgId, projectKey } = useParams<{ orgId: string; projectKey: string }>();
+  const { orgId: rawOrgId, orgSlug, projectKey } = useParams<{ orgId?: string; orgSlug?: string; projectKey?: string }>();
+  const orgId = orgSlug || rawOrgId;
   const orgs = useAppSelector((state: RootState) => state.org.list);
   const projects = useAppSelector((state: RootState) => state.project.list);
 

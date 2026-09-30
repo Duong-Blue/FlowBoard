@@ -15,9 +15,8 @@ import {
   X,
   Briefcase,
   Home,
-  ListTodo,
-  Sliders,
-  Calendar as CalendarIcon,
+  Map,
+  SquareKanban,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -351,49 +350,45 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Project Navigation Items */}
+          {/* Project Navigation Items: Strictly 4 primary project links (Overview, Roadmap, Work, Settings) */}
           {currentProjectKey ? (
             <div className="space-y-1">
               <SidebarNavItem
-                to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/issues?view=list`}
-                icon={ListTodo}
-                label={t('sidebar.issuesList')}
+                to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/overview`}
+                icon={LayoutDashboard}
+                label={t('sidebar.overview', { defaultValue: 'Overview' })}
                 isActive={
-                  location.pathname.includes(`/projects/${currentProjectKey}`) &&
-                  location.search.includes('view=list')
+                  location.pathname.includes(`/projects/${currentProjectKey}/overview`) ||
+                  location.pathname === `/workspace/orgs/${orgSlug}/projects/${currentProjectKey}` ||
+                  location.pathname === `/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/`
                 }
                 onClick={closeMobileMenu}
                 isCollapsed={isCollapsed}
               />
               <SidebarNavItem
-                to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/issues`}
-                icon={Kanban}
-                label={t('sidebar.board')}
-                isActive={
-                  (location.pathname.includes(`/projects/${currentProjectKey}/issues`) ||
-                    location.pathname.includes(`/projects/${currentProjectKey}/board`)) &&
-                  !location.search.includes('view=list') &&
-                  !location.search.includes('view=calendar') &&
-                  !location.pathname.includes(`/projects/${currentProjectKey}/calendar`)
-                }
+                to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/roadmap`}
+                icon={Map}
+                label={t('sidebar.roadmap', { defaultValue: 'Roadmap' })}
+                isActive={location.pathname.includes(`/projects/${currentProjectKey}/roadmap`)}
                 onClick={closeMobileMenu}
                 isCollapsed={isCollapsed}
               />
               <SidebarNavItem
-                to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/calendar`}
-                icon={CalendarIcon}
-                label={t('sidebar.calendar')}
+                to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/work`}
+                icon={SquareKanban}
+                label={t('sidebar.work', { defaultValue: 'Work' })}
                 isActive={
-                  location.pathname.includes(`/projects/${currentProjectKey}/calendar`) ||
-                  location.search.includes('view=calendar')
+                  location.pathname.includes(`/projects/${currentProjectKey}/work`) ||
+                  location.pathname.includes(`/projects/${currentProjectKey}/issues`) ||
+                  location.pathname.includes(`/projects/${currentProjectKey}/board`)
                 }
                 onClick={closeMobileMenu}
                 isCollapsed={isCollapsed}
               />
               <SidebarNavItem
                 to={`/workspace/orgs/${orgSlug}/projects/${currentProjectKey}/settings`}
-                icon={Sliders}
-                label={t('sidebar.projectSettings')}
+                icon={Settings}
+                label={t('sidebar.settings', { defaultValue: 'Settings' })}
                 isActive={location.pathname.includes(`/projects/${currentProjectKey}/settings`)}
                 onClick={closeMobileMenu}
                 isCollapsed={isCollapsed}

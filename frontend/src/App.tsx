@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, useSearchParams, Outlet, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom';
 import PublicLayout from './layouts/PublicLayout';
 import AuthLayout from './layouts/AuthLayout';
 import WorkspaceLayout from './layouts/WorkspaceLayout';
@@ -12,10 +12,9 @@ import ProjectListPage from './pages/projects/ProjectListPage';
 import CreateProjectPage from './pages/projects/CreateProjectPage';
 import ProjectSettingsPage from './pages/projects/ProjectSettingsPage';
 import ProjectMembersPage from './pages/projects/ProjectMembersPage';
-import IssueListPage from './pages/projects/IssueListPage';
-import BoardPage from './pages/projects/BoardPage';
-import ProjectCalendarPage from './pages/projects/ProjectCalendarPage';
-import { IssueDetailPage } from './features/issues/pages/IssueDetailPage';
+import { ProjectOverviewPage } from './pages/projects/ProjectOverviewPage';
+import { ProjectRoadmapPage } from './pages/projects/ProjectRoadmapPage';
+import { ProjectWorkPage } from './pages/projects/ProjectWorkPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
@@ -40,28 +39,6 @@ import {
   SecuritySettings,
   AppearanceSettings,
 } from './features/settings';
-
-function ProjectIssuesLayout({ defaultView }: { defaultView?: 'board' | 'list' | 'calendar' }) {
-  const [searchParams] = useSearchParams();
-  const viewParam = searchParams.get('view');
-  const activeView = viewParam || defaultView;
-
-  const baseView =
-    activeView === 'list' ? (
-      <IssueListPage />
-    ) : activeView === 'calendar' ? (
-      <ProjectCalendarPage />
-    ) : (
-      <BoardPage />
-    );
-
-  return (
-    <>
-      {baseView}
-      <Outlet />
-    </>
-  );
-}
 
 const router = createBrowserRouter([
   {
@@ -108,39 +85,20 @@ const router = createBrowserRouter([
               { path: 'orgs/:orgId/projects', element: <ProjectListPage /> },
               { path: 'orgs/:orgId/projects/new', element: <CreateProjectPage /> },
               {
-                path: 'orgs/:orgId/projects/:projectKey',
-                element: <ProjectIssuesLayout />,
+                path: 'orgs/:orgSlug/projects/:projectKey',
                 children: [
-                  { index: true, element: null },
-                  { path: 'issues/:issueId', element: <IssueDetailPage /> },
+                  { index: true, element: <Navigate to="overview" replace /> },
+                  { path: 'overview', element: <ProjectOverviewPage /> },
+                  { path: 'roadmap', element: <ProjectRoadmapPage /> },
+                  { path: 'work', element: <ProjectWorkPage /> },
+                  { path: 'work/issues/:issueId', element: <ProjectWorkPage /> },
+                  { path: 'settings/*', element: <ProjectSettingsPage /> },
+                  { path: 'members', element: <ProjectMembersPage /> },
+                  { path: 'issues', element: <Navigate to="../work?view=list" replace /> },
+                  { path: 'board', element: <Navigate to="../work?view=board" replace /> },
+                  { path: 'calendar', element: <Navigate to="../work?view=calendar" replace /> },
                 ],
               },
-              {
-                path: 'orgs/:orgId/projects/:projectKey/issues',
-                element: <ProjectIssuesLayout />,
-                children: [
-                  { index: true, element: null },
-                  { path: ':issueId', element: <IssueDetailPage /> },
-                ],
-              },
-              {
-                path: 'orgs/:orgId/projects/:projectKey/board',
-                element: <ProjectIssuesLayout defaultView="board" />,
-                children: [
-                  { index: true, element: null },
-                  { path: 'issues/:issueId', element: <IssueDetailPage /> },
-                ],
-              },
-              {
-                path: 'orgs/:orgId/projects/:projectKey/calendar',
-                element: <ProjectIssuesLayout defaultView="calendar" />,
-                children: [
-                  { index: true, element: null },
-                  { path: 'issues/:issueId', element: <IssueDetailPage /> },
-                ],
-              },
-              { path: 'orgs/:orgId/projects/:projectKey/members', element: <ProjectMembersPage /> },
-              { path: 'orgs/:orgId/projects/:projectKey/settings', element: <ProjectSettingsPage /> },
               { path: 'orgs/:orgId/members', element: <OrgMembersPage /> },
               { path: 'orgs/:orgId/invitations', element: <InvitationsPage /> },
               { path: 'orgs/:orgId/settings', element: <OrgSettingsPage /> },

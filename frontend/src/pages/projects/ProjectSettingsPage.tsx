@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Sliders, Workflow, ArrowLeft } from 'lucide-react';
+import { Sliders, Users, Workflow, Tag, Bell, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useAppSelector } from '../../store';
 import { getOrgMembers, getProjectMembers } from '../../services/memberService';
 import { Button } from '../../components/ui/button';
@@ -10,8 +10,16 @@ import { ProjectPageShell } from '@/components/shared/ProjectPageShell';
 import NotFound from '../NotFound';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { GeneralSettingsTab } from '@/features/projects/components/GeneralSettingsTab';
+import { ProjectMembersTab } from '@/features/projects/components/ProjectMembersTab';
 import { WorkflowSettingsTab } from '@/features/projects/components/WorkflowSettingsTab';
+import { IssueTypesTab } from '@/features/projects/components/IssueTypesTab';
+import { NotificationsTab } from '@/features/projects/components/NotificationsTab';
+import { DangerZoneTab } from '@/features/projects/components/DangerZoneTab';
 import type { Member, Project } from '../../store/types';
+
+export type SettingsTabType = 'general' | 'members' | 'workflow' | 'issuetypes' | 'notifications' | 'danger';
+
+const VALID_TABS: SettingsTabType[] = ['general', 'members', 'workflow', 'issuetypes', 'notifications', 'danger'];
 
 export default function ProjectSettingsPage() {
   const { t } = useTranslation(['workspace', 'common']);
@@ -22,8 +30,8 @@ export default function ProjectSettingsPage() {
   const user = useAppSelector((state) => state.auth.user);
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
 
-  const tabParam = searchParams.get('tab');
-  const activeTab: 'general' | 'workflow' = tabParam === 'workflow' ? 'workflow' : 'general';
+  const tabParam = searchParams.get('tab') as SettingsTabType;
+  const activeTab: SettingsTabType = VALID_TABS.includes(tabParam) ? tabParam : 'general';
 
   const [localProject, setLocalProject] = useState<Project | null>(null);
   const currentProject = localProject || project;
@@ -32,7 +40,7 @@ export default function ProjectSettingsPage() {
 
   const currentOrgId = orgId || activeOrgId || project?.organizationId || project?.orgId;
 
-  const handleTabChange = (tab: 'general' | 'workflow') => {
+  const handleTabChange = (tab: SettingsTabType) => {
     setSearchParams({ tab }, { replace: true });
   };
 
@@ -71,6 +79,39 @@ export default function ProjectSettingsPage() {
 
   const displayKey = currentProject.key || projectKey;
 
+  const tabs = [
+    {
+      id: 'general' as const,
+      label: t('projects.generalTab', { defaultValue: 'General' }),
+      icon: Sliders,
+    },
+    {
+      id: 'members' as const,
+      label: t('projects.membersTab', { defaultValue: 'Members' }),
+      icon: Users,
+    },
+    {
+      id: 'workflow' as const,
+      label: t('projects.workflowTab', { defaultValue: 'Workflow' }),
+      icon: Workflow,
+    },
+    {
+      id: 'issuetypes' as const,
+      label: t('projects.issueTypesTab', { defaultValue: 'Issue Types' }),
+      icon: Tag,
+    },
+    {
+      id: 'notifications' as const,
+      label: t('projects.notificationsTab', { defaultValue: 'Notifications' }),
+      icon: Bell,
+    },
+    {
+      id: 'danger' as const,
+      label: t('projects.dangerZoneTab', { defaultValue: 'Danger Zone' }),
+      icon: AlertTriangle,
+    },
+  ];
+
   return (
     <ProjectPageShell
       project={currentProject || project}
@@ -91,48 +132,97 @@ export default function ProjectSettingsPage() {
     >
       <div className="space-y-6">
         {/* Tabs Switcher Navigation */}
-        <nav className="flex items-center border-b border-slate-200 gap-2" aria-label={t('projects.settingsTabs', { defaultValue: 'Settings Tabs' })}>
-          <button
-            type="button"
-            aria-current={activeTab === 'general' ? 'page' : undefined}
-            onClick={() => handleTabChange('general')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
-              activeTab === 'general'
-                ? 'border-blue-600 text-blue-600 font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-            }`}
+        <div className="border-b border-slate-200 dark:border-slate-800">
+          <nav
+            role="tablist"
+            className="flex items-center gap-1 sm:gap-2 overflow-x-auto py-1 no-scrollbar"
+            aria-label={t('projects.settingsTabs', { defaultValue: 'Settings Navigation' })}
           >
-            <Sliders className="h-4 w-4" aria-hidden="true" />
-            {t('projects.generalTab')}
-          </button>
+            {tabs.map((tabItem) => {
+              const Icon = tabItem.icon;
+              const isActive = activeTab === tabItem.id;
+              const isDanger = tabItem.id === 'danger';
+              return (
+                <button
+                  key={tabItem.id}
+                  id={`tab-${tabItem.id}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`panel-${tabItem.id}`}
+                  onClick={() => handleTabChange(tabItem.id)}
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-sm font-medium border-b-2 transition-all cursor-pointer whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded-t-md ${
+                    isActive
+                      ? isDanger
+                        ? 'border-red-600 dark:border-red-500 text-red-600 dark:text-red-400 font-semibold bg-red-50/50 dark:bg-red-950/30'
+                        : 'border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 font-semibold bg-blue-50/50 dark:bg-blue-950/30'
+                      : isDanger
+                      ? 'border-transparent text-red-600/70 dark:text-red-400/70 hover:text-red-700 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-800'
+                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
+                >
+                  <Icon
+                    className={`h-4 w-4 shrink-0 ${
+                      isActive
+                        ? isDanger
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-blue-600 dark:text-blue-400'
+                        : isDanger
+                        ? 'text-red-500/70'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
+                    aria-hidden="true"
+                  />
+                  <span>{tabItem.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
-          <button
-            type="button"
-            aria-current={activeTab === 'workflow' ? 'page' : undefined}
-            onClick={() => handleTabChange('workflow')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
-              activeTab === 'workflow'
-                ? 'border-blue-600 text-blue-600 font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-            }`}
-          >
-            <Workflow className="h-4 w-4" aria-hidden="true" />
-            {t('projects.workflowTab')}
-          </button>
-        </nav>
-
-        {/* Tab Panels */}
-        <div className="pt-2">
+        {/* Tab Panel Content */}
+        <div
+          role="tabpanel"
+          id={`panel-${activeTab}`}
+          aria-labelledby={`tab-${activeTab}`}
+          className="pt-1 outline-none"
+        >
           {activeTab === 'general' && (
             <GeneralSettingsTab
               project={currentProject}
               currentOrgId={currentOrgId || ''}
               isAdmin={isAdmin}
               onProjectUpdated={(updated) => setLocalProject(updated)}
+              hideDangerZone={true}
             />
           )}
 
-          {activeTab === 'workflow' && <WorkflowSettingsTab projectId={projectId} isAdmin={isAdmin} />}
+          {activeTab === 'members' && (
+            <ProjectMembersTab
+              projectId={projectId}
+              currentOrgId={currentOrgId || ''}
+              isAdmin={isAdmin}
+            />
+          )}
+
+          {activeTab === 'workflow' && (
+            <WorkflowSettingsTab projectId={projectId} isAdmin={isAdmin} />
+          )}
+
+          {activeTab === 'issuetypes' && <IssueTypesTab />}
+
+          {activeTab === 'notifications' && (
+            <NotificationsTab projectId={projectId} isAdmin={isAdmin} />
+          )}
+
+          {activeTab === 'danger' && (
+            <DangerZoneTab
+              project={currentProject}
+              currentOrgId={currentOrgId || ''}
+              isAdmin={isAdmin}
+              onProjectUpdated={(updated) => setLocalProject(updated)}
+            />
+          )}
         </div>
       </div>
     </ProjectPageShell>

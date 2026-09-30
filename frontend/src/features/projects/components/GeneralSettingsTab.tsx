@@ -27,6 +27,7 @@ interface GeneralSettingsTabProps {
   currentOrgId: string;
   isAdmin: boolean;
   onProjectUpdated?: (updated: Project) => void;
+  hideDangerZone?: boolean;
 }
 
 export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
@@ -34,6 +35,7 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
   currentOrgId,
   isAdmin,
   onProjectUpdated,
+  hideDangerZone = false,
 }) => {
   const { t } = useTranslation(['workspace', 'common']);
   const navigate = useNavigate();
@@ -210,7 +212,7 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
         )}
       </Card>
 
-      {isAdmin && (
+      {isAdmin && !hideDangerZone && (
         <Card className="border border-red-200 bg-red-50/30 dark:bg-red-950/20 dark:border-red-900/50 shadow-sm">
           <CardHeader>
             <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
