@@ -78,6 +78,10 @@ export interface Invitation {
   email: string;
   role: string;
   orgId: string;
+  organizationId?: string;
+  metadata?: any;
+  organization?: { id: string; name: string; slug?: string; logoUrl?: string };
+  invitedBy?: { id: string; firstName?: string; lastName?: string; displayName?: string; avatarUrl?: string };
   expiresAt?: string;
   acceptedAt?: string | null;
   revokedAt?: string | null;
@@ -226,11 +230,12 @@ export interface IssueListResponse {
   };
 }
 
-export type NotificationType = 'ISSUE_ASSIGNED' | 'COMMENT_MENTION' | 'PROJECT_MEMBER_ADDED';
+export type NotificationType = 'ISSUE_ASSIGNED' | 'COMMENT_MENTION' | 'PROJECT_MEMBER_ADDED' | 'ORGANIZATION_INVITATION';
 export const NotificationType = {
   ISSUE_ASSIGNED: 'ISSUE_ASSIGNED',
   COMMENT_MENTION: 'COMMENT_MENTION',
   PROJECT_MEMBER_ADDED: 'PROJECT_MEMBER_ADDED',
+  ORGANIZATION_INVITATION: 'ORGANIZATION_INVITATION',
 } as const;
 
 

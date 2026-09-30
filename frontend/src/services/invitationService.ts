@@ -6,3 +6,5 @@ export const sendInvitation = (orgId: string, data: { email: string, role: strin
 export const revokeInvitation = (orgId: string, invitationId: string) => apiDelete(`/organizations/${orgId}/invitations/${invitationId}`);
 export const acceptInvitation = (orgId: string, token: string) => apiPost(`/organizations/${orgId}/invitations/accept`, { token });
 export const declineInvitation = (orgId: string, token: string) => apiPost(`/organizations/${orgId}/invitations/decline`, { token });
+
+export const getMyInvitations = () => apiGet<Invitation[]>('/users/me/invitations');
