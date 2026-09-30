@@ -35,6 +35,12 @@ export class ProjectsController {
   }
 
   @UseGuards(ProjectMemberGuard)
+  @Get(':id/summary')
+  getSummary(@Param('id') id: string) {
+    return this.projectsService.getProjectSummary(id);
+  }
+
+  @UseGuards(ProjectMemberGuard)
   @Get(':id')
   findOne(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.projectsService.findOne(id, userId);

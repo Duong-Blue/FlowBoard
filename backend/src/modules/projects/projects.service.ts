@@ -89,6 +89,99 @@ export class ProjectsService {
     return project;
   }
 
+  async getProjectSummary(projectId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        OR: [
+          { id: projectId },
+          { key: { equals: projectId, mode: 'insensitive' } },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (!project) throw new NotFoundException('Project not found');
+
+    const resolvedProjectId = project.id;
+    const now = new Date();
+
+    const [
+      totalIssues,
+      completedIssues,
+      inProgressIssues,
+      overdueIssues,
+      statusBreakdownGrouped,
+      currentMilestone,
+      recentActivities,
+      recentlyUpdatedIssues,
+    ] = await Promise.all([
+      this.prisma.issue.count({ where: { projectId: resolvedProjectId } }),
+      this.prisma.issue.count({ where: { projectId: resolvedProjectId, status: 'DONE' } }),
+      this.prisma.issue.count({ where: { projectId: resolvedProjectId, status: 'IN_PROGRESS' } }),
+      this.prisma.issue.count({
+        where: {
+          projectId: resolvedProjectId,
+          status: { not: 'DONE' },
+          dueDate: { lt: now },
+        },
+      }),
+      this.prisma.issue.groupBy({
+        by: ['workflowStatusId'],
+        where: { projectId: resolvedProjectId },
+        _count: { id: true },
+      }),
+      this.prisma.milestone.findFirst({
+        where: { projectId: resolvedProjectId, status: 'IN_PROGRESS' },
+        include: { _count: { select: { issues: true } } },
+        orderBy: { targetDate: 'asc' },
+      }),
+      this.prisma.activity.findMany({
+        where: { projectId: resolvedProjectId },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      }),
+      this.prisma.issue.findMany({
+        where: { projectId: resolvedProjectId },
+        orderBy: { updatedAt: 'desc' },
+        take: 5,
+        include: {
+          assignee: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+          workflowStatus: { select: { id: true, name: true, color: true } },
+        },
+      }),
+    ]);
+
+    const progressPercentage = totalIssues > 0 ? (completedIssues / totalIssues) * 100 : 0;
+    const workflowStatusIds = statusBreakdownGrouped.map((g) => g.workflowStatusId).filter(Boolean) as string[];
+    const workflowStatuses = await this.prisma.workflowStatus.findMany({
+      where: { id: { in: workflowStatusIds } },
+    });
+
+    const statusBreakdown = statusBreakdownGrouped.map((g) => {
+      const status = workflowStatuses.find((s) => s.id === g.workflowStatusId);
+      return {
+        id: g.workflowStatusId,
+        name: status?.name || 'Unknown',
+        count: g._count.id,
+        color: status?.color,
+      };
+    });
+
+    return {
+      metrics: {
+        totalIssues,
+        completedIssues,
+        inProgressIssues,
+        overdueIssues,
+        progressPercentage,
+      },
+      currentMilestone,
+      statusBreakdown,
+      recentActivities,
+      recentlyUpdatedIssues,
+    };
+  }
+
   async update(projectId: string, userId: string, dto: UpdateProjectDto) {
     const targetProject = await this.findOne(projectId, userId);
     if (

@@ -19,13 +19,22 @@ export class ProjectMembersService {
     private readonly activityService: ActivityService,
   ) {}
 
-  private async checkOrgAdminPermission(orgId: string, userId: string) {
-    const member = await this.prisma.organizationMember.findUnique({
+  private async checkAdminPermission(orgId: string, projectId: string, userId: string) {
+    const orgMember = await this.prisma.organizationMember.findUnique({
       where: { organizationId_userId: { organizationId: orgId, userId } },
     });
-    if (!member || (member.role !== 'OWNER' && member.role !== 'ADMIN')) {
-      throw new ForbiddenException('Insufficient permissions');
+    if (orgMember && (orgMember.role === 'OWNER' || orgMember.role === 'ADMIN')) {
+      return;
     }
+
+    const projMember = await this.prisma.projectMember.findUnique({
+      where: { projectId_userId: { projectId, userId } },
+    });
+    if (projMember && projMember.role === 'ADMIN') {
+      return;
+    }
+
+    throw new ForbiddenException('Insufficient permissions');
   }
 
   private async resolveProjectId(projectParam: string): Promise<string> {
@@ -52,7 +61,7 @@ export class ProjectMembersService {
     });
     if (!project) throw new NotFoundException('Project not found');
 
-    await this.checkOrgAdminPermission(project.organizationId, requesterId);
+    await this.checkAdminPermission(project.organizationId, project.id, requesterId);
 
     const orgMember = await this.prisma.organizationMember.findFirst({
       where: { organizationId: project.organizationId, userId: dto.userId },
@@ -119,7 +128,7 @@ export class ProjectMembersService {
     });
     if (!project) throw new NotFoundException('Project not found');
 
-    await this.checkOrgAdminPermission(project.organizationId, requesterId);
+    await this.checkAdminPermission(project.organizationId, project.id, requesterId);
 
     return this.prisma.projectMember.update({
       where: { projectId_userId: { projectId, userId: targetUserId } },
@@ -138,7 +147,7 @@ export class ProjectMembersService {
     });
     if (!project) throw new NotFoundException('Project not found');
 
-    await this.checkOrgAdminPermission(project.organizationId, requesterId);
+    await this.checkAdminPermission(project.organizationId, project.id, requesterId);
 
     const deletedMember = await this.prisma.projectMember.delete({
       where: { projectId_userId: { projectId, userId: targetUserId } },

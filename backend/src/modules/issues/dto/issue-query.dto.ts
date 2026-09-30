@@ -6,6 +6,7 @@ import {
   Min,
   Max,
   IsDateString,
+  IsUUID,
 } from 'class-validator';
 import { IssueStatus, IssuePriority } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
@@ -22,6 +23,11 @@ export class IssueQueryDto {
   @IsOptional()
   @IsString()
   workflowStatusId?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsUUID()
+  milestoneId?: string;
 
   @IsOptional()
   @IsEnum(IssuePriority)

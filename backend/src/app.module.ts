@@ -21,6 +21,7 @@ import { WorkflowsModule } from './modules/workflows/workflows.module';
 import { SearchModule } from './modules/search/search.module';
 import { MailerModule } from './modules/mailer/mailer.module';
 
+import { MilestonesModule } from './modules/milestones/milestones.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 
@@ -40,6 +41,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
     OrgMembersModule,
     InvitationsModule,
     ProjectsModule,
+    MilestonesModule,
     ProjectMembersModule,
     IssuesModule,
     AttachmentsModule,

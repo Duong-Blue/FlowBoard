@@ -30,8 +30,11 @@ export class BoardController {
   constructor(private readonly issuesService: IssuesService) {}
 
   @Get()
-  getBoard(@Param('projectId') projectId: string) {
-    return this.issuesService.getBoard(projectId);
+  getBoard(
+    @Param('projectId') projectId: string,
+    @Query('milestoneId') milestoneId?: string,
+  ) {
+    return this.issuesService.getBoard(projectId, milestoneId);
   }
 }
 

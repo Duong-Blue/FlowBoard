@@ -414,14 +414,14 @@ export class IssuesService {
         },
       });
 
-      // await tx.activity.create({
-      //   data: {
-      //     issueId: issue.id,
-      //     actorId: reporterId,
-      //     type: 'ISSUE_CREATED',
-      //     metadata: { title: issue.title },
-      //   },
-      // });
+      await tx.activity.create({
+        data: {
+          issueId: issue.id,
+          actorId: reporterId,
+          type: 'ISSUE_CREATED',
+          metadata: { title: issue.title },
+        },
+      });
 
       return issue;
     });
@@ -470,6 +470,10 @@ export class IssuesService {
 
     if (query.workflowStatusId) {
       where.workflowStatusId = query.workflowStatusId;
+    }
+
+    if (query.milestoneId) {
+      where.milestoneId = query.milestoneId;
     }
 
     if (query.priority) {
@@ -670,10 +674,15 @@ export class IssuesService {
     return workload;
   }
 
-  async getBoard(projectParam: string) {
+  async getBoard(projectParam: string, milestoneId?: string) {
     const projectId = await this.resolveProjectId(projectParam);
+    const where: Prisma.IssueWhereInput = { projectId, parentId: null };
+    if (milestoneId) {
+      where.milestoneId = milestoneId;
+    }
+
     const issues = await this.prisma.issue.findMany({
-      where: { projectId, parentId: null },
+      where,
       // Circuit breaker: limit board fetch to 2000 items to prevent Node/DB OOM
       take: 2000,
       orderBy: { order: 'asc' },
@@ -844,14 +853,14 @@ export class IssuesService {
       });
 
       if (issue.workflowStatusId !== targetWorkflowStatusId) {
-        // await tx.activity.create({
-        //   data: {
-        //     issueId,
-        //     actorId,
-        //     type: 'STATUS_CHANGED',
-        //     metadata: { from: issue.status, to: targetCategory, fromWorkflowStatusId: issue.workflowStatusId, toWorkflowStatusId: targetWorkflowStatusId },
-        //   },
-        // });
+        await tx.activity.create({
+          data: {
+            issueId,
+            actorId,
+            type: 'STATUS_CHANGED',
+            metadata: { from: issue.status, to: targetCategory, fromWorkflowStatusId: issue.workflowStatusId, toWorkflowStatusId: targetWorkflowStatusId },
+          },
+        });
 
         if (targetCategory === IssueStatus.DONE && issue.parentId) {
           await this.handleParentAutoComplete(
