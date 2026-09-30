@@ -7,14 +7,16 @@ import { setOrgs } from '@/store/slices/orgSlice';
 import { getOrgs } from '@/services/orgService';
 import { getProjects } from '@/services/projectService';
 import { getIssues, getActivities, type IssueActivity } from '@/services/issueService';
+import { getMyInvitations, acceptInvitation, declineInvitation } from '@/services/invitationService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { WelcomeSection } from '@/features/workspace/components/WelcomeSection';
+import { PendingInvitationsSection } from '@/features/workspace/components/PendingInvitationsSection';
 import { OrganizationList } from '@/features/workspace/components/OrganizationList';
 import { ProjectsSection } from '@/features/workspace/components/ProjectsSection';
 import { MyWorkList } from '@/features/workspace/components/MyWorkList';
 import { RecentActivity, type ActivityItem } from '@/features/workspace/components/RecentActivity';
-import type { Project, Issue } from '@/store/types';
+import type { Project, Issue, Invitation } from '@/store/types';
 
 export function WorkspaceHome() {
   const { t } = useTranslation(['workspace', 'common']);
@@ -29,13 +31,20 @@ export function WorkspaceHome() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [assignedIssues, setAssignedIssues] = useState<Issue[]>([]);
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>([]);
 
   const fetchWorkspaceData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // 1. Ensure organizations list is populated
+      try {
+        const invs = await getMyInvitations();
+        setPendingInvitations(invs || []);
+      } catch (err: unknown) {
+        console.warn('Failed to fetch user invitations:', err);
+      }
+
       let currentOrgs = orgs;
       if (currentOrgs.length === 0) {
         try {
@@ -146,6 +155,26 @@ export function WorkspaceHome() {
     fetchWorkspaceData();
   }, [fetchWorkspaceData]);
 
+  const handleAcceptInvitation = async (inv: Invitation) => {
+    const orgId = inv.organizationId || inv.orgId || inv.organization?.id || '';
+    const token = inv.metadata?.token || '';
+    await acceptInvitation(orgId, token);
+    try {
+      const fetchedOrgs = await getOrgs();
+      dispatch(setOrgs(fetchedOrgs));
+    } catch (err: unknown) {
+      console.warn('Failed to refresh orgs after accepting invitation:', err);
+    }
+    await fetchWorkspaceData();
+  };
+
+  const handleDeclineInvitation = async (inv: Invitation) => {
+    const orgId = inv.organizationId || inv.orgId || inv.organization?.id || '';
+    const token = inv.metadata?.token || '';
+    await declineInvitation(orgId, token);
+    await fetchWorkspaceData();
+  };
+
   const handleCreateProject = () => {
     if (orgs.length === 1) {
       navigate(`/workspace/orgs/${orgs[0].id}/projects/new`);
@@ -186,6 +215,12 @@ export function WorkspaceHome() {
             organizations={orgs}
             onCreateOrg={() => navigate('/workspace/orgs/new')}
             onJoinOrg={() => navigate('/workspace/invitations')}
+          />
+
+          <PendingInvitationsSection
+            invitations={pendingInvitations}
+            onAccept={handleAcceptInvitation}
+            onDecline={handleDeclineInvitation}
           />
 
           <div className="space-y-3">

@@ -10,6 +10,7 @@ import {
   markAllNotificationsAsRead,
 } from '../../store/slices/notificationSlice';
 import type { NotificationItem, NotificationActor } from '../../store/types';
+import { NotificationType } from '../../store/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,6 +79,13 @@ export function NotificationCenter() {
       dispatch(markNotificationAsRead(item.id));
     }
     setOpen(false);
+
+    if ((item.type as string) === 'ORGANIZATION_INVITATION' || (item.type as string) === NotificationType.ORGANIZATION_INVITATION) {
+      if (!item.projectId) {
+        navigate('/workspace/home');
+        return;
+      }
+    }
 
     if (item.projectId && item.issueId) {
       const targetOrgId = item.organizationId || activeOrgId;
