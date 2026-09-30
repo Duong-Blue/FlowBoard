@@ -14,14 +14,18 @@ import {
   Res,
   StreamableFile,
   Param,
+  Query,
 } from '@nestjs/common';
+import * as path from 'path';
 import { UsersService } from './users.service';
+import { InvitationsService } from '../invitations/invitations.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { SetPasswordDto } from './dto/set-password.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Multer } from 'multer';
 import { Response } from 'express';
@@ -31,11 +35,16 @@ import { SessionQueryDto } from './dto/session.dto';
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService, private readonly invitationsService: InvitationsService) {}
 
   @Get('me')
   async getProfile(@CurrentUser('id') userId: string) {
     return this.usersService.getProfile(userId);
+  }
+
+  @Get('me/invitations')
+  async getPendingInvitations(@CurrentUser('id') userId: string) {
+    return this.invitationsService.findPendingForUser(userId);
   }
 
   @Patch('me')
@@ -89,16 +98,38 @@ export class UsersController {
     return this.usersService.deleteAvatar(userId);
   }
 
+  @Public()
   @Get('me/avatar/download')
   async downloadAvatar(
+    @Query('path') storagePath: string,
     @CurrentUser('id') userId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const stream = await this.usersService.getAvatarStream(userId);
+    const stream = await this.usersService.getAvatarStream(userId, storagePath);
+    const ext = storagePath ? path.extname(storagePath).toLowerCase() : '.jpg';
+    const contentType =
+      ext === '.png'
+        ? 'image/png'
+        : ext === '.webp'
+          ? 'image/webp'
+          : ext === '.svg'
+            ? 'image/svg+xml'
+            : 'image/jpeg';
+
     res.set({
-      'Content-Type': 'image/jpeg', // The service will set the correct content type if needed, but since we don't store mime type, we can let browser infer it or use application/octet-stream. Wait, maybe we store mime type? Let's check avatarUrl.
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=86400',
     });
     return new StreamableFile(stream);
+  }
+
+  @Public()
+  @Get('avatar/download')
+  async downloadAvatarPublic(
+    @Query('path') storagePath: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.downloadAvatar(storagePath, '', res);
   }
 
   @Post('me/sessions/query')

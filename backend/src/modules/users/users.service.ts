@@ -220,18 +220,24 @@ export class UsersService {
     return this.mapToProfileDto(updatedUser);
   }
 
-  async getAvatarStream(userId: string, requestedPath?: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !user.avatarUrl)
-      throw new NotFoundException('Avatar not found');
-
+  async getAvatarStream(userId?: string, requestedPath?: string) {
     let storagePath = requestedPath;
-    if (!storagePath) {
-      const url = new URL('http://localhost' + user.avatarUrl);
-      storagePath = url.searchParams.get('path');
+
+    if (!storagePath && userId) {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (user?.avatarUrl && user.avatarUrl.includes('path=')) {
+        try {
+          const url = new URL('http://localhost' + user.avatarUrl);
+          storagePath = url.searchParams.get('path') || undefined;
+        } catch {
+          storagePath = undefined;
+        }
+      }
     }
 
-    if (!storagePath) throw new NotFoundException('Avatar not found');
+    if (!storagePath || !storagePath.startsWith('avatars/')) {
+      throw new NotFoundException('Avatar file not found');
+    }
 
     try {
       return await this.storage.getFileStream(storagePath);
