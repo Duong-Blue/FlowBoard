@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { InvitationsService } from './invitations.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../../database/prisma.service';
 import {
   ForbiddenException,
@@ -18,6 +19,10 @@ describe('InvitationsService', () => {
       providers: [
         InvitationsService,
         {
+          provide: NotificationsService,
+          useValue: { createNotification: vi.fn() },
+        },
+        {
           provide: PrismaService,
           useValue: {
             organizationMember: {
@@ -33,6 +38,11 @@ describe('InvitationsService', () => {
               update: vi.fn(),
             },
             user: {
+              findUnique: vi.fn(),
+              findFirst: vi.fn(),
+            },
+            organization: {
+              findFirst: vi.fn(),
               findUnique: vi.fn(),
             },
             $transaction: vi.fn(),
@@ -181,19 +191,78 @@ describe('InvitationsService', () => {
     });
   });
 
-  describe('findPending', () => {
+  describe('findPendingForUser', () => {
     it('verifies expired or declined invitations are excluded in Prisma query', async () => {
-      vi.mocked(prisma.organizationMember.findUnique).mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: 'user1',
+        email: 'user@example.com',
+      } as any);
+      vi.mocked(prisma.invitation.findMany).mockResolvedValue([]);
+
+      await service.findPendingForUser('user1');
+
+      expect(prisma.invitation.findMany).toHaveBeenCalledWith({
+        where: {
+          email: { equals: 'user@example.com', mode: 'insensitive' },
+          acceptedAt: null,
+          revokedAt: null,
+          declinedAt: null,
+          expiresAt: { gt: expect.any(Date) },
+        },
+        include: {
+          organization: {
+            select: { id: true, name: true, slug: true, logoUrl: true },
+          },
+          invitedBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+    });
+
+    it('returns empty array if user is not found', async () => {
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+      await expect(service.findPendingForUser('nonexistentUser')).resolves.toEqual([]);
+      expect(prisma.invitation.findMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findPending', () => {
+    it('fails when requester is not OWNER or ADMIN', async () => {
+      vi.mocked(prisma.organizationMember.findFirst).mockResolvedValue({
+        id: '1',
+        organizationId: 'org1',
+        userId: 'user1',
+        role: 'MEMBER',
+      } as any);
+
+      await expect(service.findPending('org1', 'user1')).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('returns pending invitations when requester is ADMIN', async () => {
+      vi.mocked(prisma.organizationMember.findFirst).mockResolvedValue({
         id: '1',
         organizationId: 'org1',
         userId: 'user1',
         role: 'ADMIN',
       } as any);
+      vi.mocked(prisma.invitation.findMany).mockResolvedValue([
+        { id: 'inv1', organizationId: 'org1' },
+      ] as any);
 
-      vi.mocked(prisma.invitation.findMany).mockResolvedValue([]);
-
-      await service.findPending('org1', 'user1');
-
+      const result = await service.findPending('org1', 'user1');
+      expect(result).toHaveLength(1);
       expect(prisma.invitation.findMany).toHaveBeenCalledWith({
         where: {
           organizationId: 'org1',
@@ -201,6 +270,20 @@ describe('InvitationsService', () => {
           revokedAt: null,
           declinedAt: null,
           expiresAt: { gt: expect.any(Date) },
+        },
+        include: {
+          invitedBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
         },
       });
     });

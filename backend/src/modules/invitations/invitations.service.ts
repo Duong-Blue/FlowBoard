@@ -6,11 +6,13 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '@prisma/client';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class InvitationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private readonly notificationsService: NotificationsService) {}
 
   private async resolveOrgId(orgIdOrSlug: string): Promise<string> {
     if (!this.prisma.organization?.findFirst) {
@@ -87,15 +89,34 @@ export class InvitationsService {
       },
     });
 
-    return { invitationToken: rawToken };
+            const user = await this.prisma.user.findFirst({
+          where: { email: { equals: dto.email, mode: 'insensitive' } },
+        });
+
+        if (user) {
+          const org = await this.prisma.organization.findFirst({
+            where: { id: orgId },
+            select: { name: true },
+          });
+
+          await this.notificationsService.createNotification({
+            userId: user.id,
+            actorId: invitedById,
+            organizationId: orgId,
+            type: NotificationType.ORGANIZATION_INVITATION,
+            title: 'Organization Invitation',
+            message: `You have been invited to join ${org?.name || 'an organization'}`, 
+            metadata: { token: rawToken },
+          });
+        }
+
+        return { invitationToken: rawToken };
   }
 
   async findPending(orgIdOrSlug: string, requesterId: string) {
     const orgId = await this.resolveOrgId(orgIdOrSlug);
-    const requester = await this.prisma.organizationMember.findUnique({
-      where: {
-        organizationId_userId: { organizationId: orgId, userId: requesterId },
-      },
+    const requester = await this.prisma.organizationMember.findFirst({
+      where: { organizationId: orgId, userId: requesterId },
     });
     if (
       !requester ||
@@ -111,6 +132,57 @@ export class InvitationsService {
         revokedAt: null,
         declinedAt: null,
         expiresAt: { gt: new Date() },
+      },
+      include: {
+        invitedBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async findPendingForUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return [];
+    }
+
+    return this.prisma.invitation.findMany({
+      where: {
+        email: { equals: user.email, mode: 'insensitive' },
+        acceptedAt: null,
+        revokedAt: null,
+        declinedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      include: {
+        organization: {
+          select: { id: true, name: true, slug: true, logoUrl: true },
+        },
+        invitedBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
   }
