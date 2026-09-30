@@ -55,6 +55,9 @@ model Issue {
   relationsAsTarget IssueRelation[] @relation("RelationTarget")
   attachments       Attachment[]
 
+  milestoneId String?
+  milestone   Milestone? @relation("MilestoneIssues", fields: [milestoneId], references: [id], onDelete: SetNull)
+
   @@index([projectId, status])
   @@index([projectId, assigneeId])
   @@index([projectId, createdAt])
@@ -63,4 +66,5 @@ model Issue {
   @@index([projectId, workflowStatusId, order])
   @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
   @@index([description(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([milestoneId])
 }
