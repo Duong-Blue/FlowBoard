@@ -12,15 +12,20 @@ import {
 import { MilestonesService } from './milestones.service';
 import { CreateMilestoneDto } from './dto/create-milestone.dto';
 import { UpdateMilestoneDto } from './dto/update-milestone.dto';
+import { AssignIssuesDto } from './dto/assign-issues.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ProjectMemberGuard } from '../../common/guards/project-member.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { ProjectRole } from '@prisma/client';
 
-@UseGuards(JwtAuthGuard, ProjectMemberGuard)
+@UseGuards(JwtAuthGuard, ProjectMemberGuard, RolesGuard)
 @Controller('projects/:projectId/milestones')
 export class MilestonesController {
   constructor(private readonly milestonesService: MilestonesService) {}
 
   @Post()
+  @Roles(ProjectRole.ADMIN)
   create(
     @Param('projectId') projectId: string,
     @Body() createMilestoneDto: CreateMilestoneDto,
@@ -34,14 +39,12 @@ export class MilestonesController {
   }
 
   @Get(':id')
-  findOne(
-    @Param('projectId') projectId: string,
-    @Param('id') id: string,
-  ) {
+  findOne(@Param('projectId') projectId: string, @Param('id') id: string) {
     return this.milestonesService.findOne(projectId, id);
   }
 
   @Patch(':id')
+  @Roles(ProjectRole.ADMIN)
   update(
     @Param('projectId') projectId: string,
     @Param('id') id: string,
@@ -51,18 +54,26 @@ export class MilestonesController {
   }
 
   @Delete(':id')
-  remove(
-    @Param('projectId') projectId: string,
-    @Param('id') id: string,
-  ) {
+  @Roles(ProjectRole.ADMIN)
+  remove(@Param('projectId') projectId: string, @Param('id') id: string) {
     return this.milestonesService.delete(projectId, id);
   }
 
   @Put('reorder')
+  @Roles(ProjectRole.ADMIN)
   reorder(
     @Param('projectId') projectId: string,
     @Body('milestoneIds') milestoneIds: string[],
   ) {
     return this.milestonesService.reorder(projectId, milestoneIds);
+  }
+
+  @Post(':id/issues')
+  assignIssues(
+    @Param('projectId') projectId: string,
+    @Param('id') id: string,
+    @Body() dto: AssignIssuesDto,
+  ) {
+    return this.milestonesService.assignIssues(projectId, id, dto.issueIds);
   }
 }

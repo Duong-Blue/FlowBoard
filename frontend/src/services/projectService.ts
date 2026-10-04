@@ -6,3 +6,4 @@ export const createProject = (orgId: string, data: Partial<Project>) => apiPost<
 export const getProject = (orgId: string, idOrKey: string) => apiGet<Project>(`/organizations/${orgId}/projects/${idOrKey}`);
 export const updateProject = (orgId: string, idOrKey: string, data: Partial<Project>) => apiPatch<Project>(`/organizations/${orgId}/projects/${idOrKey}`, data);
 export const deleteProject = (orgId: string, idOrKey: string) => apiDelete(`/organizations/${orgId}/projects/${idOrKey}`);
+export const getProjectSummary = (idOrKey: string) => apiGet(`/projects/${idOrKey}/summary`);

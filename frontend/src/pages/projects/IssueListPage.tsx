@@ -59,7 +59,12 @@ export function buildIssueTree(issues: Issue[]): TreeIssueItem[] {
   return result;
 }
 
-export default function IssueListPage() {
+export interface IssueListPageProps {
+  standalone?: boolean;
+  showFilterBar?: boolean;
+}
+
+export default function IssueListPage({ standalone = true, showFilterBar }: IssueListPageProps = {}) {
   const { t } = useTranslation(['issues', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
   const { project, projectId, loading: projectLoading, is404, loading: resolvedLoading } = useResolvedProject();
@@ -171,118 +176,140 @@ export default function IssueListPage() {
     ? buildIssueTree(issues)
     : issues.map((issue) => ({ issue, depth: 0 }));
 
-  return (
-    <ProjectPageShell
-      project={project}
-      title={t('board.listView')}
-      activeView="list"
-      actions={
-        canCreateOrEdit ? (
-          <Button onClick={() => { setEditingIssue(undefined); setDialogOpen(true); }}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t('board.createIssue')}
-          </Button>
-        ) : undefined
-      }
-    >
-      <div className="flex flex-col gap-4">
+  const shouldShowFilters = showFilterBar ?? standalone;
+
+  const listContent = (
+    <div className="flex flex-col gap-4">
+      {shouldShowFilters && (
         <div className="flex flex-col sm:flex-row sm:items-center flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
-          <Input
-            placeholder={t('board.searchPlaceholder')}
-            className="pl-9"
-            value={filters.search || ''}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-          />
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+            <Input
+              placeholder={t('board.searchPlaceholder')}
+              className="pl-9"
+              value={filters.search || ''}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+            />
+          </div>
+          {projectId && (
+            <SavedViewsDropdown
+              projectId={projectId}
+              currentFilters={filters}
+              onApplyView={(savedFilters) => {
+                dispatch(
+                  setFilters({
+                    search: savedFilters.search || '',
+                    status: savedFilters.status || undefined,
+                    priority: savedFilters.priority || undefined,
+                    assigneeId: savedFilters.assigneeId || undefined,
+                    overdue: savedFilters.overdue || undefined,
+                    dueSoon: savedFilters.dueSoon || undefined,
+                    noDueDate: savedFilters.noDueDate || undefined,
+                    dueDateFrom: savedFilters.dueDateFrom || undefined,
+                    dueDateTo: savedFilters.dueDateTo || undefined,
+                    page: 1,
+                  })
+                );
+              }}
+              userRole={userRole}
+              currentUserId={currentUser?.id}
+            />
+          )}
+          <div className="inline-flex rounded-md border p-1 bg-slate-100 gap-1 text-xs font-medium shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode('hierarchical')}
+              className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
+                viewMode === 'hierarchical'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <ListTree className="h-3.5 w-3.5" />
+              Hierarchical
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('flat')}
+              className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
+                viewMode === 'flat'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <List className="h-3.5 w-3.5" />
+              Flat
+            </button>
+          </div>
+          <Select value={filters.status || 'ALL'} onValueChange={(v) => handleFilterChange('status', v === 'ALL' ? undefined : v)}>
+            <SelectTrigger className="w-[150px] shrink-0">
+              <SelectValue placeholder={t('detail.status')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">{t('board.all')}</SelectItem>
+              {activeStatuses.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filters.priority || 'ALL'} onValueChange={(v) => handleFilterChange('priority', v === 'ALL' ? undefined : v)}>
+            <SelectTrigger className="w-[150px] shrink-0">
+              <SelectValue placeholder={t('detail.priority')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">{t('board.all')}</SelectItem>
+              <SelectItem value="LOW">{t('priorities.low')}</SelectItem>
+              <SelectItem value="MEDIUM">{t('priorities.medium')}</SelectItem>
+              <SelectItem value="HIGH">{t('priorities.high')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filters.assigneeId || 'ALL'} onValueChange={(v) => handleFilterChange('assigneeId', v === 'ALL' ? undefined : v)}>
+            <SelectTrigger className="w-[180px] shrink-0">
+              <SelectValue placeholder={t('detail.assignee')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">{t('board.all')}</SelectItem>
+              <SelectItem value="unassigned">{t('form.unassigned')}</SelectItem>
+              {members.map(m => (
+                <SelectItem key={m.userId} value={m.userId}>{m.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        {projectId && (
-          <SavedViewsDropdown
-            projectId={projectId}
-            currentFilters={filters}
-            onApplyView={(savedFilters) => {
-              dispatch(
-                setFilters({
-                  search: savedFilters.search || '',
-                  status: savedFilters.status || undefined,
-                  priority: savedFilters.priority || undefined,
-                  assigneeId: savedFilters.assigneeId || undefined,
-                  overdue: savedFilters.overdue || undefined,
-                  dueSoon: savedFilters.dueSoon || undefined,
-                  noDueDate: savedFilters.noDueDate || undefined,
-                  dueDateFrom: savedFilters.dueDateFrom || undefined,
-                  dueDateTo: savedFilters.dueDateTo || undefined,
-                  page: 1,
-                })
-              );
-            }}
-            userRole={userRole}
-            currentUserId={currentUser?.id}
-          />
-        )}
-        <div className="inline-flex rounded-md border p-1 bg-slate-100 gap-1 text-xs font-medium shrink-0">
-          <button
-            type="button"
-            onClick={() => setViewMode('hierarchical')}
-            className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
-              viewMode === 'hierarchical'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <ListTree className="h-3.5 w-3.5" />
-            Hierarchical
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('flat')}
-            className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
-              viewMode === 'flat'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <List className="h-3.5 w-3.5" />
-            Flat
-          </button>
+      )}
+
+      {!shouldShowFilters && (
+        <div className="flex justify-end mb-2">
+          <div className="inline-flex rounded-md border p-1 bg-slate-100 gap-1 text-xs font-medium shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode('hierarchical')}
+              className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
+                viewMode === 'hierarchical'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <ListTree className="h-3.5 w-3.5" />
+              Hierarchical
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('flat')}
+              className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
+                viewMode === 'flat'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <List className="h-3.5 w-3.5" />
+              Flat
+            </button>
+          </div>
         </div>
-        <Select value={filters.status || 'ALL'} onValueChange={(v) => handleFilterChange('status', v === 'ALL' ? undefined : v)}>
-          <SelectTrigger className="w-[150px] shrink-0">
-            <SelectValue placeholder={t('detail.status')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">{t('board.all')}</SelectItem>
-            {activeStatuses.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filters.priority || 'ALL'} onValueChange={(v) => handleFilterChange('priority', v === 'ALL' ? undefined : v)}>
-          <SelectTrigger className="w-[150px] shrink-0">
-            <SelectValue placeholder={t('detail.priority')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">{t('board.all')}</SelectItem>
-            <SelectItem value="LOW">{t('priorities.low')}</SelectItem>
-            <SelectItem value="MEDIUM">{t('priorities.medium')}</SelectItem>
-            <SelectItem value="HIGH">{t('priorities.high')}</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={filters.assigneeId || 'ALL'} onValueChange={(v) => handleFilterChange('assigneeId', v === 'ALL' ? undefined : v)}>
-          <SelectTrigger className="w-[180px] shrink-0">
-            <SelectValue placeholder={t('detail.assignee')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">{t('board.all')}</SelectItem>
-            <SelectItem value="unassigned">{t('form.unassigned')}</SelectItem>
-            {members.map(m => (
-              <SelectItem key={m.userId} value={m.userId}>{m.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      )}
 
       {loading && issues.length === 0 ? (
         <PageLoader text={t('common:status.loading')} />
@@ -322,9 +349,8 @@ export default function IssueListPage() {
                     onClick={() => {
                       const targetOrgId = currentOrgId;
                       const targetProjectKey = project.key;
-                      const issueKey = issue.key || issue.id;
                       if (targetOrgId && targetProjectKey) {
-                        navigate(`/workspace/orgs/${targetOrgId}/projects/${targetProjectKey}/issues/${issueKey}`);
+                        navigate(`/workspace/orgs/${targetOrgId}/projects/${targetProjectKey}/work/issues/${issue.id}`);
                       }
                     }}
                   >
@@ -436,7 +462,32 @@ export default function IssueListPage() {
         members={members}
         onSubmit={handleCreateOrUpdate}
       />
-      </div>
+    </div>
+  );
+
+  if (standalone === false) {
+    return listContent;
+  }
+
+  return (
+    <ProjectPageShell
+      project={project}
+      title={t('board.listView')}
+      activeView="list"
+      actions={
+        canCreateOrEdit ? (
+          <Button onClick={() => { setEditingIssue(undefined); setDialogOpen(true); }}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('board.createIssue')}
+          </Button>
+        ) : undefined
+      }
+    >
+      {listContent}
     </ProjectPageShell>
   );
+}
+
+export function IssueListView(props: IssueListPageProps) {
+  return <IssueListPage standalone={false} {...props} />;
 }

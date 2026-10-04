@@ -27,7 +27,11 @@ import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { useBoardRealtime } from '@/hooks/useBoardRealtime';
 import NotFound from '../NotFound';
 
-export default function BoardPage() {
+export interface BoardPageProps {
+  standalone?: boolean;
+}
+
+export default function BoardPage({ standalone = true }: BoardPageProps) {
   const { t } = useTranslation('issues');
   const { project, projectId, loading: projectLoading, is404 } = useResolvedProject();
   const { statuses, isLoading: isWorkflowLoading } = useProjectWorkflow(projectId);
@@ -35,7 +39,8 @@ export default function BoardPage() {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
   const { columns, loading } = useAppSelector((state) => state.issue.board);
-  
+  const filters = useAppSelector((state) => state.issue.filters);
+
   const [members, setMembers] = useState<Member[]>([]);
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
 
@@ -53,7 +58,20 @@ export default function BoardPage() {
     return defaultStatuses;
   }, [statuses, defaultStatuses]);
 
-  const allIssues = useMemo(() => Object.values(columns).flat(), [columns]);
+  const rawAllIssues = useMemo(() => Object.values(columns).flat(), [columns]);
+
+  const filteredIssues = useMemo(() => {
+    return rawAllIssues.filter((issue) => {
+      if (filters.search && filters.search.trim()) {
+        const q = filters.search.toLowerCase();
+        if (!issue.title.toLowerCase().includes(q) && !issue.key.toLowerCase().includes(q)) return false;
+      }
+      if (filters.status && filters.status !== 'ALL' && issue.status !== filters.status && issue.workflowStatusId !== filters.status) return false;
+      if (filters.priority && filters.priority !== 'ALL' && issue.priority !== filters.priority) return false;
+      if (filters.assigneeId && filters.assigneeId !== 'ALL' && issue.assigneeId !== filters.assigneeId) return false;
+      return true;
+    });
+  }, [rawAllIssues, filters]);
 
   const issuesByStatusId = useMemo(() => {
     const map: Record<string, Issue[]> = {};
@@ -61,7 +79,7 @@ export default function BoardPage() {
       map[s.id] = [];
     });
 
-    allIssues.forEach((issue) => {
+    filteredIssues.forEach((issue) => {
       if (issue.workflowStatusId && map[issue.workflowStatusId]) {
         map[issue.workflowStatusId].push(issue);
       } else {
@@ -73,7 +91,7 @@ export default function BoardPage() {
     });
 
     return map;
-  }, [allIssues, activeStatuses]);
+  }, [filteredIssues, activeStatuses]);
 
   const currentMember = members.find((m) => m.userId === currentUser?.id);
   const userRole = currentMember?.role;
@@ -209,6 +227,36 @@ export default function BoardPage() {
     return <NotFound />;
   }
 
+  const boardContent = (
+    <div className="flex-1 overflow-x-auto overflow-y-hidden">
+      <DndContext
+        sensors={canDrag ? sensors : undefined}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex gap-4 h-full pb-4">
+          {activeStatuses.map(status => (
+            <BoardColumn
+              key={status.id}
+              status={status}
+              issues={issuesByStatusId[status.id] || []}
+              disabled={!canDrag}
+            />
+          ))}
+        </div>
+
+        <DragOverlay>
+          {activeIssue ? <DragOverlayCard issue={activeIssue} /> : null}
+        </DragOverlay>
+      </DndContext>
+    </div>
+  );
+
+  if (!standalone) {
+    return boardContent;
+  }
+
   return (
     <ProjectPageShell
       project={project}
@@ -227,29 +275,7 @@ export default function BoardPage() {
         </div>
       }
     >
-      <div className="flex-1 overflow-x-auto overflow-y-hidden">
-        <DndContext
-          sensors={canDrag ? sensors : undefined}
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="flex gap-4 h-full pb-4">
-            {activeStatuses.map(status => (
-              <BoardColumn
-                key={status.id}
-                status={status}
-                issues={issuesByStatusId[status.id] || []}
-                disabled={!canDrag}
-              />
-            ))}
-          </div>
-
-          <DragOverlay>
-            {activeIssue ? <DragOverlayCard issue={activeIssue} /> : null}
-          </DragOverlay>
-        </DndContext>
-      </div>
+      {boardContent}
     </ProjectPageShell>
   );
 }

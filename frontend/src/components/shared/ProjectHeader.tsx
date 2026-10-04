@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, LayoutList, Calendar as CalendarIcon, Users, Settings } from 'lucide-react';
+import { LayoutDashboard, LayoutList, Calendar as CalendarIcon, CalendarDays, Users, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
@@ -11,7 +11,7 @@ export interface ProjectHeaderProps {
   project?: Project | null;
   title?: string;
   subtitle?: string;
-  activeView?: 'board' | 'list' | 'calendar' | 'members' | 'settings' | 'none';
+  activeView?: 'board' | 'list' | 'calendar' | 'timeline' | 'members' | 'settings' | 'none';
   realtimeIndicator?: React.ReactNode;
   actions?: React.ReactNode;
   showViewSwitcher?: boolean;
@@ -45,6 +45,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     if (path.endsWith('/board')) return 'board';
     if (path.endsWith('/issues') || path.includes('/issues?')) return 'list';
     if (path.endsWith('/calendar')) return 'calendar';
+    if (path.endsWith('/timeline')) return 'timeline';
     if (path.endsWith('/members')) return 'members';
     if (path.endsWith('/settings')) return 'settings';
     return 'none';
@@ -57,6 +58,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
       board: `${base}/board`,
       list: `${base}/issues`,
       calendar: `${base}/calendar`,
+      timeline: `${base}/timeline`,
       members: `${base}/members`,
       settings: `${base}/settings`,
     };
@@ -190,6 +192,50 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                   <Link to={viewLinks.calendar}>
                     <CalendarIcon className="h-4 w-4 mr-1.5" aria-hidden="true" />
                     {t('board.calendarView', { defaultValue: 'Calendar' })}
+                  </Link>
+                )}
+              </Button>
+
+              <Button
+                variant={derivedActiveView === 'timeline' ? 'default' : 'ghost'}
+                size="sm"
+                className={`min-h-[44px] md:min-h-0 h-11 md:h-8 px-3 text-xs font-medium focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none ${
+                  derivedActiveView === 'timeline' ? 'shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+                asChild={derivedActiveView !== 'timeline'}
+                aria-current={derivedActiveView === 'timeline' ? 'page' : undefined}
+              >
+                {derivedActiveView === 'timeline' ? (
+                  <span className="flex items-center gap-1.5">
+                    <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                    {t('board.timelineView', { defaultValue: 'Timeline' })}
+                  </span>
+                ) : (
+                  <Link to={viewLinks.timeline}>
+                    <CalendarDays className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                    {t('board.timelineView', { defaultValue: 'Timeline' })}
+                  </Link>
+                )}
+              </Button>
+
+              <Button
+                variant={derivedActiveView === 'timeline' ? 'default' : 'ghost'}
+                size="sm"
+                className={`min-h-[44px] md:min-h-0 h-11 md:h-8 px-3 text-xs font-medium focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none ${
+                  derivedActiveView === 'timeline' ? 'shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+                asChild={derivedActiveView !== 'timeline'}
+                aria-current={derivedActiveView === 'timeline' ? 'page' : undefined}
+              >
+                {derivedActiveView === 'timeline' ? (
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4" aria-hidden="true" />
+                    {t('board.timelineView', { defaultValue: 'Timeline' })}
+                  </span>
+                ) : (
+                  <Link to={viewLinks.timeline}>
+                    <Clock className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                    {t('board.timelineView', { defaultValue: 'Timeline' })}
                   </Link>
                 )}
               </Button>

@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock } from 'luci
 import { Button } from '@/components/ui/button';
 import { getIssues } from '@/services/issueService';
 import type { Issue } from '@/store/types';
+import { useAppSelector } from '@/store';
 import { useProjectWorkflow } from '@/hooks/useProjectWorkflow';
 import { formatDate } from '@/lib/dateUtils';
 
@@ -31,6 +32,7 @@ function parseLocalDate(dateStr?: string | null): Date | null {
 export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardProps) {
   const { t } = useTranslation('issues');
   const navigate = useNavigate();
+  const reduxFilters = useAppSelector((state) => state.issue.filters);
   const { statuses, getStatusById, getStatusColor } = useProjectWorkflow(projectId);
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
@@ -82,6 +84,7 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
       setError(null);
       try {
         const res = await getIssues(projectId, {
+          ...reduxFilters,
           startDateFrom,
           startDateTo,
           limit: 100,
@@ -106,7 +109,7 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
     return () => {
       isMounted = false;
     };
-  }, [projectId, startDateFrom, startDateTo, t]);
+  }, [projectId, startDateFrom, startDateTo, reduxFilters, t]);
 
   const handlePrevMonth = () => {
     setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));

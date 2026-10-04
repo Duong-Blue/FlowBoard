@@ -97,6 +97,7 @@ const router = createBrowserRouter([
                   { path: 'issues', element: <Navigate to="../work?view=list" replace /> },
                   { path: 'board', element: <Navigate to="../work?view=board" replace /> },
                   { path: 'calendar', element: <Navigate to="../work?view=calendar" replace /> },
+                  { path: 'timeline', element: <Navigate to="../work?view=timeline" replace /> },
                 ],
               },
               { path: 'orgs/:orgId/members', element: <OrgMembersPage /> },
