@@ -35,7 +35,10 @@ import { SessionQueryDto } from './dto/session.dto';
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService, private readonly invitationsService: InvitationsService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly invitationsService: InvitationsService,
+  ) {}
 
   @Get('me')
   async getProfile(@CurrentUser('id') userId: string) {

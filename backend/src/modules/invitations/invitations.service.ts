@@ -12,7 +12,10 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class InvitationsService {
-  constructor(private prisma: PrismaService, private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   private async resolveOrgId(orgIdOrSlug: string): Promise<string> {
     if (!this.prisma.organization?.findFirst) {
@@ -89,28 +92,28 @@ export class InvitationsService {
       },
     });
 
-            const user = await this.prisma.user.findFirst({
-          where: { email: { equals: dto.email, mode: 'insensitive' } },
-        });
+    const user = await this.prisma.user.findFirst({
+      where: { email: { equals: dto.email, mode: 'insensitive' } },
+    });
 
-        if (user) {
-          const org = await this.prisma.organization.findFirst({
-            where: { id: orgId },
-            select: { name: true },
-          });
+    if (user) {
+      const org = await this.prisma.organization.findFirst({
+        where: { id: orgId },
+        select: { name: true },
+      });
 
-          await this.notificationsService.createNotification({
-            userId: user.id,
-            actorId: invitedById,
-            organizationId: orgId,
-            type: NotificationType.ORGANIZATION_INVITATION,
-            title: 'Organization Invitation',
-            message: `You have been invited to join ${org?.name || 'an organization'}`, 
-            metadata: { token: rawToken },
-          });
-        }
+      await this.notificationsService.createNotification({
+        userId: user.id,
+        actorId: invitedById,
+        organizationId: orgId,
+        type: NotificationType.ORGANIZATION_INVITATION,
+        title: 'Organization Invitation',
+        message: `You have been invited to join ${org?.name || 'an organization'}`,
+        metadata: { token: rawToken },
+      });
+    }
 
-        return { invitationToken: rawToken };
+    return { invitationToken: rawToken };
   }
 
   async findPending(orgIdOrSlug: string, requesterId: string) {

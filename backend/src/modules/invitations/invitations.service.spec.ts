@@ -6,9 +6,7 @@ import { PrismaService } from '../../database/prisma.service';
 import {
   ForbiddenException,
   BadRequestException,
-  ConflictException,
 } from '@nestjs/common';
-import * as crypto from 'crypto';
 
 describe('InvitationsService', () => {
   let service: InvitationsService;
@@ -231,7 +229,9 @@ describe('InvitationsService', () => {
 
     it('returns empty array if user is not found', async () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
-      await expect(service.findPendingForUser('nonexistentUser')).resolves.toEqual([]);
+      await expect(
+        service.findPendingForUser('nonexistentUser'),
+      ).resolves.toEqual([]);
       expect(prisma.invitation.findMany).not.toHaveBeenCalled();
     });
   });

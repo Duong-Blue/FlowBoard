@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrganizationsService } from './organizations.service';
 import { PrismaService } from '../../database/prisma.service';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
 
 describe('OrganizationsService', () => {
   let service: OrganizationsService;

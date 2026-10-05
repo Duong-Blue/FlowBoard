@@ -1,7 +1,6 @@
 import {
   Injectable,
   BadRequestException,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 import { AuthService } from '../auth.service';
@@ -15,7 +14,7 @@ import {
 import { GitHubAdapter } from './adapters/github.adapter';
 import { GoogleAdapter } from './adapters/google.adapter';
 import { OAuthProvider } from '@prisma/client';
-import { createHash, randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class OAuthService {
@@ -88,7 +87,7 @@ export class OAuthService {
     let profile;
     try {
       profile = await adapter.exchangeCode(code, flow.codeVerifier);
-    } catch (e) {
+    } catch {
       return { error: 'exchange_failed' };
     }
 

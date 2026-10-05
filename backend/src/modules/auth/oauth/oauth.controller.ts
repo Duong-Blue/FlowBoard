@@ -6,7 +6,6 @@ import {
   Query,
   Body,
   Res,
-  Redirect,
 } from '@nestjs/common';
 import { OAuthService } from './oauth.service';
 import { Response } from 'express';

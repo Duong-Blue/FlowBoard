@@ -6,7 +6,11 @@ import { AuthModule } from '../auth/auth.module';
 import { InvitationsModule } from '../invitations/invitations.module';
 
 @Module({
-  imports: [StorageModule, forwardRef(() => AuthModule), forwardRef(() => InvitationsModule)],
+  imports: [
+    StorageModule,
+    forwardRef(() => AuthModule),
+    forwardRef(() => InvitationsModule),
+  ],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],

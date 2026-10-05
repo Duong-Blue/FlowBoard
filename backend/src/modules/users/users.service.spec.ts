@@ -4,9 +4,6 @@ import { PrismaService } from '../../database/prisma.service';
 import { LocalStorageService } from '../storage/local-storage.service';
 import {
   BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { vi } from 'vitest';
