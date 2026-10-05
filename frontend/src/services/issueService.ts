@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPatch, apiDelete } from '../utils/api_helper';
+import { api } from '../utils/api_helper';
 import type { Issue, IssueFilters, IssueListResponse } from '../store/types';
 
 export const getIssues = (projectId: string, filters: IssueFilters) => {
@@ -15,15 +15,15 @@ export const getIssues = (projectId: string, filters: IssueFilters) => {
   if (filters.limit) params.append('limit', filters.limit.toString());
   
   const query = params.toString();
-  return apiGet<IssueListResponse>(`/projects/${projectId}/issues${query ? `?${query}` : ''}`);
+  return api.get<IssueListResponse>(`/projects/${projectId}/issues${query ? `?${query}` : ''}`).then(res => res.data);
 };
 
-export const getBoardIssues = (projectId: string) => apiGet<Issue[] | Record<string, Issue[]>>(`/projects/${projectId}/board`);
+export const getBoardIssues = (projectId: string) => api.get<Issue[] | Record<string, Issue[]>>(`/projects/${projectId}/board`).then(res => res.data);
 
-export const getIssue = (projectId: string, id: string) => apiGet<Issue>(`/projects/${projectId}/issues/${id}`);
-export const createIssue = (projectId: string, data: Partial<Issue>) => apiPost<Issue>(`/projects/${projectId}/issues`, data);
-export const createSubtask = (projectId: string, parentId: string, data: Partial<Issue>) => apiPost<Issue>(`/projects/${projectId}/issues/${parentId}/subtasks`, data);
-export const updateIssue = (projectId: string, id: string, data: Partial<Issue>) => apiPatch<Issue>(`/projects/${projectId}/issues/${id}`, data);
+export const getIssue = (projectId: string, id: string) => api.get<Issue>(`/projects/${projectId}/issues/${id}`).then(res => res.data);
+export const createIssue = (projectId: string, data: Partial<Issue>) => api.post<Issue>(`/projects/${projectId}/issues`, data).then(res => res.data);
+export const createSubtask = (projectId: string, parentId: string, data: Partial<Issue>) => api.post<Issue>(`/projects/${projectId}/issues/${parentId}/subtasks`, data).then(res => res.data);
+export const updateIssue = (projectId: string, id: string, data: Partial<Issue>) => api.patch<Issue>(`/projects/${projectId}/issues/${id}`, data).then(res => res.data);
 export const moveIssue = (
   projectId: string,
   id: string,
@@ -33,8 +33,8 @@ export const moveIssue = (
     beforeIssueId?: string | null;
     afterIssueId?: string | null;
   }
-) => apiPatch<Issue>(`/projects/${projectId}/issues/${id}/move`, data);
-export const deleteIssue = (projectId: string, id: string, force?: boolean) => apiDelete(`/projects/${projectId}/issues/${id}${force ? '?force=true' : ''}`);
+) => api.patch<Issue>(`/projects/${projectId}/issues/${id}/move`, data).then(res => res.data);
+export const deleteIssue = (projectId: string, id: string, force?: boolean) => api.delete(`/projects/${projectId}/issues/${id}${force ? '?force=true' : ''}`).then(res => res.data);
 
 export type CommentAuthor = {
   id: string;
@@ -100,16 +100,16 @@ export interface PaginatedResponse<T> {
 }
 
 export const getComments = (projectId: string, issueId: string, page = 1, limit = 20) => 
-  apiGet<PaginatedResponse<Comment>>(`/projects/${projectId}/issues/${issueId}/comments?page=${page}&limit=${limit}`);
+  api.get<PaginatedResponse<Comment>>(`/projects/${projectId}/issues/${issueId}/comments?page=${page}&limit=${limit}`).then(res => res.data);
 
 export const createComment = (projectId: string, issueId: string, content: string) =>
-  apiPost<Comment>(`/projects/${projectId}/issues/${issueId}/comments`, { content });
+  api.post<Comment>(`/projects/${projectId}/issues/${issueId}/comments`, { content }).then(res => res.data);
 
 export const updateComment = (projectId: string, issueId: string, commentId: string, content: string) =>
-  apiPatch<Comment>(`/projects/${projectId}/issues/${issueId}/comments/${commentId}`, { content });
+  api.patch<Comment>(`/projects/${projectId}/issues/${issueId}/comments/${commentId}`, { content }).then(res => res.data);
 
 export const deleteComment = (projectId: string, issueId: string, commentId: string) =>
-  apiDelete(`/projects/${projectId}/issues/${issueId}/comments/${commentId}`);
+  api.delete(`/projects/${projectId}/issues/${issueId}/comments/${commentId}`).then(res => res.data);
 
 export const getActivities = (projectId: string, issueId: string, page = 1, limit = 20) =>
-  apiGet<PaginatedResponse<IssueActivity>>(`/projects/${projectId}/issues/${issueId}/activity?page=${page}&limit=${limit}`);
+  api.get<PaginatedResponse<IssueActivity>>(`/projects/${projectId}/issues/${issueId}/activity?page=${page}&limit=${limit}`).then(res => res.data);

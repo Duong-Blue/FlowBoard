@@ -187,7 +187,3 @@ api.interceptors.response.use(
   },
 );
 
-export const apiGet = <T>(url: string, config?: AxiosRequestConfig): Promise<T> => api.get<T>(url, config).then((res) => res.data);
-export const apiPost = <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => api.post<T>(url, data, config).then((res) => res.data);
-export const apiPatch = <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => api.patch<T>(url, data, config).then((res) => res.data);
-export const apiDelete = <T>(url: string, config?: AxiosRequestConfig): Promise<T> => api.delete<T>(url, config).then((res) => res.data);

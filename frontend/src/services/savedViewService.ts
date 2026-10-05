@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPatch, apiDelete } from '../utils/api_helper';
+import { api } from '../utils/api_helper';
 
 export interface SavedView {
   id: string;
@@ -24,16 +24,16 @@ export interface UpdateSavedViewPayload {
 }
 
 export const getSavedViews = (projectId: string) =>
-  apiGet<SavedView[]>(`/projects/${projectId}/saved-views`);
+  api.get<SavedView[]>(`/projects/${projectId}/saved-views`).then(res => res.data);
 
 export const getSavedView = (projectId: string, id: string) =>
-  apiGet<SavedView>(`/projects/${projectId}/saved-views/${id}`);
+  api.get<SavedView>(`/projects/${projectId}/saved-views/${id}`).then(res => res.data);
 
 export const createSavedView = (projectId: string, data: CreateSavedViewPayload) =>
-  apiPost<SavedView>(`/projects/${projectId}/saved-views`, data);
+  api.post<SavedView>(`/projects/${projectId}/saved-views`, data).then(res => res.data);
 
 export const updateSavedView = (projectId: string, id: string, data: UpdateSavedViewPayload) =>
-  apiPatch<SavedView>(`/projects/${projectId}/saved-views/${id}`, data);
+  api.patch<SavedView>(`/projects/${projectId}/saved-views/${id}`, data).then(res => res.data);
 
 export const deleteSavedView = (projectId: string, id: string) =>
-  apiDelete(`/projects/${projectId}/saved-views/${id}`);
+  api.delete(`/projects/${projectId}/saved-views/${id}`).then(res => res.data);

@@ -1,10 +1,10 @@
-import { apiGet, apiPost, apiDelete } from '../utils/api_helper';
+import { api } from '../utils/api_helper';
 import type { Invitation } from '../store/types';
 
-export const getInvitations = (orgId: string) => apiGet<Invitation[]>(`/organizations/${orgId}/invitations`);
-export const sendInvitation = (orgId: string, data: { email: string, role: string }) => apiPost<Invitation>(`/organizations/${orgId}/invitations`, data);
-export const revokeInvitation = (orgId: string, invitationId: string) => apiDelete(`/organizations/${orgId}/invitations/${invitationId}`);
-export const acceptInvitation = (orgId: string, token: string) => apiPost(`/organizations/${orgId}/invitations/accept`, { token });
-export const declineInvitation = (orgId: string, token: string) => apiPost(`/organizations/${orgId}/invitations/decline`, { token });
+export const getInvitations = (orgId: string) => api.get<Invitation[]>(`/organizations/${orgId}/invitations`).then(res => res.data);
+export const sendInvitation = (orgId: string, data: { email: string, role: string }) => api.post<Invitation>(`/organizations/${orgId}/invitations`, data).then(res => res.data);
+export const revokeInvitation = (orgId: string, invitationId: string) => api.delete(`/organizations/${orgId}/invitations/${invitationId}`).then(res => res.data);
+export const acceptInvitation = (orgId: string, token: string) => api.post(`/organizations/${orgId}/invitations/accept`, { token }).then(res => res.data);
+export const declineInvitation = (orgId: string, token: string) => api.post(`/organizations/${orgId}/invitations/decline`, { token }).then(res => res.data);
 
-export const getMyInvitations = () => apiGet<Invitation[]>('/users/me/invitations');
+export const getMyInvitations = () => api.get<Invitation[]>('/users/me/invitations').then(res => res.data);

@@ -1,11 +1,11 @@
-import { apiPost } from '../utils/api_helper';
+import { api } from '../utils/api_helper';
 
 export const forgotPassword = (data: { email: string }) =>
-  apiPost<{ message: string }>('/auth/forgot-password', data);
+  api.post<{ message: string }>('/auth/forgot-password', data).then(res => res.data);
 
 export const verifyResetCode = (data: { email: string; code: string }) =>
-  apiPost<{ resetToken: string }>('/auth/verify-reset-code', data);
+  api.post<{ resetToken: string }>('/auth/verify-reset-code', data).then(res => res.data);
 
 export const resetPassword = (data: { resetToken: string; newPassword: string }) =>
-  apiPost<{ message: string }>('/auth/reset-password', data);
+  api.post<{ message: string }>('/auth/reset-password', data).then(res => res.data);
 
