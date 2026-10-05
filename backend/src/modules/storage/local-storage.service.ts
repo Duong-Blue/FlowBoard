@@ -1,13 +1,12 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { StorageService } from './storage.interface';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Readable } from 'stream';
 import { createReadStream } from 'fs';
 
 @Injectable()
-export class LocalStorageService implements StorageService {
+export class LocalStorageService {
   private readonly basePath = path.resolve(process.cwd(), 'storage/uploads');
 
   constructor() {

@@ -4,18 +4,10 @@ import { PrismaService } from '../../database/prisma.service';
 import { IssuesService } from './issues.service';
 import { AppModule } from '../../app.module';
 import { ActivityModule } from '../activity/activity.module';
-import { ProjectRole, IssueStatus } from '@prisma/client';
-import { ForbiddenException, BadRequestException } from '@nestjs/common';
 
 describe('IssuesService (Integration)', () => {
   let service: IssuesService;
   let prisma: PrismaService;
-  let orgId: string;
-  let projectId: string;
-  let adminId: string;
-  let memberId: string;
-  let viewerId: string;
-  let otherProjectId: string;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({

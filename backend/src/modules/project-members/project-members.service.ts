@@ -19,11 +19,18 @@ export class ProjectMembersService {
     private readonly activityService: ActivityService,
   ) {}
 
-  private async checkAdminPermission(orgId: string, projectId: string, userId: string) {
+  private async checkAdminPermission(
+    orgId: string,
+    projectId: string,
+    userId: string,
+  ) {
     const orgMember = await this.prisma.organizationMember.findUnique({
       where: { organizationId_userId: { organizationId: orgId, userId } },
     });
-    if (orgMember && (orgMember.role === 'OWNER' || orgMember.role === 'ADMIN')) {
+    if (
+      orgMember &&
+      (orgMember.role === 'OWNER' || orgMember.role === 'ADMIN')
+    ) {
       return;
     }
 
@@ -61,7 +68,11 @@ export class ProjectMembersService {
     });
     if (!project) throw new NotFoundException('Project not found');
 
-    await this.checkAdminPermission(project.organizationId, project.id, requesterId);
+    await this.checkAdminPermission(
+      project.organizationId,
+      project.id,
+      requesterId,
+    );
 
     const orgMember = await this.prisma.organizationMember.findFirst({
       where: { organizationId: project.organizationId, userId: dto.userId },
@@ -128,7 +139,11 @@ export class ProjectMembersService {
     });
     if (!project) throw new NotFoundException('Project not found');
 
-    await this.checkAdminPermission(project.organizationId, project.id, requesterId);
+    await this.checkAdminPermission(
+      project.organizationId,
+      project.id,
+      requesterId,
+    );
 
     return this.prisma.projectMember.update({
       where: { projectId_userId: { projectId, userId: targetUserId } },
@@ -147,7 +162,11 @@ export class ProjectMembersService {
     });
     if (!project) throw new NotFoundException('Project not found');
 
-    await this.checkAdminPermission(project.organizationId, project.id, requesterId);
+    await this.checkAdminPermission(
+      project.organizationId,
+      project.id,
+      requesterId,
+    );
 
     const deletedMember = await this.prisma.projectMember.delete({
       where: { projectId_userId: { projectId, userId: targetUserId } },

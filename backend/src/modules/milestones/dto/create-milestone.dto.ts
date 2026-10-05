@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsDateString,
+  IsNumber,
+} from 'class-validator';
 import { MilestoneStatus } from '@prisma/client';
 
 export class CreateMilestoneDto {

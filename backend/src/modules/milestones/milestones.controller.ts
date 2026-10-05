@@ -18,6 +18,7 @@ import { ProjectMemberGuard } from '../../common/guards/project-member.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { ProjectRole } from '@prisma/client';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @UseGuards(JwtAuthGuard, ProjectMemberGuard, RolesGuard)
 @Controller('projects/:projectId/milestones')
@@ -28,9 +29,10 @@ export class MilestonesController {
   @Roles(ProjectRole.ADMIN)
   create(
     @Param('projectId') projectId: string,
+    @CurrentUser('id') userId: string,
     @Body() createMilestoneDto: CreateMilestoneDto,
   ) {
-    return this.milestonesService.create(projectId, createMilestoneDto);
+    return this.milestonesService.create(projectId, userId, createMilestoneDto);
   }
 
   @Get()
@@ -47,16 +49,21 @@ export class MilestonesController {
   @Roles(ProjectRole.ADMIN)
   update(
     @Param('projectId') projectId: string,
+    @CurrentUser('id') userId: string,
     @Param('id') id: string,
     @Body() updateMilestoneDto: UpdateMilestoneDto,
   ) {
-    return this.milestonesService.update(projectId, id, updateMilestoneDto);
+    return this.milestonesService.update(projectId, userId, id, updateMilestoneDto);
   }
 
   @Delete(':id')
   @Roles(ProjectRole.ADMIN)
-  remove(@Param('projectId') projectId: string, @Param('id') id: string) {
-    return this.milestonesService.delete(projectId, id);
+  remove(
+    @Param('projectId') projectId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.milestonesService.delete(projectId, userId, id);
   }
 
   @Put('reorder')

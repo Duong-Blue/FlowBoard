@@ -116,8 +116,12 @@ export class ProjectsService {
       recentlyUpdatedIssues,
     ] = await Promise.all([
       this.prisma.issue.count({ where: { projectId: resolvedProjectId } }),
-      this.prisma.issue.count({ where: { projectId: resolvedProjectId, status: 'DONE' } }),
-      this.prisma.issue.count({ where: { projectId: resolvedProjectId, status: 'IN_PROGRESS' } }),
+      this.prisma.issue.count({
+        where: { projectId: resolvedProjectId, status: 'DONE' },
+      }),
+      this.prisma.issue.count({
+        where: { projectId: resolvedProjectId, status: 'IN_PROGRESS' },
+      }),
       this.prisma.issue.count({
         where: {
           projectId: resolvedProjectId,
@@ -145,14 +149,24 @@ export class ProjectsService {
         orderBy: { updatedAt: 'desc' },
         take: 5,
         include: {
-          assignee: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+          assignee: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+            },
+          },
           workflowStatus: { select: { id: true, name: true, color: true } },
         },
       }),
     ]);
 
-    const progressPercentage = totalIssues > 0 ? (completedIssues / totalIssues) * 100 : 0;
-    const workflowStatusIds = statusBreakdownGrouped.map((g) => g.workflowStatusId).filter(Boolean) as string[];
+    const progressPercentage =
+      totalIssues > 0 ? (completedIssues / totalIssues) * 100 : 0;
+    const workflowStatusIds = statusBreakdownGrouped
+      .map((g) => g.workflowStatusId)
+      .filter(Boolean) as string[];
     const workflowStatuses = await this.prisma.workflowStatus.findMany({
       where: { id: { in: workflowStatusIds } },
     });

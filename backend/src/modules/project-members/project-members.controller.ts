@@ -25,6 +25,7 @@ export class ProjectMembersController {
 
   @Post()
   @Roles(ProjectRole.ADMIN, OrgRole.ADMIN)
+  @Roles(ProjectRole.ADMIN) // Inherit Admin role from OrgRole.ADMIN
   add(
     @Param('projectId') projectId: string,
     @Req() req,
@@ -40,6 +41,7 @@ export class ProjectMembersController {
 
   @Patch(':userId')
   @Roles(ProjectRole.ADMIN, OrgRole.ADMIN)
+  @Roles(ProjectRole.ADMIN) // Inherit Admin role from OrgRole.ADMIN
   updateRole(
     @Param('projectId') projectId: string,
     @Param('userId') targetUserId: string,
@@ -56,6 +58,7 @@ export class ProjectMembersController {
 
   @Delete(':userId')
   @Roles(ProjectRole.ADMIN, OrgRole.ADMIN)
+  @Roles(ProjectRole.ADMIN) // Inherit Admin role from OrgRole.ADMIN
   remove(
     @Param('projectId') projectId: string,
     @Param('userId') targetUserId: string,
@@ -64,4 +67,3 @@ export class ProjectMembersController {
     return this.service.remove(projectId, targetUserId, req.user.id);
   }
 }
-

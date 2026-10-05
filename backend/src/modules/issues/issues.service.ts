@@ -858,7 +858,12 @@ export class IssuesService {
             issueId,
             actorId,
             type: 'STATUS_CHANGED',
-            metadata: { from: issue.status, to: targetCategory, fromWorkflowStatusId: issue.workflowStatusId, toWorkflowStatusId: targetWorkflowStatusId },
+            metadata: {
+              from: issue.status,
+              to: targetCategory,
+              fromWorkflowStatusId: issue.workflowStatusId,
+              toWorkflowStatusId: targetWorkflowStatusId,
+            },
           },
         });
 
