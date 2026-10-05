@@ -23,9 +23,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       response.status(status).json(exceptionResponse);
     } else {
       this.logger.error(exception);
+      const err = exception as any;
       response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Internal server error',
+        message: err?.message || 'Internal server error',
+        stack: err?.stack,
+        details: String(exception),
       });
     }
   }

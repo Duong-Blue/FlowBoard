@@ -9,20 +9,24 @@ vi.mock('@prisma/client', () => {
   const mockPrismaClient = {
     $connect: vi.fn().mockResolvedValue(undefined),
     $disconnect: vi.fn().mockResolvedValue(undefined),
-    $queryRawUnsafe: vi.fn().mockResolvedValue([{
-      'QUERY PLAN': [{
-        'Execution Time': 1,
-        'Planning Time': 1,
-        'Plan': { 'Total Cost': 1, 'Actual Rows': 1 }
-      }]
-    }])
+    $queryRawUnsafe: vi.fn().mockResolvedValue([
+      {
+        'QUERY PLAN': [
+          {
+            'Execution Time': 1,
+            'Planning Time': 1,
+            Plan: { 'Total Cost': 1, 'Actual Rows': 1 },
+          },
+        ],
+      },
+    ]),
   };
-  return { 
+  return {
     PrismaClient: class {
       constructor() {
         return mockPrismaClient;
       }
-    } 
+    },
   };
 });
 

@@ -40,7 +40,7 @@ export class RolesGuard implements CanActivate {
     const project = await this.prisma.project.findUnique({
       where: { id: projectMember.projectId },
     });
-    
+
     if (project) {
       const orgMember = await this.prisma.organizationMember.findUnique({
         where: {
@@ -51,7 +51,10 @@ export class RolesGuard implements CanActivate {
         },
       });
 
-      if (orgMember && (orgMember.role === 'OWNER' || orgMember.role === 'ADMIN')) {
+      if (
+        orgMember &&
+        (orgMember.role === 'OWNER' || orgMember.role === 'ADMIN')
+      ) {
         return true;
       }
     }
@@ -59,4 +62,3 @@ export class RolesGuard implements CanActivate {
     throw new ForbiddenException('Insufficient role permissions');
   }
 }
-
