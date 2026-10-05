@@ -5,7 +5,6 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import { getIssues, createIssue, updateIssue, deleteIssue } from '../../services/issueService';
 import { getProjectMembers } from '../../services/memberService';
 import { setIssues, setLoading, setError, setFilters, addIssue, updateIssue as updateIssueAction, removeIssue } from '../../store/slices/issueSlice';
-import { ProjectPageShell } from '@/components/shared/ProjectPageShell';
 import { PageLoader } from '../../components/shared/PageLoader';
 import { EmptyState } from '../../components/shared/EmptyState';
 import { SemanticBadge } from '../../components/shared/SemanticBadge';
@@ -470,21 +469,9 @@ export default function IssueListPage({ standalone = true, showFilterBar }: Issu
   }
 
   return (
-    <ProjectPageShell
-      project={project}
-      title={t('board.listView')}
-      activeView="list"
-      actions={
-        canCreateOrEdit ? (
-          <Button onClick={() => { setEditingIssue(undefined); setDialogOpen(true); }}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t('board.createIssue')}
-          </Button>
-        ) : undefined
-      }
-    >
+    <>
       {listContent}
-    </ProjectPageShell>
+    </>
   );
 }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { apiPost } from '../../utils/api_helper';
+import { api } from '../../utils/api_helper';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -31,7 +31,7 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
-      await apiPost('/auth/register', { firstName, lastName, email, password });
+      await api.post('/auth/register', { firstName, lastName, email, password }).then(res => res.data);
       toast.success('Registration successful! Please login.');
       
       const locationState = location.state as { from?: unknown } | null;

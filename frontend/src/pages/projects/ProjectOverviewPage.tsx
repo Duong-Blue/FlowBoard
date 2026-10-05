@@ -1,25 +1,30 @@
 import { useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ProjectPageShell } from '@/components/shared/ProjectPageShell';
-import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { PageLoader } from '@/components/shared/PageLoader';
 import NotFound from '../NotFound';
 import { LayoutDashboard, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useQuery } from '@tanstack/react-query';
 import { getProjectSummary } from '@/services/projectService';
 import { milestoneService, type Milestone } from '@/services/milestoneService';
+import type { Project } from '@/store/types';
 
 export function ProjectOverviewPage() {
   const { t } = useTranslation(['workspace', 'common']);
-  const { project, loading: projectLoading, is404 } = useResolvedProject();
+  const { project } = useOutletContext<{ project: Project }>();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [summary, setSummary] = useState<any>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
-  const { data: summary, isLoading: summaryLoading } = useQuery({
-    queryKey: ['projectSummary', project?.id],
-    queryFn: () => (project ? getProjectSummary(project.id) : null),
-    enabled: !!project,
-  });
+  useEffect(() => {
+    if (project?.id) {
+        setSummaryLoading(true);
+        getProjectSummary(project.id)
+            .then(res => setSummary(res))
+            .catch(() => {})
+            .finally(() => setSummaryLoading(false));
+    }
+  }, [project?.id]);
 
   useEffect(() => {
     if (project?.id) {
@@ -27,14 +32,13 @@ export function ProjectOverviewPage() {
     }
   }, [project?.id]);
 
-  if (projectLoading || summaryLoading) return <PageLoader text={t('common:status.loading', { defaultValue: 'Loading...' })} />;
-  if (is404 || !project) return <NotFound />;
+  if (summaryLoading) return <PageLoader text={t('common:status.loading', { defaultValue: 'Loading...' })} />;
+  if (!project) return <NotFound />;
 
-  const summaryData = (summary as any)?.data || {};
+  const summaryData = summary?.data || {};
   const metrics = summaryData.metrics || { totalIssues: 0, completedIssues: 0, inProgressIssues: 0, overdueIssues: 0, progressPercentage: 0 };
 
   return (
-    <ProjectPageShell project={project} title={project.name} subtitle={project.description || 'Project Overview'}>
       <div className="p-6 space-y-6 max-w-6xl">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -85,7 +89,6 @@ export function ProjectOverviewPage() {
             </CardContent>
         </Card>
       </div>
-    </ProjectPageShell>
   );
 }
 

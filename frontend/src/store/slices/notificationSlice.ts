@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { NotificationItem } from '../types';
-import { apiGet, apiPatch } from '../../utils/api_helper';
+import { api } from '../../utils/api_helper';
 
 export interface NotificationState {
   items: NotificationItem[];
@@ -40,30 +40,30 @@ export const fetchNotifications = createAsyncThunk(
     const page = params.page ?? 1;
     const limit = params.limit ?? 20;
     const unreadOnly = params.unreadOnly;
-    return await apiGet<NotificationsResponse>('/notifications', {
+    return await api.get<NotificationsResponse>('/notifications', {
       params: { page, limit, ...(unreadOnly !== undefined ? { unreadOnly } : {}) },
-    });
+    }).then(res => res.data);
   }
 );
 
 export const fetchUnreadCount = createAsyncThunk(
   'notification/fetchUnreadCount',
   async () => {
-    return await apiGet<{ count: number }>('/notifications/unread-count');
+    return await api.get<{ count: number }>('/notifications/unread-count').then(res => res.data);
   }
 );
 
 export const markNotificationAsRead = createAsyncThunk(
   'notification/markNotificationAsRead',
   async (id: string) => {
-    return await apiPatch<NotificationItem>(`/notifications/${id}/read`);
+    return await api.patch<NotificationItem>(`/notifications/${id}/read`).then(res => res.data);
   }
 );
 
 export const markAllNotificationsAsRead = createAsyncThunk(
   'notification/markAllNotificationsAsRead',
   async () => {
-    return await apiPatch<{ count: number }>('/notifications/read-all');
+    return await api.patch<{ count: number }>('/notifications/read-all').then(res => res.data);
   }
 );
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { Milestone } from '@/services/milestoneService';
+import type { Milestone } from '@/services/milestoneService';
 
 interface MilestoneDetailDrawerProps {
   milestone: Milestone | null;

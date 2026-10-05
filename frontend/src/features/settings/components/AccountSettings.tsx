@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { apiDelete } from '@/utils/api_helper';
+import { api } from '@/utils/api_helper';
 import { toast } from 'sonner';
 
 export function AccountSettings() {
@@ -48,7 +48,7 @@ export function AccountSettings() {
         dto.confirmation = inputValue;
       }
 
-      await apiDelete('/users/me', { data: dto });
+      await api.delete('/users/me', { data: dto }).then(res => res.data);
       toast.success(t('account.deleteSuccess'));
       dispatch(logout());
       window.location.href = '/login';

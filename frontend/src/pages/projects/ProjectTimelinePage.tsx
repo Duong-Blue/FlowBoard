@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { PageLoader } from '@/components/shared/PageLoader';
-import { ProjectPageShell } from '@/components/shared/ProjectPageShell';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { fetchBoardIssues } from '@/store/slices/issueSlice';
@@ -33,15 +32,10 @@ export default function ProjectTimelinePage() {
   }
 
   return (
-    <ProjectPageShell
-      project={project}
-      title={t('board.timelineView', { defaultValue: 'Timeline' })}
-      activeView="timeline"
-      fullHeight
-    >
+    <>
       <div className="flex-1 overflow-hidden p-2">
         <IssueTimelineView />
       </div>
-    </ProjectPageShell>
+    </>
   );
 }

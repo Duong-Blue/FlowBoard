@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch } from '../../store';
 import { setCredentials } from '../../store/slices/authSlice';
-import { apiPost } from '../../utils/api_helper';
+import { api } from '../../utils/api_helper';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -32,7 +32,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      const response = await apiPost<{ user: { id: string; email: string; name?: string; firstName: string; lastName: string }; accessToken: string; refreshToken: string }>('/auth/login', { email, password });
+      const response = await api.post<{ user: { id: string; email: string; name?: string; firstName: string; lastName: string }; accessToken: string; refreshToken: string }>('/auth/login', { email, password }).then(res => res.data);
       dispatch(setCredentials({
         user: response.user,
         accessToken: response.accessToken

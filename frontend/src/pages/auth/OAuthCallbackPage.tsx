@@ -5,7 +5,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppDispatch } from '../../store';
 import { setCredentials } from '../../store/slices/authSlice';
-import { apiPost } from '../../utils/api_helper';
+import { api } from '../../utils/api_helper';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
 import { type User } from '../../store/types';
@@ -61,7 +61,7 @@ export default function OAuthCallbackPage() {
 
     async function performExchange() {
       try {
-        const response = await apiPost<ExchangeResponse>('/auth/oauth/exchange', { code });
+        const response = await api.post<ExchangeResponse>('/auth/oauth/exchange', { code }).then(res => res.data);
         dispatch(
           setCredentials({
             user: response.user,

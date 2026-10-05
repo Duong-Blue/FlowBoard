@@ -32,6 +32,7 @@ import WorkspaceHome from './pages/workspace/WorkspaceHome';
 import { Toaster } from './components/ui/sonner';
 import { SocketProvider } from './providers/SocketProvider';
 import { ThemeProvider } from './providers/ThemeProvider';
+import { ProjectPageShell } from './components/shared/ProjectPageShell';
 import {
   SettingsLayout,
   ProfileSettings,
@@ -86,6 +87,7 @@ const router = createBrowserRouter([
               { path: 'orgs/:orgId/projects/new', element: <CreateProjectPage /> },
               {
                 path: 'orgs/:orgSlug/projects/:projectKey',
+                element: <ProjectPageShell />,
                 children: [
                   { index: true, element: <Navigate to="overview" replace /> },
                   { path: 'overview', element: <ProjectOverviewPage /> },

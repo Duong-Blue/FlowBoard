@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { PageLoader } from '@/components/shared/PageLoader';
-import { ProjectPageShell } from '@/components/shared/ProjectPageShell';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { useAppSelector } from '@/store';
 import { CalendarBoard } from '@/features/issues/components/CalendarBoard';
@@ -38,14 +37,9 @@ export default function ProjectCalendarPage({ standalone = true }: ProjectCalend
   }
 
   return (
-    <ProjectPageShell
-      project={project}
-      title={t('board.calendarView', { defaultValue: 'Calendar' })}
-      activeView="calendar"
-      fullHeight
-    >
+    <>
       {calendarContent}
-    </ProjectPageShell>
+    </>
   );
 }
 

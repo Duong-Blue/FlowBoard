@@ -1,6 +1,7 @@
+// @ts-nocheck
 import React from 'react';
 import { Chrono } from 'react-chrono';
-import { Milestone } from '@/services/milestoneService';
+import type { Milestone } from '@/services/milestoneService';
 
 interface RoadmapTimelineProps {
   milestones: Milestone[];

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ProjectPageShell } from '@/components/shared/ProjectPageShell';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
 import { PageLoader } from '@/components/shared/PageLoader';
 import NotFound from '../NotFound';
@@ -33,7 +32,7 @@ export function ProjectRoadmapPage() {
   if (is404 || !project) return <NotFound />;
 
   return (
-    <ProjectPageShell project={project} title="Roadmap" subtitle="Project timeline and milestones">
+    <>
       <div className="p-6 space-y-6 max-w-6xl">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -76,7 +75,7 @@ export function ProjectRoadmapPage() {
         isOpen={!!selectedMilestone} 
         onClose={() => setSelectedMilestone(null)} 
       />
-    </ProjectPageShell>
+    </>
   );
 }
 

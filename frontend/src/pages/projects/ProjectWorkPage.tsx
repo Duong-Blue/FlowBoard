@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ProjectPageShell } from '@/components/shared/ProjectPageShell';
 import { PageLoader } from '@/components/shared/PageLoader';
 import NotFound from '../NotFound';
 import { useResolvedProject } from '@/hooks/useResolvedProject';
@@ -141,12 +140,7 @@ export function ProjectWorkPage() {
   }
 
   return (
-    <ProjectPageShell
-      project={project}
-      title={t('board.workViewTitle', { defaultValue: 'Work Workspace' })}
-      activeView={activeView}
-      fullHeight
-    >
+    <>
       <div className="flex flex-col gap-4 h-full min-h-0">
         {/* Top Control Bar: View Switcher, Filter Bar & Create Button */}
         <div className="flex flex-col space-y-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
@@ -362,7 +356,7 @@ export function ProjectWorkPage() {
         members={members}
         onSubmit={handleCreateIssue}
       />
-    </ProjectPageShell>
+    </>
   );
 }
 
