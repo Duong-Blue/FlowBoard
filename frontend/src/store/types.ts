@@ -55,6 +55,7 @@ export interface Project {
     name: string;
     slug?: string;
   };
+  createdAt?: string;
   lastAccessedAt?: string;
 }
 
@@ -158,6 +159,9 @@ export interface SubtaskProgress {
 }
 
 export interface Issue {
+  milestoneId?: string | null;
+  milestone?: { id: string; name: string } | null;
+
   id: string;
   projectId: string;
   key: string;

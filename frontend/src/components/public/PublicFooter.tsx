@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard } from "lucide-react";
 
 export default function PublicFooter() {
   const { t } = useTranslation('landing');
@@ -12,7 +11,7 @@ export default function PublicFooter() {
           {/* Col 1: Brand */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2 text-slate-900 font-bold text-xl">
-              <LayoutDashboard className="h-6 w-6 text-indigo-600" />
+              <img src="/logo.png" alt="FlowBoard logo" className="h-6 w-6" />
               <span>FlowBoard</span>
             </div>
             <p className="text-sm text-slate-600 leading-relaxed">

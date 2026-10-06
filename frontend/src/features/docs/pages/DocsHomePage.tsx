@@ -1,7 +1,7 @@
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
-import { ChevronRight, Clock, Copy, Info, Check, ThumbsUp, ThumbsDown, Edit, MessageSquare, ArrowRight, CheckCircle, Terminal } from 'lucide-react';
+import { ChevronRight, Clock, Copy, Info, Check, ThumbsUp, ThumbsDown, Edit, MessageSquare, ArrowRight, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function DocsHomePage() {

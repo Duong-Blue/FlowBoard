@@ -460,6 +460,7 @@ export default function IssueListPage({ standalone = true, showFilterBar }: Issu
         issue={editingIssue}
         members={members}
         onSubmit={handleCreateOrUpdate}
+        projectId={projectId}
       />
     </div>
   );

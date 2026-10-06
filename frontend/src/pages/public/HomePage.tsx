@@ -12,7 +12,6 @@ import {
   GitMerge,
   Shield,
   CheckCircle2,
-  FolderKanban,
   User,
   Search,
 } from 'lucide-react';
@@ -167,7 +166,7 @@ export default function HomePage() {
                 <div className="w-48 bg-slate-900 p-4 text-slate-300 flex flex-col justify-between hidden lg:flex">
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2 text-white font-bold text-sm">
-                      <FolderKanban className="h-5 w-5 text-indigo-400" />
+                      <img src="/logo.png" alt="FlowBoard logo" className="h-5 w-5" />
                       <span>FlowBoard</span>
                     </div>
                     <div className="space-y-1 pt-2">

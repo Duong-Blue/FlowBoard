@@ -332,7 +332,7 @@ export function ProjectWorkPage() {
         </div>
 
         {/* View Content Area */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-[500px]">
           {activeView === 'list' ? (
             <IssueListPage standalone={false} />
           ) : activeView === 'calendar' ? (
@@ -355,6 +355,7 @@ export function ProjectWorkPage() {
         onOpenChange={setCreateModalOpen}
         members={members}
         onSubmit={handleCreateIssue}
+        projectId={projectId}
       />
     </>
   );

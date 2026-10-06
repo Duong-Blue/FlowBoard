@@ -35,7 +35,7 @@ export function DocsSidebar() {
         <div key={section.category}>
           <div className="flex items-center gap-2 px-3 mb-2 text-xs font-semibold tracking-wider uppercase text-slate-900 dark:text-slate-200">
             <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-            {t(getCategoryKey(section.category))}
+            {t(getCategoryKey(section.category) as any)}
           </div>
           <div className="flex flex-col gap-1">
             {section.articles.map((article) => {
@@ -55,7 +55,7 @@ export function DocsSidebar() {
                 >
                   {({ isActive }) => (
                     <>
-                      <span>{t(getArticleKey(article.slug))}</span>
+                      <span>{t(getArticleKey(article.slug) as any)}</span>
                       {isActive && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>}
                     </>
                   )}

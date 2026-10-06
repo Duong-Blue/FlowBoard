@@ -7,6 +7,7 @@ export interface CreateIssueModalProps {
   issue?: Issue;
   members: Member[];
   onSubmit: (data: Partial<Issue>) => Promise<void>;
+  projectId?: string;
 }
 
 export function CreateIssueModal(props: CreateIssueModalProps) {

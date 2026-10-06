@@ -5,7 +5,6 @@ import { useAppSelector, useAppDispatch } from '../store';
 import { setActiveOrg } from '../store/slices/orgSlice';
 import { setActiveProject } from '../store/slices/projectSlice';
 import {
-  Kanban,
   LayoutDashboard,
   FolderKanban,
   Users,
@@ -332,6 +331,7 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
                   key={proj.id}
                   onClick={() => {
                     dispatch(setActiveProject(proj.id));
+                    localStorage.setItem(`lastProjectId_${orgId}`, proj.id);
                     navigate(`/workspace/orgs/${orgSlug}/projects/${proj.key}`);
                     closeMobileMenu?.();
                   }}

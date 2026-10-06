@@ -10,17 +10,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { type Issue } from '../../../store/types';
 import type { Member } from '../../../store/types';
 import { useProjectWorkflow } from '@/hooks/useProjectWorkflow';
+import { milestoneService, type Milestone } from '@/services/milestoneService';
+import { getProjectMembers } from '@/services/memberService';
 
 interface IssueFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   issue?: Issue;
-  members: Member[];
+  members?: Member[];
   onSubmit: (data: Partial<Issue>) => Promise<void>;
   projectId?: string;
+  defaultMilestoneId?: string;
 }
 
-export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit, projectId }: IssueFormDialogProps) {
+export function IssueFormDialog({ open, onOpenChange, issue, members: propMembers, onSubmit, projectId, defaultMilestoneId }: IssueFormDialogProps) {
   const { t } = useTranslation(['issues', 'common']);
   const params = useParams<{ projectId?: string }>();
   const effectiveProjectId = projectId || issue?.projectId || params.projectId;
@@ -32,10 +35,25 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit, 
   const [workflowStatusId, setWorkflowStatusId] = useState('TODO');
   const [priority, setPriority] = useState('MEDIUM');
   const [assigneeId, setAssigneeId] = useState<string>('unassigned');
+  const [milestoneId, setMilestoneId] = useState<string>('unassigned');
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [members, setMembers] = useState<Member[]>(propMembers || []);
   const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dateError, setDateError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (effectiveProjectId && open) {
+      Promise.all([
+        milestoneService.getAll(effectiveProjectId).catch(() => []),
+        !propMembers || propMembers.length === 0 ? getProjectMembers(effectiveProjectId).catch(() => []) : Promise.resolve(propMembers)
+      ]).then(([milestonesRes, membersRes]) => {
+        setMilestones(milestonesRes);
+        setMembers(membersRes);
+      });
+    }
+  }, [effectiveProjectId, open, propMembers]);
 
   useEffect(() => {
     if (open) {
@@ -51,11 +69,12 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit, 
       setWorkflowStatusId(defaultWfId);
       setPriority(issue?.priority || 'MEDIUM');
       setAssigneeId(issue?.assigneeId || 'unassigned');
+      setMilestoneId(issue?.milestoneId || defaultMilestoneId || 'unassigned');
       setStartDate(issue?.startDate ? issue.startDate.split('T')[0] : '');
       setDueDate(issue?.dueDate ? issue.dueDate.split('T')[0] : '');
       setDateError(null);
     }
-  }, [open, issue, statuses, getDefaultStatusId]);
+  }, [open, issue, statuses, getDefaultStatusId, defaultMilestoneId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +101,7 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit, 
         workflowStatusId: finalWfStatusId,
         priority,
         assigneeId: assigneeId === 'unassigned' ? undefined : assigneeId,
+        milestoneId: milestoneId === 'unassigned' ? null : milestoneId,
         startDate: startDate ? new Date(startDate).toISOString() : undefined,
         dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
       });
@@ -201,6 +221,23 @@ export function IssueFormDialog({ open, onOpenChange, issue, members, onSubmit, 
                     {members.map(member => (
                       <SelectItem key={member.userId} value={member.userId}>
                         {member.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="milestone">{t('form.milestoneLabel', 'Milestone')}</Label>
+                <Select value={milestoneId} onValueChange={setMilestoneId}>
+                  <SelectTrigger id="milestone" className="bg-white dark:bg-slate-950">
+                    <SelectValue placeholder={t('form.milestoneLabel', 'Milestone')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">{t('form.unassigned')}</SelectItem>
+                    {milestones.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
