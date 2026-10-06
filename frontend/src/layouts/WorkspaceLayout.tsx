@@ -158,15 +158,26 @@ export default function WorkspaceLayout() {
 
   // 4. Hydrate Redux activeProjectId matching strictly p.key === projectKey (no fallback to p.id)
   useEffect(() => {
-    if (projects.length === 0 || !projectKey) return;
+    if (projects.length === 0) return;
 
-    const matchedProject = projects.find((p) => p.key === projectKey);
-    if (matchedProject) {
-      if (matchedProject.id !== activeProjectId) {
-        dispatch(setActiveProject(matchedProject.id));
+    if (projectKey) {
+      const matchedProject = projects.find((p) => p.key === projectKey);
+      if (matchedProject) {
+        if (matchedProject.id !== activeProjectId) {
+          dispatch(setActiveProject(matchedProject.id));
+          localStorage.setItem(`lastProjectId_${orgId}`, matchedProject.id);
+        }
+      }
+    } else if (activeOrgId) {
+      const lastProjectId = localStorage.getItem(`lastProjectId_${orgId}`);
+      if (lastProjectId) {
+        const lastProject = projects.find((p) => p.id === lastProjectId);
+        if (lastProject && lastProject.id !== activeProjectId) {
+          dispatch(setActiveProject(lastProject.id));
+        }
       }
     }
-  }, [projectKey, projects, activeProjectId, dispatch]);
+  }, [projectKey, projects, activeProjectId, dispatch, orgId, activeOrgId]);
 
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
