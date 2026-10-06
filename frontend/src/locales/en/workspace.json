@@ -71,6 +71,7 @@
     "organizationSection": "ORGANIZATION",
     "organizations": "Organizations",
     "selectOrganization": "Select Organization",
+    "selectOrganizationHint": "Select an organization to view details",
     "noOrgSelected": "No org selected",
     "noOrganizations": "No organizations found",
     "createOrganization": "Create Organization",

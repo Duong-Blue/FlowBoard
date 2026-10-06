@@ -71,6 +71,7 @@
     "organizationSection": "TỔ CHỨC",
     "organizations": "Danh sách tổ chức",
     "selectOrganization": "Chọn tổ chức",
+    "selectOrganizationHint": "Chọn một tổ chức để xem chi tiết",
     "noOrgSelected": "Chưa chọn tổ chức",
     "noOrganizations": "Không tìm thấy tổ chức nào",
     "createOrganization": "Tạo tổ chức mới",
