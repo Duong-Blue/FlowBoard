@@ -106,11 +106,11 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
                 onToggleCollapse();
               }
             }}
-            className="bg-blue-600 hover:bg-blue-500 p-1.5 rounded-lg text-white flex items-center justify-center shrink-0 transition-colors shadow-sm cursor-pointer outline-none"
+            className="bg-indigo-600 hover:bg-indigo-500 p-1.5 rounded-lg text-white flex items-center justify-center shrink-0 transition-colors shadow-sm cursor-pointer outline-none"
             title={isCollapsed ? t('sidebar.expandSidebar') : t('sidebar.collapseSidebar')}
             aria-label="Toggle sidebar"
           >
-            <Kanban className="h-5 w-5" />
+            <img src="/logo.png" alt="FlowBoard logo" className="h-5 w-5" />
           </button>
           {!isCollapsed && (
             <Link
@@ -229,50 +229,58 @@ export function WorkspaceSidebar({ closeMobileMenu, isCollapsed = false, onToggl
           </DropdownMenu>
 
           {/* Org Navigation Items */}
-          <div className="space-y-1">
-            <SidebarNavItem
-              to={`/workspace/orgs/${orgSlug}`}
-              icon={LayoutDashboard}
-              label={t('sidebar.overview')}
-              isActive={
-                location.pathname === `/workspace/orgs/${orgSlug}` ||
-                location.pathname === `/workspace/orgs/${orgSlug}/` ||
-                location.pathname === `/workspace/orgs/${orgSlug}/overview`
-              }
-              onClick={closeMobileMenu}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarNavItem
-              to={`/workspace/orgs/${orgSlug}/projects`}
-              icon={FolderKanban}
-              label={t('sidebar.allProjects')}
-              isActive={
-                location.pathname === `/workspace/orgs/${orgSlug}/projects` ||
-                location.pathname === `/workspace/orgs/${orgSlug}/projects/new`
-              }
-              onClick={closeMobileMenu}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarNavItem
-              to={`/workspace/orgs/${orgSlug}/members`}
-              icon={Users}
-              label={t('sidebar.membersAndInvitations')}
-              isActive={
-                location.pathname === `/workspace/orgs/${orgSlug}/members` ||
-                location.pathname === `/workspace/orgs/${orgSlug}/invitations`
-              }
-              onClick={closeMobileMenu}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarNavItem
-              to={`/workspace/orgs/${orgSlug}/settings`}
-              icon={Settings}
-              label={t('sidebar.orgSettings')}
-              isActive={location.pathname === `/workspace/orgs/${orgSlug}/settings`}
-              onClick={closeMobileMenu}
-              isCollapsed={isCollapsed}
-            />
-          </div>
+          {activeOrg ? (
+            <div className="space-y-1">
+              <SidebarNavItem
+                to={`/workspace/orgs/${orgSlug}`}
+                icon={LayoutDashboard}
+                label={t('sidebar.overview')}
+                isActive={
+                  location.pathname === `/workspace/orgs/${orgSlug}` ||
+                  location.pathname === `/workspace/orgs/${orgSlug}/` ||
+                  location.pathname === `/workspace/orgs/${orgSlug}/overview`
+                }
+                onClick={closeMobileMenu}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                to={`/workspace/orgs/${orgSlug}/projects`}
+                icon={FolderKanban}
+                label={t('sidebar.allProjects')}
+                isActive={
+                  location.pathname === `/workspace/orgs/${orgSlug}/projects` ||
+                  location.pathname === `/workspace/orgs/${orgSlug}/projects/new`
+                }
+                onClick={closeMobileMenu}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                to={`/workspace/orgs/${orgSlug}/members`}
+                icon={Users}
+                label={t('sidebar.membersAndInvitations')}
+                isActive={
+                  location.pathname === `/workspace/orgs/${orgSlug}/members` ||
+                  location.pathname === `/workspace/orgs/${orgSlug}/invitations`
+                }
+                onClick={closeMobileMenu}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                to={`/workspace/orgs/${orgSlug}/settings`}
+                icon={Settings}
+                label={t('sidebar.orgSettings')}
+                isActive={location.pathname === `/workspace/orgs/${orgSlug}/settings`}
+                onClick={closeMobileMenu}
+                isCollapsed={isCollapsed}
+              />
+            </div>
+          ) : (
+            !isCollapsed && (
+              <div className="px-3 py-2 text-xs text-slate-500 italic">
+                {t('sidebar.selectOrganizationHint', { defaultValue: 'Select an organization to view details' })}
+              </div>
+            )
+          )}
         </div>
 
         {/* Divider */}

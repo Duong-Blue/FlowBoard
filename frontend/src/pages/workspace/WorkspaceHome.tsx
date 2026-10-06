@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, RotateCcw } from 'lucide-react';
@@ -32,6 +32,7 @@ export function WorkspaceHome() {
   const [assignedIssues, setAssignedIssues] = useState<Issue[]>([]);
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
   const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>([]);
+  const hasFetchedOrgs = useRef(false);
 
   const fetchWorkspaceData = useCallback(async () => {
     setLoading(true);
@@ -46,7 +47,8 @@ export function WorkspaceHome() {
       }
 
       let currentOrgs = orgs;
-      if (currentOrgs.length === 0) {
+      if (currentOrgs.length === 0 && !hasFetchedOrgs.current) {
+        hasFetchedOrgs.current = true;
         try {
           const fetchedOrgs = await getOrgs();
           dispatch(setOrgs(fetchedOrgs));
