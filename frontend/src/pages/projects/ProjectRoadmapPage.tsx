@@ -47,18 +47,12 @@ export function ProjectRoadmapPage() {
           </CardHeader>
           <CardContent>
              {milestones.length > 0 ? (
-                <div onClick={(e) => {
-                  const target = e.target as HTMLElement;
-                  const title = target.getAttribute('data-title');
-                  if (title) {
-                    const found = milestones.find(m => m.name === title);
-                    if (found) setSelectedMilestone(found);
-                  }
-                }}>
-                  <RoadmapTimeline milestones={milestones} />
-                </div>
+                <RoadmapTimeline 
+                  milestones={milestones} 
+                  onSelectMilestone={setSelectedMilestone}
+                />
              ) : (
-                <p>No milestones defined yet.</p>
+                <p className="text-sm text-slate-500 py-4">No milestones defined yet.</p>
              )}
           </CardContent>
         </Card>
