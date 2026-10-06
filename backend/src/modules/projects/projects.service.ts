@@ -71,6 +71,15 @@ export class ProjectsService {
     if (!org) return [];
     return this.prisma.project.findMany({
       where: { organizationId: org.id, members: { some: { userId } } },
+      include: {
+        _count: {
+          select: {
+            issues: true,
+            members: true,
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
