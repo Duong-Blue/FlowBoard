@@ -23,6 +23,10 @@ import VerifyResetCodePage from './pages/auth/VerifyResetCodePage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import ResetSuccessPage from './pages/auth/ResetSuccessPage';
 import HomePage from './pages/public/HomePage';
+import DocsLayout from './layouts/DocsLayout';
+import DocsHomePage from './features/docs/pages/DocsHomePage';
+import DocsArticlePage from './features/docs/pages/DocsArticlePage';
+import DocsNotFoundPage from './features/docs/pages/DocsNotFoundPage';
 import InvitationsPage from './pages/invitations/InvitationsPage';
 import AcceptInvitationPage from './pages/invitations/AcceptInvitationPage';
 import DocumentTitleHelper from './components/DocumentTitleHelper';
@@ -55,6 +59,15 @@ const router = createBrowserRouter([
         element: <PublicLayout />,
         children: [
           { path: '/', element: <HomePage /> },
+          {
+            path: 'docs',
+            element: <DocsLayout />,
+            children: [
+              { index: true, element: <DocsHomePage /> },
+              { path: 'not-found', element: <DocsNotFoundPage /> },
+              { path: ':slug', element: <DocsArticlePage /> },
+            ],
+          },
         ],
       },
       {
