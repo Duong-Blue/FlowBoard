@@ -1,0 +1,137 @@
+{
+  "sidebar": {
+    "gettingStarted": "Getting Started",
+    "coreConcepts": "Core Concepts",
+    "features": "Features",
+    "account": "Account"
+  },
+  "home": {
+    "title": "Welcome to FlowBoard",
+    "description": [
+      "Manage projects intuitively.",
+      "Track issues and milestones.",
+      "Stay aligned with your team."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "homePage": {
+    "breadcrumbDocs": "Docs",
+    "breadcrumbGettingStarted": "Getting Started",
+    "breadcrumbIntro": "Introduction",
+    "mainTitle": "FlowBoard Overview & Core Concepts",
+    "mainDesc": "Learn how FlowBoard structures organizations, projects, sprint cycles, and real-time kanban boards for high-velocity software engineering squads.",
+    "updatedAgo": "Updated 2 days ago",
+    "stableVersion": "v2.4.0 (Stable)",
+    "overviewTitle": "Overview",
+    "overviewP1": "FlowBoard is an opinionated project orchestration platform built for high-throughput engineering teams. Rather than treating issues as isolated tickets, FlowBoard couples telemetry, real-time board states, and hierarchical permission boundaries into a single operational canvas.",
+    "overviewP2": "Designed to bridge tactical issue management with continuous integration feedback loops, FlowBoard guarantees sub-50ms reactive updates across connected browser sessions using dedicated WebSocket multiplexing.",
+    "workspaceIsolationTitle": "Workspace Isolation Principle",
+    "workspaceIsolationDesc": "FlowBoard isolates telemetry and workspace data strictly at the Organization level before drilling into Projects. API keys and service integrations cannot bridge organization barriers without explicit multi-tenant cross-grants.",
+    "archScopesTitle": "Architectural Scopes",
+    "archScopesDesc": "FlowBoard’s object model is strictly hierarchical. Data ownership flows downward through four core tiers:",
+    "archScopeOrgTitle": "Organization",
+    "archScopeOrgDesc": "Top-level billing entity, enterprise SSO boundaries, global audit logs, and member provisioning.",
+    "archScopeProjectTitle": "Project Space",
+    "archScopeProjectDesc": "Domain-specific repositories of engineering initiatives with custom workflow state definitions.",
+    "archScopeKanbanTitle": "Kanban View",
+    "archScopeKanbanDesc": "Real-time projection of issues organized by status columns, active sprint milestones, and swimlanes.",
+    "archScopeIssueTitle": "Issue & Cycle",
+    "archScopeIssueDesc": "Atomic work unit containing technical telemetry, Git branch connections, subtask graphs, and estimates.",
+    "coreEntityTitle": "Core Entity Model",
+    "coreEntityDesc": "Every entity in FlowBoard carries deterministic prefix keys (e.g. FLW-1042) that resolve globally within an organization cluster.",
+    "coreEntityLi1Prefix": "Org-level Isolation:",
+    "coreEntityLi1Text": " Team members are authenticated against an Org, inheriting granular RBAC.",
+    "coreEntityLi2Prefix": "Cross-Project Boards:",
+    "coreEntityLi2Text": " Engineering leads can create synthesis boards aggregating issues.",
+    "coreEntityLi3Prefix": "Deterministic Sprints:",
+    "coreEntityLi3Text": " Time-bounded cycles (1-4 weeks) that enforce commit-freeze checkpoints.",
+    "terminalTitle": "terminal — bash",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "codeComment1": "# 1. Initialize FlowBoard project context",
+    "codeComment2": "# 2. Authenticate CLI using personal token",
+    "codeComment3": "# 3. Pull active board telemetry & sync local Git branches",
+    "navPrev": "Previous",
+    "navPrevTitle": "Beginning of Documentation",
+    "navNext": "Next Article",
+    "navNextTitle": "How FlowBoard Works",
+    "navNextDesc": "Deep dive into the operational lifecycle of issues and sprints.",
+    "tocTitle": "On this page",
+    "tocOverview": "Overview",
+    "tocArchScopes": "Architectural Scopes",
+    "tocCoreEntity": "Core Entity Model",
+    "feedbackTitle": "Was this page helpful?",
+    "feedbackYes": "Yes",
+    "feedbackNo": "No",
+    "editPage": "Edit page on GitHub",
+    "joinDiscord": "Join Discord Community"
+  },
+  "how_it_works": {
+    "title": "How It Works",
+    "description": [
+      "Create projects to group your work.",
+      "Add issues to track individual tasks.",
+      "Use boards to manage your workflow."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "workspace": {
+    "title": "Your Workspace",
+    "description": [
+      "Central hub for all your projects.",
+      "Quick access to recent tasks.",
+      "Team overview and activity log."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "projects": {
+    "title": "Projects",
+    "description": [
+      "Organize issues into projects.",
+      "Track progress with roadmaps.",
+      "Collaborate with your team."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "roadmap": {
+    "title": "Roadmap",
+    "description": [
+      "Visualize your project timeline.",
+      "Track key milestones.",
+      "Plan future releases."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "issues": {
+    "title": "Issues",
+    "description": [
+      "Detailed task tracking.",
+      "Assign, tag, and prioritize.",
+      "Comment and collaborate."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "board": {
+    "title": "Board",
+    "description": [
+      "Visual Kanban workflow.",
+      "Drag and drop to update status.",
+      "Optimize team throughput."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "notFound": {
+    "title": "Article Not Found",
+    "subtitle": "The documentation page you are looking for doesn't exist or has been moved.",
+    "backToDocs": "Back to Documentation"
+  },
+  "account": {
+    "title": "Account Settings",
+    "description": [
+      "Manage your profile.",
+      "Update security preferences.",
+      "Configure notifications."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  }
+}

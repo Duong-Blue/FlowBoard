@@ -1,0 +1,137 @@
+{
+  "sidebar": {
+    "gettingStarted": "Bắt đầu",
+    "coreConcepts": "Khái niệm cốt lõi",
+    "features": "Tính năng",
+    "account": "Tài khoản"
+  },
+  "home": {
+    "title": "Chào mừng đến với FlowBoard",
+    "description": [
+      "Quản lý dự án trực quan.",
+      "Theo dõi vấn đề và cột mốc.",
+      "Đồng bộ với nhóm của bạn."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "homePage": {
+    "breadcrumbDocs": "Tài liệu",
+    "breadcrumbGettingStarted": "Bắt đầu",
+    "breadcrumbIntro": "Giới thiệu",
+    "mainTitle": "Tổng quan & Khái niệm cốt lõi",
+    "mainDesc": "Tìm hiểu cách FlowBoard tổ chức các tổ chức, dự án, chu kỳ nước rút và bảng kanban thời gian thực cho các đội kỹ thuật phần mềm tốc độ cao.",
+    "updatedAgo": "Cập nhật 2 ngày trước",
+    "stableVersion": "v2.4.0 (Ổn định)",
+    "overviewTitle": "Tổng quan",
+    "overviewP1": "FlowBoard là một nền tảng điều phối dự án mạnh mẽ dành riêng cho các nhóm kỹ thuật năng suất cao. Thay vì xem xét các vấn đề như những tấm vé đơn lẻ, FlowBoard kết hợp từ xa, trạng thái bảng thời gian thực và ranh giới phân quyền phân cấp thành một nền tảng vận hành duy nhất.",
+    "overviewP2": "Được thiết kế để kết nối quản lý vấn đề chiến thuật với vòng lặp phản hồi tích hợp liên tục, FlowBoard đảm bảo cập nhật phản ứng dưới 50ms giữa các phiên trình duyệt được kết nối bằng cách sử dụng WebSocket chuyên dụng.",
+    "workspaceIsolationTitle": "Nguyên tắc Cô lập Không gian làm việc",
+    "workspaceIsolationDesc": "FlowBoard cô lập dữ liệu từ xa và không gian làm việc chặt chẽ ở cấp độ <strong>Tổ chức</strong> trước khi đi sâu vào Dự án. Các khóa API và tích hợp dịch vụ không thể vượt qua ranh giới tổ chức nếu không có quyền chia sẻ đa người thuê rõ ràng.",
+    "archScopesTitle": "Phạm vi Kiến trúc",
+    "archScopesDesc": "Mô hình đối tượng của FlowBoard phân cấp nghiêm ngặt. Quyền sở hữu dữ liệu chảy từ trên xuống thông qua bốn cấp cốt lõi:",
+    "archScopeOrgTitle": "Tổ chức",
+    "archScopeOrgDesc": "Thực thể thanh toán cao nhất, ranh giới SSO doanh nghiệp, nhật ký kiểm toán toàn cầu và cung cấp thành viên.",
+    "archScopeProjectTitle": "Không gian Dự án",
+    "archScopeProjectDesc": "Các kho lưu trữ cụ thể theo miền của các sáng kiến kỹ thuật với định nghĩa trạng thái quy trình làm việc tùy chỉnh.",
+    "archScopeKanbanTitle": "Giao diện Kanban",
+    "archScopeKanbanDesc": "Hình chiếu thời gian thực của các vấn đề được sắp xếp theo cột trạng thái, cột mốc nước rút đang hoạt động và làn đường bơi.",
+    "archScopeIssueTitle": "Vấn đề & Chu kỳ",
+    "archScopeIssueDesc": "Đơn vị công việc cơ bản chứa dữ liệu từ xa kỹ thuật, kết nối nhánh Git, biểu đồ nhiệm vụ phụ và ước tính.",
+    "coreEntityTitle": "Mô hình Thực thể Cốt lõi",
+    "coreEntityDesc": "Mỗi thực thể trong FlowBoard mang các khóa tiền tố xác định (ví dụ: <code className=\"font-mono text-xs px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400\">FLW-1042</code>) phân giải toàn cầu trong một cụm tổ chức.",
+    "coreEntityLi1Prefix": "Cô lập cấp Tổ chức:",
+    "coreEntityLi1Text": " Thành viên nhóm được xác thực với một Tổ chức, kế thừa RBAC chi tiết.",
+    "coreEntityLi2Prefix": "Bảng Đa dự án:",
+    "coreEntityLi2Text": " Trưởng nhóm kỹ thuật có thể tạo các bảng tổng hợp kết hợp các vấn đề.",
+    "coreEntityLi3Prefix": "Nước rút Xác định:",
+    "coreEntityLi3Text": " Các chu kỳ giới hạn thời gian (1-4 tuần) thi hành các trạm kiểm soát đóng băng mã nguồn.",
+    "terminalTitle": "terminal — bash",
+    "copy": "Sao chép",
+    "copied": "Đã sao chép!",
+    "codeComment1": "# 1. Khởi tạo ngữ cảnh dự án FlowBoard",
+    "codeComment2": "# 2. Xác thực CLI bằng mã thông báo cá nhân",
+    "codeComment3": "# 3. Kéo từ xa bảng hoạt động & đồng bộ các nhánh Git cục bộ",
+    "navPrev": "Trước đó",
+    "navPrevTitle": "Bắt đầu tài liệu",
+    "navNext": "Bài viết tiếp theo",
+    "navNextTitle": "Cách FlowBoard Hoạt động",
+    "navNextDesc": "Đi sâu vào vòng đời hoạt động của các vấn đề và nước rút.",
+    "tocTitle": "Trên trang này",
+    "tocOverview": "Tổng quan",
+    "tocArchScopes": "Phạm vi Kiến trúc",
+    "tocCoreEntity": "Mô hình Thực thể Cốt lõi",
+    "feedbackTitle": "Trang này có hữu ích không?",
+    "feedbackYes": "Có",
+    "feedbackNo": "Không",
+    "editPage": "Chỉnh sửa trang trên GitHub",
+    "joinDiscord": "Tham gia Cộng đồng Discord"
+  },
+  "how_it_works": {
+    "title": "Cách thức hoạt động",
+    "description": [
+      "Tạo dự án để nhóm công việc.",
+      "Thêm vấn đề để theo dõi nhiệm vụ.",
+      "Sử dụng bảng để quản lý quy trình."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "workspace": {
+    "title": "Không gian làm việc",
+    "description": [
+      "Trung tâm cho tất cả dự án.",
+      "Truy cập nhanh nhiệm vụ gần đây.",
+      "Tổng quan nhóm và nhật ký hoạt động."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "projects": {
+    "title": "Dự án",
+    "description": [
+      "Sắp xếp vấn đề vào dự án.",
+      "Theo dõi tiến độ với lộ trình.",
+      "Cộng tác với đội ngũ."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "roadmap": {
+    "title": "Lộ trình",
+    "description": [
+      "Hình ảnh hóa dòng thời gian dự án.",
+      "Theo dõi các cột mốc quan trọng.",
+      "Lập kế hoạch phát hành tương lai."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "issues": {
+    "title": "Vấn đề",
+    "description": [
+      "Theo dõi nhiệm vụ chi tiết.",
+      "Phân công, gắn thẻ và ưu tiên.",
+      "Bình luận và cộng tác."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "board": {
+    "title": "Bảng",
+    "description": [
+      "Quy trình Kanban trực quan.",
+      "Kéo thả để cập nhật trạng thái.",
+      "Tối ưu năng suất nhóm."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  },
+  "notFound": {
+    "title": "Không tìm thấy bài viết",
+    "subtitle": "Trang tài liệu bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển.",
+    "backToDocs": "Quay lại Trang Tài liệu"
+  },
+  "account": {
+    "title": "Cài đặt tài khoản",
+    "description": [
+      "Quản lý hồ sơ cá nhân.",
+      "Cập nhật tùy chọn bảo mật.",
+      "Cấu hình thông báo."
+    ],
+    "image": "[IMAGE_PLACEHOLDER]"
+  }
+}
