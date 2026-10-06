@@ -54,7 +54,7 @@ describe('MilestonesService', () => {
         startDate: new Date('2023-02-01'),
         targetDate: new Date('2023-01-01'),
       };
-      await expect(service.create('proj-1', dto)).rejects.toThrow(BadRequestException);
+      await expect(service.create('proj-1', 'user-1', dto as any)).rejects.toThrow(BadRequestException);
       expect(prisma.milestone.create).not.toHaveBeenCalled();
     });
 
@@ -66,7 +66,7 @@ describe('MilestonesService', () => {
         issues: [],
       } as any);
       const dto = { startDate: new Date('2024-01-01') };
-      await expect(service.update('proj-1', 'ms-1', dto)).rejects.toThrow(BadRequestException);
+      await expect(service.update('proj-1', 'user-1', 'ms-1', dto as any)).rejects.toThrow(BadRequestException);
       expect(prisma.milestone.update).not.toHaveBeenCalled();
     });
   });
@@ -117,7 +117,7 @@ describe('MilestonesService', () => {
       prisma.milestone.findFirst.mockResolvedValue(null);
       prisma.milestone.create.mockResolvedValue({ id: 'ms-2', ...dto, order: 1000 });
       
-      const res = await service.create('proj-1', dto);
+      const res = await service.create('proj-1', 'user-1', dto as any);
       
       expect(prisma.milestone.create).toHaveBeenCalledWith({
         data: {
@@ -137,7 +137,7 @@ describe('MilestonesService', () => {
       prisma.milestone.findFirst.mockResolvedValue(null);
       prisma.milestone.create.mockResolvedValue({ id: 'ms-3', ...dto, order: 1000 });
       
-      const res = await service.create('proj-1', dto);
+      const res = await service.create('proj-1', 'user-1', dto as any);
       
       expect(prisma.milestone.create).toHaveBeenCalledWith({
         data: {
@@ -188,7 +188,7 @@ describe('MilestonesService', () => {
       prisma.issue.updateMany.mockResolvedValue({ count: 2 } as any);
       prisma.milestone.delete.mockResolvedValue({ id: 'ms-1' } as any);
 
-      await service.delete('proj-1', 'ms-1');
+      await service.delete('proj-1', 'user-1', 'ms-1');
 
       expect(prisma.issue.updateMany).toHaveBeenCalledWith({
         where: { milestoneId: 'ms-1' },

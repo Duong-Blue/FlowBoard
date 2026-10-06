@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID, ValidateIf } from 'class-validator';
 import { IssueStatus } from '@prisma/client';
 
 export class MoveIssueDto {
@@ -7,17 +7,17 @@ export class MoveIssueDto {
   status?: IssueStatus;
 
   @IsOptional()
-  @IsString()
   @IsUUID()
-  targetWorkflowStatusId?: string;
+  @ValidateIf((o, value) => value !== null)
+  targetWorkflowStatusId?: string | null;
 
   @IsOptional()
-  @IsString()
   @IsUUID()
-  beforeIssueId?: string;
+  @ValidateIf((o, value) => value !== null)
+  beforeIssueId?: string | null;
 
   @IsOptional()
-  @IsString()
   @IsUUID()
-  afterIssueId?: string;
+  @ValidateIf((o, value) => value !== null)
+  afterIssueId?: string | null;
 }

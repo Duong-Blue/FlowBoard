@@ -80,4 +80,8 @@ export class CreateIssueDto {
     message: 'dueDate must be after or equal to startDate',
   })
   dueDate?: string;
+
+  @IsOptional()
+  @IsString()
+  milestoneId?: string;
 }

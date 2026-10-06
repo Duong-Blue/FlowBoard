@@ -50,7 +50,9 @@ describe('GlobalExceptionFilter', () => {
     );
     expect(response.json).toHaveBeenCalledWith({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Internal server error',
+      message: mockError.message,
+      stack: mockError.stack,
+      details: String(mockError),
     });
   });
 });
