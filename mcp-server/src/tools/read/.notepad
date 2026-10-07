@@ -1,0 +1,9 @@
+## Findings: search_flowboard tool
+
+- **Implementation**: Created `mcp-server/src/tools/read/search-flowboard.tool.ts`.
+- **Schema**: Implemented `search_flowboard` using `zod` and `zod-to-json-schema` (reused from `@modelcontextprotocol/sdk` dependencies without adding new ones) to match `SearchQueryDto`.
+- **Registration Pattern**: Followed `health.ts` pattern with `export function registerSearchFlowboardTool(server, apiClient, authContext)`. Sets up `ListToolsRequestSchema` and `CallToolRequestSchema`. 
+- **Safety**: Treats `request.params.arguments` as untrusted data, parses and validates via Zod before casting and passing to `SearchAdapter`. Uses `AuthContext` check before calling `apiClient`.
+- **Errors**: Catches `FlowBoardApiError` and `ZodError` specifically, returning formatted `isError: true` messages per MCP specification. Does NOT use raw fetch.
+
+Note: Since `server.setRequestHandler` overrides previous handlers for the same request type, multiple tools following the `health.ts` pattern sequentially would overwrite each other. A central router or array-based registration `server.tool(...)` is recommended for future scalability, but this implementation strictly adheres to the requested `health.ts` structure for now.
