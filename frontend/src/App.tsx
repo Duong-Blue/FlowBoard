@@ -13,7 +13,6 @@ import CreateProjectPage from './pages/projects/CreateProjectPage';
 import ProjectSettingsPage from './pages/projects/ProjectSettingsPage';
 import ProjectMembersPage from './pages/projects/ProjectMembersPage';
 import { ProjectOverviewPage } from './pages/projects/ProjectOverviewPage';
-import { ProjectRoadmapPage } from './pages/projects/ProjectRoadmapPage';
 import { ProjectWorkPage } from './pages/projects/ProjectWorkPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -23,6 +22,7 @@ import VerifyResetCodePage from './pages/auth/VerifyResetCodePage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import ResetSuccessPage from './pages/auth/ResetSuccessPage';
 import HomePage from './pages/public/HomePage';
+import { ProductPage } from './pages/public/ProductPage';
 import DocsLayout from './layouts/DocsLayout';
 import DocsHomePage from './features/docs/pages/DocsHomePage';
 import DocsArticlePage from './features/docs/pages/DocsArticlePage';
@@ -59,6 +59,7 @@ const router = createBrowserRouter([
         element: <PublicLayout />,
         children: [
           { path: '/', element: <HomePage /> },
+          { path: 'product', element: <ProductPage /> },
           {
             path: 'docs',
             element: <DocsLayout />,
@@ -104,7 +105,6 @@ const router = createBrowserRouter([
                 children: [
                   { index: true, element: <Navigate to="overview" replace /> },
                   { path: 'overview', element: <ProjectOverviewPage /> },
-                  { path: 'roadmap', element: <ProjectRoadmapPage /> },
                   { path: 'work', element: <ProjectWorkPage /> },
                   { path: 'work/issues/:issueId', element: <ProjectWorkPage /> },
                   { path: 'settings/*', element: <ProjectSettingsPage /> },

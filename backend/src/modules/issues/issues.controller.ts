@@ -46,8 +46,10 @@ export class IssuesController {
     private readonly subtasksService: SubtasksService,
   ) {}
 
-  @Throttle({ default: { limit: 60, ttl: 60000 } })
-  @Post()
+  @Get('health')
+  health() {
+    return { status: 'ok' };
+  }
   create(
     @Param('projectId') projectId: string,
     @CurrentUser('id') userId: string,

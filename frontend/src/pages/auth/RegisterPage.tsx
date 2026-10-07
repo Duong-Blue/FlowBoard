@@ -49,7 +49,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <Card className="w-full shadow-none border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
+    <Card className="w-full max-w-md shadow-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">{t('register.title')}</CardTitle>
         <CardDescription className="dark:text-slate-400">

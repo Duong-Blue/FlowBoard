@@ -17,7 +17,7 @@ export default function AuthLayout() {
   }
 
   return (
-    <div className="relative flex min-h-[calc(100vh-140px)] items-center justify-center py-8">
+    <div className="relative flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
       <div className="absolute top-4 right-4 z-10">
         <LanguageSwitcher />
       </div>

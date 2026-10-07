@@ -52,7 +52,7 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="w-full shadow-none border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
+      <Card className="w-full max-w-md shadow-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">{t('login.title')}</CardTitle>
         <CardDescription className="dark:text-slate-400">
@@ -111,7 +111,7 @@ export default function LoginPage() {
           <OAuthButtons disabled={isLoading} />
           <div className="text-center text-sm text-slate-500 dark:text-slate-400 pt-2">
             {t('login.noAccount')}{' '}
-            <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300">
+            <Link to="/register" className="font-semibold text-primary hover:underline dark:hover:text-slate-200">
               {t('login.registerLink')}
             </Link>
           </div>
