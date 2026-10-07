@@ -1,0 +1,32 @@
+{
+  "header": {
+    "product": "Product",
+    "docs": "Docs",
+    "signIn": "Sign in",
+    "getStarted": "Get Started",
+    "openMenu": "Open menu",
+    "goToWorkspace": "Go to Workspace"
+  },
+  "product": {
+    "workspace": "Workspace",
+    "workspaceDesc": "A unified space to manage your organization's resources, people, and projects. Everything at your fingertips.",
+    "projects": "Projects",
+    "projectsDesc": "Organize work into projects with customizable boards, lists, and timelines tailored to your team's needs.",
+    "roadmap": "Roadmap",
+    "roadmapDesc": "Plan your milestones and track long-term progress with an interactive roadmap view.",
+    "issues": "Issues",
+    "issuesDesc": "Detailed issue tracking that supports states, priorities, assignees, and complex hierarchies.",
+    "work": "Work",
+    "workDesc": "Personal work management: everything you are working on, prioritized and organized.",
+    "collaboration": "Collaboration",
+    "collaborationDesc": "Seamlessly communicate within context. Comments, mentions, and activity feeds keeping everyone on the same page.",
+    "views": "Views",
+    "viewsDesc": "Create and save custom views to filter and display issues exactly the way you want to see them."
+  },
+  "footer": {
+    "product": "Product",
+    "docs": "Docs",
+    "signIn": "Sign in",
+    "getStarted": "Get Started"
+  }
+}

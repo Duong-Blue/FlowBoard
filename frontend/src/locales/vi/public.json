@@ -1,0 +1,32 @@
+{
+  "header": {
+    "product": "Sản phẩm",
+    "docs": "Tài liệu",
+    "signIn": "Đăng nhập",
+    "getStarted": "Bắt đầu",
+    "openMenu": "Mở menu",
+    "goToWorkspace": "Vào Không gian làm việc"
+  },
+  "product": {
+    "workspace": "Không gian làm việc",
+    "workspaceDesc": "Không gian hợp nhất để quản lý tài nguyên, nhân sự và dự án của tổ chức. Tất cả trong tầm tay bạn.",
+    "projects": "Dự án",
+    "projectsDesc": "Tổ chức công việc thành các dự án với bảng, danh sách và lộ trình tùy chỉnh theo nhu cầu của đội ngũ.",
+    "roadmap": "Lộ trình",
+    "roadmapDesc": "Lập kế hoạch cho các cột mốc và theo dõi tiến độ dài hạn với chế độ xem lộ trình trực quan.",
+    "issues": "Công việc & Sự cố",
+    "issuesDesc": "Theo dõi công việc chi tiết hỗ trợ trạng thái, độ ưu tiên, người thực hiện và phân cấp phức tạp.",
+    "work": "Công việc cá nhân",
+    "workDesc": "Quản lý công việc cá nhân: mọi thứ bạn đang làm, được ưu tiên và sắp xếp khoa học.",
+    "collaboration": "Cộng tác",
+    "collaborationDesc": "Giao tiếp mượt mà ngay trong ngữ cảnh. Bình luận, nhắc tên và nhật ký hoạt động giúp mọi người luôn nắm bắt thông tin.",
+    "views": "Chế độ xem",
+    "viewsDesc": "Tạo và lưu các chế độ xem tùy chỉnh để lọc và hiển thị công việc chính xác theo cách bạn muốn."
+  },
+  "footer": {
+    "product": "Sản phẩm",
+    "docs": "Tài liệu",
+    "signIn": "Đăng nhập",
+    "getStarted": "Bắt đầu"
+  }
+}

@@ -6,6 +6,7 @@ import issues from '../locales/en/issues.json';
 import landing from '../locales/en/landing.json';
 import settings from '../locales/en/settings.json';
 import docs from '../locales/en/docs.json';
+import publicJson from '../locales/en/public.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -18,6 +19,7 @@ declare module 'i18next' {
       landing: typeof landing;
       settings: typeof settings;
       docs: typeof docs;
+      public: typeof publicJson;
     };
   }
 }

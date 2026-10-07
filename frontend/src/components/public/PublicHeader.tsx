@@ -15,18 +15,10 @@ import {
 } from '@/components/ui/sheet';
 
 export default function PublicHeader() {
-  const { t } = useTranslation('landing');
+  const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { theme, setTheme } = useTheme();
-
-  const navLinks = [
-    { name: t('header.home'), href: '/' },
-    { name: t('header.features'), href: '#features' },
-    { name: t('header.workflow'), href: '#workflow' },
-    { name: t('header.highlights'), href: '#highlights' },
-    { name: t('header.docs', 'Docs'), href: '/docs' },
-  ];
 
   const handleLinkClick = () => {
     setOpen(false);
@@ -49,41 +41,34 @@ export default function PublicHeader() {
 
         {/* Desktop Navigation Links */}
         <nav aria-label="Main navigation" className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
-            >
-              {link.name}
-            </a>
-          ))}
+          <Link
+            to="/product"
+            className="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+          >
+            {t('header.product', 'Product')}
+          </Link>
+          <Link
+            to="/docs"
+            className="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+          >
+            {t('header.docs', 'Docs')}
+          </Link>
         </nav>
 
         {/* Desktop Action Buttons */}
         <div className="hidden items-center gap-3 md:flex">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-            aria-label="Toggle theme"
-          >
-            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          </Button>
           <LanguageSwitcher />
           {isAuthenticated ? (
             <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white">
-              <Link to="/workspace">{t('header.goToWorkspace')}</Link>
+              <Link to="/workspace">{t('header.goToWorkspace', 'Go to Workspace')}</Link>
             </Button>
           ) : (
             <>
               <Button variant="ghost" asChild className="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
-                <Link to="/login">{t('header.signIn')}</Link>
+                <Link to="/login">{t('header.signIn', 'Sign in')}</Link>
               </Button>
               <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                <Link to="/register">{t('header.getStarted')}</Link>
+                <Link to="/register">{t('header.getStarted', 'Get Started')}</Link>
               </Button>
             </>
           )}
@@ -108,7 +93,7 @@ export default function PublicHeader() {
                 variant="ghost"
                 size="icon"
                 className="text-slate-700 dark:text-slate-300"
-                aria-label={t('header.openMenu')}
+                aria-label={t('header.openMenu', 'Open menu')}
               >
                 <Menu className="h-6 w-6" />
               </Button>
@@ -134,16 +119,20 @@ export default function PublicHeader() {
 
               {/* Mobile Navigation Links */}
               <nav aria-label="Mobile navigation" className="flex flex-col space-y-4 pt-2">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={handleLinkClick}
-                    className="text-base font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-1"
-                  >
-                    {link.name}
-                  </a>
-                ))}
+                <Link
+                  to="/product"
+                  onClick={handleLinkClick}
+                  className="text-base font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-1"
+                >
+                  {t('header.product', 'Product')}
+                </Link>
+                <Link
+                  to="/docs"
+                  onClick={handleLinkClick}
+                  className="text-base font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-1"
+                >
+                  {t('header.docs', 'Docs')}
+                </Link>
               </nav>
             </div>
 
@@ -151,15 +140,15 @@ export default function PublicHeader() {
             <div className="flex flex-col gap-3 pt-6 border-t border-slate-200 dark:border-slate-800">
               {isAuthenticated ? (
                 <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleLinkClick}>
-                  <Link to="/workspace">{t('header.goToWorkspace')}</Link>
+                  <Link to="/workspace">{t('header.goToWorkspace', 'Go to Workspace')}</Link>
                 </Button>
               ) : (
                 <>
                   <Button variant="outline" asChild className="w-full border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300" onClick={handleLinkClick}>
-                    <Link to="/login">{t('header.signIn')}</Link>
+                    <Link to="/login">{t('header.signIn', 'Sign in')}</Link>
                   </Button>
                   <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleLinkClick}>
-                    <Link to="/register">{t('header.getStarted')}</Link>
+                    <Link to="/register">{t('header.getStarted', 'Get Started')}</Link>
                   </Button>
                 </>
               )}
