@@ -35,8 +35,8 @@ describe('Phase 2 Authentication', () => {
 
     expect(fetch).toHaveBeenCalledWith(`${mockBaseUrl}/users/me`, expect.objectContaining({
       headers: expect.objectContaining({
-        Authorization: `Bearer ${mockToken}`,
-        'Content-Type': 'application/json',
+        'authorization': `Bearer ${mockToken}`,
+        'content-type': 'application/json',
       })
     }));
     expect(result).toEqual(mockProfile);
