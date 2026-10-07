@@ -30,3 +30,7 @@ modules/
 - Standard DTO location: `modules/<domain>/dto/<action>-<domain>.dto.ts`.
 - Legacy note: `organizations`, `org-members`, `project-members` have DTO files directly at module root; new DTOs MUST go in `dto/` subfolders.
 - Every module exports a `<Domain>Module` class importing its controller and service.
+
+## ANTI-PATTERNS (THIS MODULE)
+- DO NOT place DTOs in root if module is a core domain (Issues, Projects). Use `dto/` subfolder.
+- DO NOT bypass `api_helper.ts` for HTTP requests.

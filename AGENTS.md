@@ -21,12 +21,9 @@ _FlowBoard/
 ## WHERE TO LOOK
 | Task | Location | Notes |
 |------|----------|-------|
-| API Routes & Endpoints | `backend/src/modules/` | NestJS controller & service per domain |
-| DB Schema & Migrations | `backend/prisma/schema/` | Multi-file Prisma schema split |
-| Issue Board & Drag-Drop | `frontend/src/features/issues/` | DnD Kit Kanban board & issue details |
-| UI Components | `frontend/src/components/ui/` | Radix UI primitives with Tailwind v4 |
-| Global State & Auth | `frontend/src/store/` | Redux Toolkit slices & credentials |
-| API Axios Client | `frontend/src/utils/api_helper.ts` | Bearer auth header & auto-refresh token |
+| Domain Modules | `backend/src/modules/` | See `backend/src/modules/AGENTS.md` |
+| Features & UI | `frontend/src/features/` | See `frontend/src/features/AGENTS.md` |
+| Auth & Client | `frontend/src/utils/` | Bearer auth + proxy |
 
 ## CODE MAP
 | Symbol | Type | Location | Refs | Role |
