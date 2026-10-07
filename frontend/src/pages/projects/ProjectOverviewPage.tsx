@@ -45,30 +45,14 @@ export function ProjectOverviewPage() {
   return (
     <div className="p-6 md:p-8 space-y-8 w-full">
       
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-10 w-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xl uppercase shadow-sm shrink-0">
-              {project.key?.substring(0, 1) || project.name.substring(0, 1)}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">{project.name}</h1>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="bg-slate-50 text-slate-600 font-mono text-xs">{project.key}</Badge>
-                {project.createdAt && (
-                  <span className="text-xs text-slate-500">
-                    Created {formatDate(project.createdAt)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          {project.description && (
-            <p className="text-sm text-slate-600 mt-3 max-w-2xl">{project.description}</p>
+      {/* Top Quick Actions Bar */}
+      <div className="flex items-center justify-between gap-4 pb-2 border-b border-slate-100">
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          {project.createdAt && (
+            <span>Created {formatDate(project.createdAt)}</span>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0 mt-2 md:mt-0">
+        <div className="flex items-center gap-2 shrink-0">
           <Link to={`/workspace/orgs/${orgId}/projects/${projectKey}/issues`}>
             <Button variant="outline" className="h-9">Go to Board</Button>
           </Link>

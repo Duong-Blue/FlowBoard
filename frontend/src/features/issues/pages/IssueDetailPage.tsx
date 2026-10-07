@@ -86,7 +86,7 @@ export function IssueDetailPage() {
         await deleteIssueApi(effectiveProjectId, targetIssueId, force);
         dispatch(removeIssue(targetIssueId));
         if (effectiveOrgId && effectiveProjectKey) {
-          navigate(`/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/issues`);
+          navigate(-1);
         }
       } catch (err: unknown) {
         if ((err as any)?.response?.status === 409) {
@@ -101,11 +101,7 @@ export function IssueDetailPage() {
   };
 
   const handleClose = () => {
-    if (effectiveOrgId && effectiveProjectKey) {
-      navigate(`/workspace/orgs/${effectiveOrgId}/projects/${effectiveProjectKey}/issues`);
-    } else {
-      navigate(-1);
-    }
+    navigate(-1);
   };
 
   const canDelete = true;

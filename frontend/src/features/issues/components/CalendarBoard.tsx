@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,7 @@ function parseLocalDate(dateStr?: string | null): Date | null {
 export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardProps) {
   const { t } = useTranslation('issues');
   const navigate = useNavigate();
+  const location = useLocation();
   const reduxFilters = useAppSelector((state) => state.issue.filters);
   const { statuses, getStatusById, getStatusColor } = useProjectWorkflow(projectId);
 
@@ -125,7 +126,7 @@ export function CalendarBoard({ projectId, orgId, projectKey }: CalendarBoardPro
 
   const handleIssueClick = (issue: Issue) => {
     const issueKey = issue.key || issue.id;
-    navigate(`/workspace/orgs/${orgId}/projects/${projectKey}/calendar/issues/${issueKey}`);
+    navigate(`/workspace/orgs/${orgId}/projects/${projectKey}/work/issues/${issueKey}${location.search}`);
   };
 
   // Group issues by date grid cells

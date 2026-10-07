@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { getIssues, createIssue, updateIssue, deleteIssue } from '../../services/issueService';
@@ -66,6 +66,7 @@ export interface IssueListPageProps {
 export default function IssueListPage({ standalone = true, showFilterBar }: IssueListPageProps = {}) {
   const { t } = useTranslation(['issues', 'common']);
   const { orgId } = useParams<{ orgId: string }>();
+  const location = useLocation();
   const { project, projectId, loading: projectLoading, is404, loading: resolvedLoading } = useResolvedProject();
   const { statuses, getStatusById, getStatusColor } = useProjectWorkflow(projectId);
   const navigate = useNavigate();
@@ -345,13 +346,13 @@ export default function IssueListPage({ standalone = true, showFilterBar }: Issu
                   <tr 
                     key={issue.id} 
                     className="hover:bg-slate-50/50 cursor-pointer"
-                    onClick={() => {
-                      const targetOrgId = currentOrgId;
-                      const targetProjectKey = project.key;
-                      if (targetOrgId && targetProjectKey) {
-                        navigate(`/workspace/orgs/${targetOrgId}/projects/${targetProjectKey}/work/issues/${issue.id}`);
-                      }
-                    }}
+                      onClick={() => {
+                        const targetOrgId = currentOrgId;
+                        const targetProjectKey = project.key;
+                        if (targetOrgId && targetProjectKey) {
+                          navigate(`/workspace/orgs/${targetOrgId}/projects/${targetProjectKey}/work/issues/${issue.id}${location.search}`);
+                        }
+                      }}
                   >
                     <td className="px-4 py-3 font-mono text-xs font-semibold text-slate-600">{issue.key}</td>
                     <td className="px-4 py-3 font-medium text-slate-900">

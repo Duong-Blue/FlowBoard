@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../../store';
 import type { Issue } from '../../../store/types';
 import { SemanticBadge } from '../../../components/shared/SemanticBadge';
@@ -18,6 +18,7 @@ export function IssueCard({ issue, disabled }: IssueCardProps) {
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
   const projectList = useAppSelector((state) => state.project.list);
   const navigate = useNavigate();
+  const location = useLocation();
   const { getStatusById, getStatusColor } = useProjectWorkflow(issue.projectId || projectId);
 
   const {
@@ -58,7 +59,7 @@ export function IssueCard({ issue, disabled }: IssueCardProps) {
     const targetProjectKey = projectKey || foundProject?.key;
     const issueKey = issue.key || issue.id;
     if (targetOrgId && targetProjectKey) {
-      navigate(`/workspace/orgs/${targetOrgId}/projects/${targetProjectKey}/issues/${issueKey}`);
+      navigate(`/workspace/orgs/${targetOrgId}/projects/${targetProjectKey}/work/issues/${issueKey}${location.search}`);
     }
   };
 

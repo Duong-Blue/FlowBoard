@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   ChevronLeft,
@@ -42,6 +42,7 @@ export const IssueTimelineView: React.FC<IssueTimelineViewProps> = ({
 }) => {
   const { t } = useTranslation('issues');
   const navigate = useNavigate();
+  const location = useLocation();
   const { orgId } = useParams<{ orgId?: string }>();
   const activeOrgId = useAppSelector((state) => state.org.activeOrgId);
   const reduxIssues = useAppSelector((state) => state.issue.list);
@@ -109,7 +110,7 @@ export const IssueTimelineView: React.FC<IssueTimelineViewProps> = ({
     } else {
       const projectKey = issue.projectKey || issue.project?.key || issue.projectId;
       if (currentOrgId && projectKey) {
-        navigate(`/workspace/orgs/${currentOrgId}/projects/${projectKey}/work/issues/${issue.id}`);
+        navigate(`/workspace/orgs/${currentOrgId}/projects/${projectKey}/work/issues/${issue.id}${location.search}`);
       } else {
         // Fallback for cases where orgId or projectKey might be missing
         navigate(`issues/${issue.id}`);
